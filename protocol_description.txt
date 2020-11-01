@@ -1,0 +1,278 @@
+This file contains the description of the OpenRGB network API (protocol) that this client implements.
+It uses a pseudo-language which shall be understood as follows:
+ * 'message' means a self-contained block of TCP data that represents a request or a response
+ * 'section' means a part of message that is either repeated or part of multiple different messages
+ * 'enum' is classical enum like in any programming language
+ * 'char[]' is used where the size of the array is dynamic and usually depends on a field that preceeds it
+ * 'optional' means the following element might or might not be present depending on some field that preceeds it
+ * all integers are in little-endian
+ * all messages and sections are "packed" - there are no padding bytes, integer fields might not be alligned to offsets that are multiples of their size
+
+
+enum MessageType : uint32
+{
+	REQUEST_CONTROLLER_COUNT      = 0,
+	REQUEST_CONTROLLER_DATA       = 1,
+	SET_CLIENT_NAME               = 50,
+	DEVICE_LIST_UPDATED           = 100,
+	RGBCONTROLLER_RESIZEZONE      = 1000,
+	RGBCONTROLLER_UPDATELEDS      = 1050,
+	RGBCONTROLLER_UPDATEZONELEDS  = 1051,
+	RGBCONTROLLER_UPDATESINGLELED = 1052,
+	RGBCONTROLLER_SETCUSTOMMODE   = 1100,
+	RGBCONTROLLER_UPDATEMODE      = 1101
+}
+
+section Header
+{
+	char[4]     magic = "ORGB";
+	uint32      device_idx;
+	MessageType message_type;
+	uint32      message_size;  // size of message minus size of this header
+}
+
+enum DeviceType : uint32
+{
+	MOTHERBOARD,
+	DRAM,
+	GPU,
+	COOLER,
+	LEDSTRIP,
+	KEYBOARD,
+	MOUSE,
+	MOUSEMAT,
+	HEADSET,
+	HEADSET_STAND,
+	GAMEPAD,
+	UNKNOWN
+}
+
+enum ModeFlags : uint32
+{
+	HAS_SPEED                 = (1 << 0),
+	HAS_DIRECTION_LR          = (1 << 1),
+	HAS_DIRECTION_UD          = (1 << 2),
+	HAS_DIRECTION_HV          = (1 << 3),
+	HAS_BRIGHTNESS            = (1 << 4),
+	HAS_PER_LED_COLOR         = (1 << 5),
+	HAS_MODE_SPECIFIC_COLOR   = (1 << 6),
+	HAS_RANDOM_COLOR          = (1 << 7)
+}
+
+enum Direction : uint32
+{
+	LEFT         = 0,
+	RIGHT        = 1,
+	UP           = 2,
+	DOWN         = 3,
+	HORIZONTAL   = 4,
+	VERTICAL     = 5,
+}
+
+enum ColorMode : uint32
+{
+	NONE            = 0,  // mode has no colors
+	PER_LED         = 1,  // mode has per LED colors selected
+	MODE_SPECIFIC   = 2,  // mode specific colors selected
+	RANDOM          = 3,  // mode has random colors selected
+}
+
+enum ZoneType : uint32
+{
+	SINGLE,
+	LINEAR,
+	MATRIX
+}
+
+message RequestControllerCount
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_CONTROLLER_COUNT,
+		message_size = 0
+	};
+}
+
+message ReplyControllerCount
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_CONTROLLER_COUNT,
+		message_size = 4
+	};
+	uint32   count;
+}
+
+message RequestControllerData
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = REQUEST_CONTROLLER_DATA,
+		message_size = 0
+	};
+}
+
+message ReplyControllerData
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = REQUEST_CONTROLLER_DATA,
+		message_size = <dynamic>
+	};
+	uint32     data_size = header.message_size;  // yes, this value is really there twice, no idea why
+	DeviceType device_type;
+	uint16     name_length;
+	char[]     name;
+	uint16     description_length;
+	char[]     description;
+	uint16     version_length;
+	char[]     version;
+	uint16     serial_length;
+	char[]     serial;
+	uint16     location_length;
+	char[]     location;
+	uint16     num_modes;
+	uint32     active_mode;
+	ModeDescription[]  modes;
+	uint16     num_zones;
+	ZoneDescription[]  zones;
+	uint16     num_leds;
+	LEDDescription[]   leds;
+	uint16     num_colors;
+	Color[]    colors;
+}
+
+message SetClientName
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = SET_CLIENT_NAME,
+		message_size = length(name) + 1
+	};
+	char[]   name;
+}
+
+message DeviceListUpdated
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = DEVICE_LIST_UPDATED,
+		message_size = 0
+	};
+}
+
+message ResizeZone
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_RESIZEZONE,
+		message_size = 8
+	};
+	uint32   zone_idx;
+	uint32   new_size;
+}
+
+message UpdateLEDs
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_UPDATELEDS,
+		message_size = <dynamic>
+	};
+	uint32   data_size;
+	uint16   num_colors;
+	Color[]  colors;
+}
+
+message UpdateZoneLEDs
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_UPDATEZONELEDS,
+		message_size = <dynamic>
+	};
+	uint32   data_size;
+	uint32   zone_idx;
+	uint16   num_colors;
+	Color[]  colors;
+}
+
+message UpdateSingleLED
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_UPDATESINGLELED,
+		message_size = length(name) + 1
+	};
+	uint32   led_idx;
+	Color    color;
+}
+
+message SetCustomMode
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_SETCUSTOMMODE,
+		message_size = 0
+	};
+}
+
+message UpdateMode
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_UPDATEMODE,
+		message_size = <dynamic>
+	};
+	uint32   data_size;
+	uint32   mode_idx;
+	ModeDescription mode_desc;
+}
+
+section ModeDescription
+{
+	uint16    name_length;
+	char[]    name;
+	uint32    value;
+	uint32    flags;
+	uint32    speed_min;
+	uint32    speed_max;
+	uint32    colors_min;
+	uint32    colors_max;
+	uint32    speed;
+	Direction direction;
+	ColorMode color_mode;
+	uint16    num_colors;
+	Color[]   colors;
+}
+
+section ZoneDescription
+{
+	uint16   name_length;
+	char[]   name;
+	ZoneType type;
+	uint32   leds_min;
+	uint32   leds_max;
+	uint32   leds_count;
+	uint32   matrix_length = <size of the optional block>
+	optional (if matrix_length > 0) {
+		uint32   matrix_height;
+		uint32   matrix_width;
+		uint32[] matrix_values;
+	}
+}
+
+section LEDDescription
+{
+	uint16   name_length;
+	char[]   name;
+	uint32   value;
+}
+
+section Color
+{
+	uint8  red;
+	uint8  green;
+	uint8  blue;
+	uint8  padding = 0;
+}
