@@ -1,14 +1,12 @@
-This file contains the description of the OpenRGB network API (protocol) that this client implements. It uses a pseudo-language which shall be understood as follows:
+This file contains the description of the OpenRGB network API (protocol) that this client implements.
+It uses a pseudo-language which shall be understood as follows:
  * 'message' means a self-contained block of TCP data that represents a request or a response
  * 'section' means a part of message that is either repeated or part of multiple different messages
  * 'enum' is classical enum like in any programming language
  * 'char[]' is used where the size of the array is dynamic and usually depends on a field that preceeds it
  * 'optional' means the following element might or might not be present depending on some field that preceeds it
- * all messages and sections are "packed" - there are no padding bytes, integer fields might not be alligned to offsets that are multiples of their size
-
-Global protocol characteristics
  * all integers are in little-endian
- * all string lengths include terminating null character
+ * all messages and sections are "packed" - there are no padding bytes, integer fields might not be alligned to offsets that are multiples of their size
 
 
 enum MessageType : uint32
@@ -89,7 +87,7 @@ enum ZoneType : uint32
 message RequestControllerCount
 {
 	Header   header = {
-		device_idx   = 0,
+		device_idx = 0,
 		message_type = REQUEST_CONTROLLER_COUNT,
 		message_size = 0
 	};
@@ -98,7 +96,7 @@ message RequestControllerCount
 message ReplyControllerCount
 {
 	Header   header = {
-		device_idx   = 0,
+		device_idx = 0,
 		message_type = REQUEST_CONTROLLER_COUNT,
 		message_size = 4
 	};
@@ -108,7 +106,7 @@ message ReplyControllerCount
 message RequestControllerData
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = REQUEST_CONTROLLER_DATA,
 		message_size = 0
 	};
@@ -117,7 +115,7 @@ message RequestControllerData
 message ReplyControllerData
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = REQUEST_CONTROLLER_DATA,
 		message_size = <dynamic>
 	};
@@ -147,7 +145,7 @@ message ReplyControllerData
 message SetClientName
 {
 	Header   header = {
-		device_idx   = 0,
+		device_idx = 0,
 		message_type = SET_CLIENT_NAME,
 		message_size = length(name) + 1
 	};
@@ -157,7 +155,7 @@ message SetClientName
 message DeviceListUpdated
 {
 	Header   header = {
-		device_idx   = 0,
+		device_idx = 0,
 		message_type = DEVICE_LIST_UPDATED,
 		message_size = 0
 	};
@@ -166,7 +164,7 @@ message DeviceListUpdated
 message ResizeZone
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_RESIZEZONE,
 		message_size = 8
 	};
@@ -177,7 +175,7 @@ message ResizeZone
 message UpdateLEDs
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_UPDATELEDS,
 		message_size = <dynamic>
 	};
@@ -189,7 +187,7 @@ message UpdateLEDs
 message UpdateZoneLEDs
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_UPDATEZONELEDS,
 		message_size = <dynamic>
 	};
@@ -202,7 +200,7 @@ message UpdateZoneLEDs
 message UpdateSingleLED
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_UPDATESINGLELED,
 		message_size = length(name) + 1
 	};
@@ -213,7 +211,7 @@ message UpdateSingleLED
 message SetCustomMode
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_SETCUSTOMMODE,
 		message_size = 0
 	};
@@ -222,7 +220,7 @@ message SetCustomMode
 message UpdateMode
 {
 	Header   header = {
-		device_idx   = <selected_device>,
+		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_UPDATEMODE,
 		message_size = <dynamic>
 	};
@@ -273,8 +271,8 @@ section LEDDescription
 
 section Color
 {
-	uint8  r;
-	uint8  g;
-	uint8  b;
+	uint8  red;
+	uint8  green;
+	uint8  blue;
 	uint8  padding = 0;
 }
