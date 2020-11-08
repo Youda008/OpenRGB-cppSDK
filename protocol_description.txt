@@ -254,7 +254,7 @@ section ZoneDescription
 	uint32   leds_min;
 	uint32   leds_max;
 	uint32   leds_count;
-	uint32   matrix_length = <size of the optional block>
+	uint16   matrix_length = <size of the optional block>
 	optional (if matrix_length > 0) {
 		uint32   matrix_height;
 		uint32   matrix_width;
