@@ -16,6 +16,8 @@
 using std::string;
 #include <vector>
 using std::vector;
+#include <sstream>
+using std::ostringstream;
 
 
 namespace orgb {
@@ -117,6 +119,137 @@ static bool readORGBArray( BufferInputStream & stream, vector< Type > & vec )
 		vec[i].deserialize( stream );
 	}
 	return !stream.hasFailed();
+}
+
+
+//======================================================================================================================
+//  enum strings
+
+const char * toString( MessageType type )
+{
+	// the values of message types are wildly different so we can't use an array
+	switch (type)
+	{
+		case MessageType::REQUEST_CONTROLLER_COUNT:       return "REQUEST_CONTROLLER_COUNT";
+		case MessageType::REQUEST_CONTROLLER_DATA:        return "REQUEST_CONTROLLER_DATA";
+		case MessageType::SET_CLIENT_NAME:                return "SET_CLIENT_NAME";
+		case MessageType::DEVICE_LIST_UPDATED:            return "DEVICE_LIST_UPDATED";
+		case MessageType::RGBCONTROLLER_RESIZEZONE:       return "RGBCONTROLLER_RESIZEZONE";
+		case MessageType::RGBCONTROLLER_UPDATELEDS:       return "RGBCONTROLLER_UPDATELEDS";
+		case MessageType::RGBCONTROLLER_UPDATEZONELEDS:   return "RGBCONTROLLER_UPDATEZONELEDS";
+		case MessageType::RGBCONTROLLER_UPDATESINGLELED:  return "RGBCONTROLLER_UPDATESINGLELED";
+		case MessageType::RGBCONTROLLER_SETCUSTOMMODE:    return "RGBCONTROLLER_SETCUSTOMMODE";
+		case MessageType::RGBCONTROLLER_UPDATEMODE:       return "RGBCONTROLLER_UPDATEMODE";
+		default:                                          return "<invalid>";
+	}
+}
+
+const char * toString( DeviceType type )
+{
+	static const char * const deviceTypeStr [] =
+	{
+		"MOTHERBOARD",
+		"DRAM",
+		"GPU",
+		"COOLER",
+		"LEDSTRIP",
+		"KEYBOARD",
+		"MOUSE",
+		"MOUSEMAT",
+		"HEADSET",
+		"HEADSET_STAND",
+		"GAMEPAD",
+		"UNKNOWN",
+	};
+
+	if (uint( type ) <= uint( DeviceType::UNKNOWN ))
+		return deviceTypeStr[ uint( type ) ];
+	else
+		return "<invalid>";
+}
+
+string modeFlagsToString( uint32_t flags )
+{
+	ostringstream oss;
+
+	bool isFirst = true;
+	auto addFlag = [ &isFirst, &oss ]( const char * flagStr )
+	{
+		if (isFirst) {
+			isFirst = false;
+		} else {
+			oss << " | ";
+		}
+		oss << flagStr;
+	};
+
+	if (flags & ModeFlags::HAS_SPEED)
+		addFlag( "HAS_SPEED" );
+	if (flags & ModeFlags::HAS_DIRECTION_LR)
+		addFlag( "HAS_DIRECTION_LR" );
+	if (flags & ModeFlags::HAS_DIRECTION_UD)
+		addFlag( "HAS_DIRECTION_UD" );
+	if (flags & ModeFlags::HAS_DIRECTION_HV)
+		addFlag( "HAS_DIRECTION_HV" );
+	if (flags & ModeFlags::HAS_BRIGHTNESS)
+		addFlag( "HAS_BRIGHTNESS" );
+	if (flags & ModeFlags::HAS_PER_LED_COLOR)
+		addFlag( "HAS_PER_LED_COLOR" );
+	if (flags & ModeFlags::HAS_MODE_SPECIFIC_COLOR)
+		addFlag( "HAS_MODE_SPECIFIC_COLOR" );
+	if (flags & ModeFlags::HAS_RANDOM_COLOR)
+		addFlag( "HAS_RANDOM_COLOR" );
+
+	return oss.str();
+}
+
+const char * toString( Direction dir )
+{
+	static const char * const deviceTypeStr [] =
+	{
+		"LEFT",
+		"RIGHT",
+		"UP",
+		"DOWN",
+		"HORIZONTAL",
+		"VERTICAL",
+	};
+
+	if (uint( dir ) <= uint( Direction::VERTICAL ))
+		return deviceTypeStr[ uint( dir ) ];
+	else
+		return "<invalid>";
+}
+
+const char * toString( ColorMode mode )
+{
+	static const char * const colorModeStr [] =
+	{
+		"NONE",
+		"PER_LED",
+		"MODE_SPECIFIC",
+		"RANDOM",
+	};
+
+	if (uint( mode ) <= uint( ColorMode::RANDOM ) )
+		return colorModeStr[ uint( mode ) ];
+	else
+		return "<invalid>";
+}
+
+const char * toString( ZoneType type )
+{
+	static const char * const zoneTypeStr [] =
+	{
+		"SINGLE",
+		"LINEAR",
+		"MATRIX",
+	};
+
+	if (uint( type ) <= uint( ZoneType::MATRIX ))
+		return zoneTypeStr[ uint( type ) ];
+	else
+		return "<invalid>";
 }
 
 

@@ -44,6 +44,7 @@ enum class MessageType : uint32_t
 	RGBCONTROLLER_SETCUSTOMMODE    = NET_PACKET_ID_RGBCONTROLLER_SETCUSTOMMODE,
 	RGBCONTROLLER_UPDATEMODE       = NET_PACKET_ID_RGBCONTROLLER_UPDATEMODE
 };
+const char * toString( MessageType );
 
 struct Header
 {
@@ -72,8 +73,6 @@ struct Header
 //======================================================================================================================
 //  types
 
-// TODO: strings for all enum values
-
 enum class DeviceType : uint32_t
 {
 	MOTHERBOARD    = DEVICE_TYPE_MOTHERBOARD,
@@ -89,6 +88,7 @@ enum class DeviceType : uint32_t
 	GAMEPAD        = DEVICE_TYPE_GAMEPAD,
 	UNKNOWN        = DEVICE_TYPE_UNKNOWN
 };
+const char * toString( DeviceType );
 
 enum ModeFlags : uint32_t
 {
@@ -101,6 +101,7 @@ enum ModeFlags : uint32_t
 	HAS_MODE_SPECIFIC_COLOR  = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR,
 	HAS_RANDOM_COLOR         = MODE_FLAG_HAS_RANDOM_COLOR
 };
+std::string modeFlagsToString( uint32_t flags );
 
 enum class Direction : uint32_t
 {
@@ -111,6 +112,7 @@ enum class Direction : uint32_t
 	HORIZONTAL  = MODE_DIRECTION_HORIZONTAL,
 	VERTICAL    = MODE_DIRECTION_VERTICAL,
 };
+const char * toString( Direction );
 
 enum class ColorMode : uint32_t
 {
@@ -119,6 +121,7 @@ enum class ColorMode : uint32_t
 	MODE_SPECIFIC  = MODE_COLORS_MODE_SPECIFIC,  // mode specific colors
 	RANDOM         = MODE_COLORS_RANDOM,         // mode has random colors
 };
+const char * toString( ColorMode );
 
 enum class ZoneType : uint32_t
 {
@@ -126,6 +129,7 @@ enum class ZoneType : uint32_t
 	LINEAR  = ZONE_TYPE_LINEAR,
 	MATRIX  = ZONE_TYPE_MATRIX
 };
+const char * toString( ZoneType );
 
 
 //======================================================================================================================

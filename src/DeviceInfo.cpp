@@ -54,7 +54,7 @@ void print( const Zone & zone, unsigned int indentLevel )
 {
 	indent( indentLevel ); printf( "[%u] = {\n", zone.id );
 	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", zone.name.c_str() );
-	indent( indentLevel + 1 ); printf( "type = %u;\n", uint( zone.type ) );
+	indent( indentLevel + 1 ); printf( "type = %s;\n", toString( zone.type ) );
 	indent( indentLevel + 1 ); printf( "minLeds = %u;\n", zone.minLeds );
 	indent( indentLevel + 1 ); printf( "maxLeds = %u;\n", zone.maxLeds );
 	indent( indentLevel + 1 ); printf( "numLeds = %u;\n", zone.numLeds );
@@ -104,14 +104,14 @@ void print( const Mode & mode, unsigned int indentLevel )
 	indent( indentLevel ); printf( "[%u] = {\n", mode.id );
 	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", mode.name.c_str() );
 	indent( indentLevel + 1 ); printf( "value = %u;\n", mode.value );
-	indent( indentLevel + 1 ); printf( "flags = %u;\n", mode.flags );
-	indent( indentLevel + 1 ); printf( "direction = %u;\n", uint( mode.direction ) );
+	indent( indentLevel + 1 ); printf( "flags = %s;\n", modeFlagsToString( mode.flags ).c_str() );
+	indent( indentLevel + 1 ); printf( "direction = %s;\n", toString( mode.direction ) );
 	indent( indentLevel + 1 ); printf( "minSpeed = %u;\n", mode.minSpeed );
 	indent( indentLevel + 1 ); printf( "maxSpeed = %u;\n", mode.maxSpeed );
 	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.speed );
 	indent( indentLevel + 1 ); printf( "minColors = %u;\n", mode.minColors );
 	indent( indentLevel + 1 ); printf( "maxColors = %u;\n", mode.maxColors );
-	indent( indentLevel + 1 ); printf( "colorMode = %u;\n", uint( mode.colorMode ) );
+	indent( indentLevel + 1 ); printf( "colorMode = %s;\n", toString( mode.colorMode ) );
 	indent( indentLevel + 1 ); printf( "colors = {\n" );
 	for (Color color : mode.colors)
 	{
@@ -159,7 +159,7 @@ void print( const Device & device, unsigned int indentLevel )
 {
 	indent( indentLevel ); printf( "[%u] = {\n", device.id );
 	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", device.name.c_str() );
-	indent( indentLevel + 1 ); printf( "type = %u;\n", uint( device.type ) );
+	indent( indentLevel + 1 ); printf( "type = %s;\n", toString( device.type ) );
 	indent( indentLevel + 1 ); printf( "description = \"%s\";\n", device.description.c_str() );
 	indent( indentLevel + 1 ); printf( "version = \"%s\";\n", device.version.c_str() );
 	indent( indentLevel + 1 ); printf( "serial = \"%s\";\n", device.serial.c_str() );
