@@ -1,5 +1,5 @@
 //======================================================================================================================
-//  entrypoint for the library testing and debuging
+//  continuously keep updating colors of CPU cooler until an INTERRUPT signal
 //======================================================================================================================
 
 #include <cstdio>    // printf
@@ -92,14 +92,13 @@ int main( int /*argc*/, char * /*argv*/ [] )
 
 		// connected and updated, let's change our colors
 		currentColorIdx = (currentColorIdx + 1) % (sizeof(colors) / sizeof(Color));
-		Color nextColor = colors[ currentColorIdx ];
 
 		for (const orgb::Device & device : devices)
 		{
 			if (device.type == DeviceType::COOLER)
 			{
 				printf( "setting CPU cooler to " ); print( nextColor ); putchar('\n');
-				client.setDeviceColor( device, nextColor );
+				client.setDeviceColor( device, colors[ currentColorIdx ] );
 			}
 		}
 
