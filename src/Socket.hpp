@@ -32,7 +32,7 @@ namespace orgb {
 //======================================================================================================================
 //  types shared between multiple socket classes
 
-/** our own unified error codes, because error codes from system calls differ from OS to OS */
+/** our own unified error codes, because error codes from system calls vary from OS to OS */
 enum class SocketError
 {
 	SUCCESS = 0,                   ///< The operation was successful.
@@ -48,6 +48,7 @@ enum class SocketError
 	// errors related to receive operation
 	CONNECTION_CLOSED = 30,        ///< Server has closed the connection.
 	TIMEOUT = 31,                  ///< Operation timed-out.
+	WOULD_BLOCK = 32,              ///< Socket is set to non-blocking mode and there is no data in the system input buffer.
 
 	OTHER = 255                    ///< Other system error. Call getLastSystemError() for more info.
 };
@@ -67,7 +68,9 @@ class _SocketCommon
 
  public:
 
-	system_error_t getLastSystemError() const { return _lastSystemError; }
+	system_error_t getLastSystemError() const   { return _lastSystemError; }
+	bool setBlockingMode( bool enable )         { _isBlocking = enable; return _setBlockingMode( _socket, enable ); }
+	bool isBlocking() const                     { return _isBlocking; }
 
  protected:
 
@@ -77,10 +80,14 @@ class _SocketCommon
 	static bool _closeSocket( socket_t sock );
 	static bool _setTimeout( socket_t sock, std::chrono::milliseconds timeout );
 	static bool _isTimeout( system_error_t errorCode );
+	static bool _isWouldBlock( system_error_t errorCode );
+	static bool _setBlockingMode( socket_t sock, bool enable );
 
  protected:
 
+	socket_t _socket;
 	system_error_t _lastSystemError;
+	bool _isBlocking;
 
 };
 
@@ -126,10 +133,6 @@ class TcpClientSocket : public _SocketCommon
 		return receive( buffer.data(), received );
 	}
 
- private:
-
-	socket_t _socket;
-
 };
 
 
@@ -145,10 +148,6 @@ class UdpSocket : public _SocketCommon
 	~UdpSocket();
 
 	// TODO
-
- private:
-
-	socket_t _socket;
 
 };
 

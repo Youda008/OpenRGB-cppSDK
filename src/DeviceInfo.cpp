@@ -186,7 +186,7 @@ void print( const Device & device, unsigned int indentLevel )
 	indent( indentLevel + 1 ); printf( "colors = {\n" );
 	for (Color color : device.colors)
 	{
-		print( color, indentLevel + 2 );
+		indent( indentLevel ); print( color, indentLevel + 2 ); puts(",");
 	}
 	indent( indentLevel + 1 ); printf( "};\n" );
 	indent( indentLevel ); printf( "},\n" );

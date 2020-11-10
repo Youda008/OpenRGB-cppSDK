@@ -30,7 +30,11 @@ namespace orgb {
 //  Client: high-level API
 
 Client::Client( const string & clientName )
-	: _clientName( clientName ), _socket( new TcpClientSocket ) {}
+:
+	_clientName( clientName ),
+	_socket( new TcpClientSocket ),
+	_isDeviceListOutOfDate( true )
+{}
 
 Client::~Client() {}
 
@@ -45,7 +49,7 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 			case SocketError::NETWORKING_INIT_FAILED:   return ConnectStatus::NETWORKING_INIT_FAILED;
 			case SocketError::HOST_NOT_RESOLVED:        return ConnectStatus::HOST_NOT_RESOLVED;
 			case SocketError::CONNECT_FAILED:           return ConnectStatus::CONNECT_FAILED;
-			default:                                    return ConnectStatus::OTHER;
+			default:                                    return ConnectStatus::OTHER_ERROR;
 		}
 	}
 
@@ -56,12 +60,30 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 		return ConnectStatus::SEND_NAME_FAILED;
 	}
 
+	// The list isn't trully out of date, because there isn't any list yet. But let's say there is, because
+	// it simplifies writing an application loop. This way user can just write
+	//
+	// while (true)
+	// {
+	//     if (!client.isConnected())
+	//         client.connect();
+	//     if (client.isDeviceListOutOfDate())
+	//         deviceList = client.requestDeviceList();
+	//     ...
+	// }
+	_isDeviceListOutOfDate = true;
+
 	return ConnectStatus::SUCCESS;
 }
 
 void Client::disconnect()
 {
 	_socket->disconnect();
+}
+
+bool Client::isConnected() const
+{
+	return _socket->isConnected();
 }
 
 DeviceListResult Client::requestDeviceList()
@@ -104,6 +126,7 @@ DeviceListResult Client::requestDeviceList()
 		result.devices.append( deviceIdx, move( deviceDataResult.message.device_desc ) );
 	}
 
+	_isDeviceListOutOfDate = false;
 	result.status = RequestStatus::SUCCESS;
 	return result;
 }
@@ -200,10 +223,82 @@ RequestStatus Client::switchToCustomMode( const Device & device )
 	return RequestStatus::SUCCESS;
 }*/
 
-bool Client::isDeviceListOutdated()
+UpdateStatus Client::checkForDeviceUpdates()
 {
-	// TODO: peak message from socket and check if it isn't DeviceListUpdated
-	return false;
+	if (_isDeviceListOutOfDate)
+	{
+		// Last time we found DeviceListUpdated message in the socket, and user haven't requested the new list yet,
+		// no need to look again, keep reporting "out of date" until he calls requestDeviceList().
+		return UpdateStatus::OUT_OF_DATE;
+	}
+
+	// Last time we checked there wasn't any DeviceListUpdated message, but it already might be now, so let's check.
+	UpdateStatus status = hasUpdateMessageArrived();
+	if (status == UpdateStatus::OUT_OF_DATE)
+	{
+		// DeviceListUpdated message found, cache this discovery until user calls requestDeviceList().
+		_isDeviceListOutOfDate = true;
+	}
+
+	return status;
+}
+
+UpdateStatus Client::hasUpdateMessageArrived()
+{
+	// We only need to check if there is any TCP message in the system input buffer, but don't wait for it.
+	// So we switch the socket to non-blocking mode and try to receive.
+
+	if (!_socket->setBlockingMode( false ))
+	{
+		return UpdateStatus::OTHER_ERROR;
+	}
+
+	auto enableBlockingAndReturn = [ this ]( UpdateStatus returnStatus )
+	{
+		if (!_socket->setBlockingMode( true ))
+		{
+			// This is bad, we changed the state of the socket and now we're unable to return it back.
+			// So rather burn everything to the ground and start from the beginning, than let things be in undefined state.
+			disconnect();
+			return UpdateStatus::CANT_RESTORE_SOCKET;
+		}
+		else
+		{
+			return returnStatus;
+		}
+	};
+
+	vector< uint8_t > buffer;
+	SocketError status = _socket->receive( buffer, Header::size() );
+	if (status == SocketError::WOULD_BLOCK)
+	{
+		// No message is currently in the socket, no indication that the device list is out of date.
+		return enableBlockingAndReturn( UpdateStatus::UP_TO_DATE );
+	}
+	else if (status == SocketError::CONNECTION_CLOSED)
+	{
+		return enableBlockingAndReturn( UpdateStatus::CONNECTION_CLOSED );
+	}
+	else if (status != SocketError::SUCCESS)
+	{
+		return enableBlockingAndReturn( UpdateStatus::OTHER_ERROR );
+	}
+
+	// We have some message, so let's check what it is.
+
+	Header header;
+	BufferInputStream stream( move( buffer ) );
+	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
+	{
+		// We received something, but something totally different than what we expected.
+		return enableBlockingAndReturn( UpdateStatus::UNEXPECTED_MESSAGE );
+	}
+	else
+	{
+		// We have received a DeviceListUpdated message from the server,
+		// signal to the user that he needs to request the list again.
+		return enableBlockingAndReturn( UpdateStatus::OUT_OF_DATE );
+	}
 }
 
 

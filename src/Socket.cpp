@@ -107,7 +107,12 @@ static _NetworkingSubsystem g_netSystem;  // this will get initialized on first 
 //======================================================================================================================
 //  SocketCommon
 
-_SocketCommon::_SocketCommon() : _lastSystemError( SUCCESS ) {}
+_SocketCommon::_SocketCommon()
+:
+	_socket( INVALID_SOCK ),
+	_lastSystemError( SUCCESS ),
+	_isBlocking( true )
+{}
 
 bool _SocketCommon::_shutdownSocket( socket_t sock )
 {
@@ -149,11 +154,39 @@ bool _SocketCommon::_isTimeout( system_error_t errorCode )
  #endif // _WIN32
 }
 
+bool _SocketCommon::_isWouldBlock( system_error_t errorCode )
+{
+ #ifdef _WIN32
+	return errorCode == WSAEWOULDBLOCK;
+ #else
+	return errorCode == EAGAIN || errorCode == EWOULDBLOCK;
+ #endif // _WIN32
+}
+
+bool _SocketCommon::_setBlockingMode( socket_t sock, bool enable )
+{
+#ifdef _WIN32
+	unsigned long mode = enable ? 0 : 1;
+	return ioctlsocket( sock, (long)FIONBIO, &mode ) == 0;
+#else
+	int flags = fcntl( sock, F_GETFL, 0 );
+	if (flags == -1)
+		return false;
+
+	if (enable)
+		flags &= ~O_NONBLOCK;
+	else
+		flags |= O_NONBLOCK;
+
+	return fcntl( sock, F_SETFL, flags ) == 0;
+#endif
+}
+
 
 //======================================================================================================================
 //  TcpSocket
 
-TcpClientSocket::TcpClientSocket() : _SocketCommon(), _socket( INVALID_SOCK ) {}
+TcpClientSocket::TcpClientSocket() : _SocketCommon() {}
 
 TcpClientSocket::~TcpClientSocket()
 {
@@ -277,13 +310,26 @@ SocketError TcpClientSocket::receive( uint8_t * buffer, size_t & size )
 		if (received <= 0)
 		{
 			_lastSystemError = getLastError();
-			size -= recvSize;
+			size -= recvSize;  // this is how much we failed to receive
+
 			if (received == 0)
+			{
+				_closeSocket( _socket );  // server closed, so let's close on our side too
+				_socket = INVALID_SOCK;
 				return SocketError::CONNECTION_CLOSED;
+			}
+			else if (!_isBlocking && _isWouldBlock( _lastSystemError ))
+			{
+				return SocketError::WOULD_BLOCK;
+			}
 			else if (_isTimeout( _lastSystemError ))
+			{
 				return SocketError::TIMEOUT;
+			}
 			else
+			{
 				return SocketError::OTHER;
+			}
 		}
 		recvBegin += received;
 		recvSize -= size_t( received );
@@ -295,7 +341,7 @@ SocketError TcpClientSocket::receive( uint8_t * buffer, size_t & size )
 //======================================================================================================================
 //  UdpSocket
 
-UdpSocket::UdpSocket() : _SocketCommon(), _socket( INVALID_SOCK ) {}
+UdpSocket::UdpSocket() : _SocketCommon() {}
 
 
 //======================================================================================================================

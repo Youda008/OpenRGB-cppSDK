@@ -45,7 +45,7 @@ bool Color::deserialize( BufferInputStream & stream )
 
 void print( const Color & color, unsigned int indentLevel )
 {
-	indent( indentLevel ); printf( "%02X%02X%02X,\n", color.r, color.g, color.b );
+	printf( "%02X%02X%02X", color.r, color.g, color.b );
 }
 
 

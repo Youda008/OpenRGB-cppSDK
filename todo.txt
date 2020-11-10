@@ -4,3 +4,4 @@ convenience search methods for DeviceList
 more methods for colors, from HSV conversion, mixing, ...
 mode updating vs mode selection ??
 custom mode ??
+alternative API throwing exceptions instead of return values

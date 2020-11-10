@@ -176,6 +176,11 @@ class DeviceList
  public:
 
 	DeviceList() {}
+	// copying is not allowed because it would break the non-owning references in Device sub-objects
+	DeviceList( const DeviceList & other ) = delete;
+	DeviceList( DeviceList && other ) noexcept = default;
+	DeviceList & operator=( const DeviceList & other ) = delete;
+	DeviceList & operator=( DeviceList && other ) noexcept = default;
 
 	void append( uint32_t deviceId, DeviceDescription && desc ) { _list.emplace_back( deviceId, std::move( desc ) ); }
 
