@@ -107,6 +107,8 @@ class TcpClientSocket : public _SocketCommon
 	SocketError disconnect();
 	bool isConnected() const;
 
+	bool setTimeout( std::chrono::milliseconds timeout );
+
 	/** Sends given number of bytes to the socket. If the system does not accept that amount of data all at once,
 	  * it repeats the system calls until all requested data are sent. */
 	SocketError send( const uint8_t * buffer, size_t size );

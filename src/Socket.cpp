@@ -272,6 +272,11 @@ bool TcpClientSocket::isConnected() const
 	return _socket != INVALID_SOCK;
 }
 
+bool TcpClientSocket::setTimeout( std::chrono::milliseconds timeout )
+{
+	return _setTimeout( _socket, timeout );
+}
+
 SocketError TcpClientSocket::send( const uint8_t * buffer, size_t size )
 {
 	if (_socket == INVALID_SOCK)

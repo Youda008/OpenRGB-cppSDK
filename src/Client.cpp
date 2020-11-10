@@ -22,6 +22,9 @@ using std::vector;
 #include <array>
 using std::array;
 
+#include <chrono>
+using std::chrono::milliseconds;
+
 
 namespace orgb {
 
@@ -52,6 +55,9 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 			default:                                    return ConnectStatus::OTHER_ERROR;
 		}
 	}
+
+	// rather set some default timeout for recv operations, user can always override this
+	_socket->setTimeout( milliseconds( 500 ) );
 
 	bool result2 = sendMessage< SetClientName >( _clientName );
 	if (!result2)
@@ -84,6 +90,18 @@ void Client::disconnect()
 bool Client::isConnected() const
 {
 	return _socket->isConnected();
+}
+
+bool Client::setTimeout( std::chrono::milliseconds timeout )
+{
+	// Currently we cannot set timeout on a socket that is not connected, because the actual system socket is created
+	// during connect operation, so the preceeding setTimeout calls would go to nowhere.
+	if (!_socket->isConnected())
+	{
+		return false;
+	}
+
+	return _socket->setTimeout( timeout );
 }
 
 DeviceListResult Client::requestDeviceList()

@@ -89,6 +89,8 @@ class Client
 
 	bool isConnected() const;
 
+	bool setTimeout( std::chrono::milliseconds timeout );
+
 	/** Queries the server for information about all its RGB devices. */
 	DeviceListResult requestDeviceList();
 
