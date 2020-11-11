@@ -156,6 +156,12 @@ RequestStatus Client::setDeviceColor( const Device & device, Color color )
 		return RequestStatus::NOT_CONNECTED;
 	}
 
+	// Before setting our own color, first we need to switch to the custom/direct mode.
+	if (!sendMessage< SetCustomMode >())
+	{
+		return RequestStatus::SEND_REQUEST_FAILED;
+	}
+
 	std::vector< Color > allColorsInDevice( device.leds.size(), color );
 	if (!sendMessage< UpdateLEDs >( device.id, allColorsInDevice ))
 	{
@@ -170,6 +176,12 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 	if (!_socket->isConnected())
 	{
 		return RequestStatus::NOT_CONNECTED;
+	}
+
+	// Before setting our own color, first we need to switch to the custom/direct mode.
+	if (!sendMessage< SetCustomMode >())
+	{
+		return RequestStatus::SEND_REQUEST_FAILED;
 	}
 
 	std::vector< Color > allColorsInZone( zone.numLeds, color );
@@ -188,6 +200,12 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 		return RequestStatus::NOT_CONNECTED;
 	}
 
+	// Before setting our own color, first we need to switch to the custom/direct mode.
+	if (!sendMessage< SetCustomMode >())
+	{
+		return RequestStatus::SEND_REQUEST_FAILED;
+	}
+
 	if (!sendMessage< ResizeZone >( zone.parent.id, zone.id, newSize ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
@@ -201,6 +219,12 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 	if (!_socket->isConnected())
 	{
 		return RequestStatus::NOT_CONNECTED;
+	}
+
+	// Before setting our own color, first we need to switch to the custom/direct mode.
+	if (!sendMessage< SetCustomMode >())
+	{
+		return RequestStatus::SEND_REQUEST_FAILED;
 	}
 
 	if (!sendMessage< UpdateSingleLED >( led.parent.id, led.id, color ))
@@ -219,21 +243,6 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 	}
 
 	if (!sendMessage< UpdateMode >( mode.parent.id, mode.id, mode.desc ))
-	{
-		return RequestStatus::SEND_REQUEST_FAILED;
-	}
-
-	return RequestStatus::SUCCESS;
-}
-
-RequestStatus Client::switchToCustomMode( const Device & device )
-{
-	if (!_socket->isConnected())
-	{
-		return RequestStatus::NOT_CONNECTED;
-	}
-
-	if (!sendMessage< RequestControllerCount >())
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
 	}

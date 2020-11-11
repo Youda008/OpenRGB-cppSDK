@@ -112,9 +112,6 @@ class Client
 	/** Sets a color for one selected LED. */
 	RequestStatus setColorOfSingleLED( const LED & led, Color color );
 
-	/** Switches the device to a custom/direct mode where you can control individual LEDs and zones manually. */
-	RequestStatus switchToCustomMode( const Device & device );
-
 	// TODO: seems currently unfinished on the server side
 	//RequestStatus modifyMode( const Mode & mode );
 
