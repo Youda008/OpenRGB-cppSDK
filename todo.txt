@@ -1,7 +1,6 @@
 proper build system in CMake
-command line tool for the most basic actions
+mode updating vs mode selection ??
 convenience search methods for DeviceList
 more methods for colors, from HSV conversion, mixing, ...
-mode updating vs mode selection ??
-custom mode ??
+command line tool for the most basic actions
 alternative API throwing exceptions instead of return values
