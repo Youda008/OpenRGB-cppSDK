@@ -157,7 +157,7 @@ RequestStatus Client::setDeviceColor( const Device & device, Color color )
 	}
 
 	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >())
+	if (!sendMessage< SetCustomMode >( device.id ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
 	}
@@ -179,7 +179,7 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 	}
 
 	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >())
+	if (!sendMessage< SetCustomMode >( zone.parent.id ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
 	}
@@ -201,7 +201,7 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 	}
 
 	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >())
+	if (!sendMessage< SetCustomMode >( zone.parent.id ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
 	}
@@ -222,7 +222,7 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 	}
 
 	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >())
+	if (!sendMessage< SetCustomMode >( led.parent.id ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
 	}
