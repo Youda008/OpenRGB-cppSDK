@@ -350,23 +350,35 @@ Client::RecvResult< Message > Client::awaitMessage()
 	RecvResult< Message > result;
 	vector< uint8_t > buffer;
 
-	// receive header into buffer
-	SocketError headerStatus = _socket->receive( buffer, Header::size() );
-	if (headerStatus != SocketError::SUCCESS)
+	do
 	{
-		switch (headerStatus)
+		// receive header into buffer
+		SocketError headerStatus = _socket->receive( buffer, Header::size() );
+		if (headerStatus != SocketError::SUCCESS)
 		{
-			case SocketError::CONNECTION_CLOSED:  result.status = RequestStatus::CONNECTION_CLOSED;  break;
-			case SocketError::TIMEOUT:            result.status = RequestStatus::NO_REPLY;           break;
-			default:                              result.status = RequestStatus::RECEIVE_ERROR;      break;
+			switch (headerStatus)
+			{
+				case SocketError::CONNECTION_CLOSED:  result.status = RequestStatus::CONNECTION_CLOSED;  break;
+				case SocketError::TIMEOUT:            result.status = RequestStatus::NO_REPLY;           break;
+				default:                              result.status = RequestStatus::RECEIVE_ERROR;      break;
+			}
+			return result;
 		}
-		return result;
-	}
 
-	// parse and validate the header
-	BufferInputStream stream( move( buffer ) );
-	if (!result.message.header.deserialize( stream ) || result.message.header.message_type != Message::thisType)
+		// parse and validate the header
+		BufferInputStream stream( move( buffer ) );
+		if (!result.message.header.deserialize( stream ))
+		{
+			result.status = RequestStatus::INVALID_REPLY;
+			return result;
+		}
+	}
+	// skip over all the DeviceListUpdated messages that have arrived while we were waiting for a request response
+	while (result.message.header.message_type == MessageType::DEVICE_LIST_UPDATED);
+
+	if (result.message.header.message_type != Message::thisType)
 	{
+		// the message is neither DeviceListUpdated, nor the type we expected
 		result.status = RequestStatus::INVALID_REPLY;
 		return result;
 	}
@@ -385,7 +397,7 @@ Client::RecvResult< Message > Client::awaitMessage()
 	}
 
 	// parse and validate the body
-	stream.reset( move( buffer ) );
+	BufferInputStream stream( move( buffer ) );
 	if (!result.message.deserializeBody( stream ))
 	{
 		result.status = RequestStatus::INVALID_REPLY;
