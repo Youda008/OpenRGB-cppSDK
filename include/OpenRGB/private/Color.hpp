@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  3.11.2020
-// Description: TODO
+// Description: Representation of a color
 //======================================================================================================================
 
 #ifndef OPENRGB_COLOR_INCLUDED
@@ -22,7 +22,7 @@ namespace orgb {
 
 
 //======================================================================================================================
-/** TODO */
+/** Simple representation of a color with 3 8-bit values for red, green, blue components */
 
 class Color
 {
@@ -46,6 +46,7 @@ class Color
 	static const Color MAGENTA;
 	static const Color CYAN;
 
+	/** this is here only for the templates in Client implementation */
 	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
 	void serialize( BufferOutputStream & stream ) const;
 	bool deserialize( BufferInputStream & stream );

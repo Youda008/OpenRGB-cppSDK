@@ -30,7 +30,7 @@ struct DeviceDescription;
 
 
 //======================================================================================================================
-/** TODO */
+/** Represents a particular LED on an RGB device. */
 
 class LED
 {
@@ -58,7 +58,7 @@ class LED
 
 
 //======================================================================================================================
-/** TODO */
+/** Represents a group of LEDs on an RGB device. Only some devices have zones. */
 
 class Zone
 {
@@ -70,11 +70,12 @@ class Zone
 	uint32_t      id;
 	std::string   name;
 	ZoneType      type;
-	uint32_t      minLeds;
-	uint32_t      maxLeds;
-	uint32_t      numLeds;
-	uint32_t      matrixHeight;
-	uint32_t      matrixWidth;
+	uint32_t      minLeds;      ///< minimum size of the zone
+	uint32_t      maxLeds;      ///< maximum size of the zone
+	uint32_t      numLeds;      ///< current size of the zone
+	uint32_t      matrixHeight; ///< if the zone type is matrix, this is its height
+	uint32_t      matrixWidth;  ///< if the zone type is matrix, this is its width
+	// TODO: the matrix values
 
  public:
 
@@ -91,7 +92,7 @@ class Zone
 
 
 //======================================================================================================================
-/** TODO */
+/** Represents a color mode of an RGB device, like "breathing", "flashing", "rainbow" or "direct". */
 
 class Mode
 {
@@ -102,15 +103,15 @@ class Mode
 
 	uint32_t      id;
 	std::string   name;
-	uint32_t      value;  ///< device-specific value
-	uint32_t      flags;  ///< see ModeFlags for possible bit flags
-	Direction     direction;
-	uint32_t      minSpeed;
-	uint32_t      maxSpeed;
-	uint32_t      speed;
-	uint32_t      minColors;
-	uint32_t      maxColors;
-	ColorMode     colorMode;
+	uint32_t      value;      ///< device-specific value
+	uint32_t      flags;      ///< see ModeFlags for possible bit flags
+	Direction     direction;  ///< direction of the color effect, this attribute is only valid if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
+	uint32_t      minSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	uint32_t      maxSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	uint32_t      speed;      ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	uint32_t      minColors;  ///< TODO: what is this?
+	uint32_t      maxColors;  ///< TODO: what is this?
+	ColorMode     colorMode;  ///< how the colors of a mode are set
 	std::vector< Color > colors;
 
  public:
@@ -130,7 +131,7 @@ class Mode
 
 
 //======================================================================================================================
-/** TODO */
+/** Represents an RGB-capable device. Device can have modes, zones and individual LEDs. */
 
 class Device
 {
@@ -165,7 +166,7 @@ class Device
 
 
 //======================================================================================================================
-/** TODO */
+/** All RGB-capable devices in your computer. */
 
 class DeviceList
 {
@@ -187,13 +188,15 @@ class DeviceList
 	DeviceListType::const_iterator begin() const  { return _list.begin(); }
 	DeviceListType::const_iterator end() const    { return _list.end(); }
 
+	// TODO: custom search methods for easier device filtering
+
 };
 
 
 //======================================================================================================================
 //  printing utils
 
-// TODO: output to abstract stream
+// TODO: output to abstract C++ stream
 
 void print( const Device & device, unsigned int indentLevel = 0 );
 void print( const Mode & mode, unsigned int indentLevel = 0 );

@@ -73,6 +73,7 @@ struct Header
 //======================================================================================================================
 //  types
 
+/** Type of device with RGB LEDs */
 enum class DeviceType : uint32_t
 {
 	MOTHERBOARD    = DEVICE_TYPE_MOTHERBOARD,
@@ -90,19 +91,21 @@ enum class DeviceType : uint32_t
 };
 const char * toString( DeviceType );
 
+/** Which features the mode supports */
 enum ModeFlags : uint32_t
 {
-	HAS_SPEED                = MODE_FLAG_HAS_SPEED,
-	HAS_DIRECTION_LR         = MODE_FLAG_HAS_DIRECTION_LR,
-	HAS_DIRECTION_UD         = MODE_FLAG_HAS_DIRECTION_UD,
-	HAS_DIRECTION_HV         = MODE_FLAG_HAS_DIRECTION_HV,
-	HAS_BRIGHTNESS           = MODE_FLAG_HAS_BRIGHTNESS,
-	HAS_PER_LED_COLOR        = MODE_FLAG_HAS_PER_LED_COLOR,
-	HAS_MODE_SPECIFIC_COLOR  = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR,
-	HAS_RANDOM_COLOR         = MODE_FLAG_HAS_RANDOM_COLOR
+	HAS_SPEED                = MODE_FLAG_HAS_SPEED,                // the speed attribute in ModeDescription is present
+	HAS_DIRECTION_LR         = MODE_FLAG_HAS_DIRECTION_LR,         // the direction attribute in ModeDescription can have LEFT or RIGHT values
+	HAS_DIRECTION_UD         = MODE_FLAG_HAS_DIRECTION_UD,         // the direction attribute in ModeDescription can have UP or DOWN values
+	HAS_DIRECTION_HV         = MODE_FLAG_HAS_DIRECTION_HV,         // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
+	HAS_BRIGHTNESS           = MODE_FLAG_HAS_BRIGHTNESS,           // the brightness attribute in ModeDescription is present
+	HAS_PER_LED_COLOR        = MODE_FLAG_HAS_PER_LED_COLOR,        // the color_mode attribute in ModeDescription can be set to PER_LED
+	HAS_MODE_SPECIFIC_COLOR  = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR,  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
+	HAS_RANDOM_COLOR         = MODE_FLAG_HAS_RANDOM_COLOR          // the color_mode attribute in ModeDescription can be set to RANDOM
 };
 std::string modeFlagsToString( uint32_t flags );
 
+/** Direction of the color effect */
 enum class Direction : uint32_t
 {
 	LEFT        = MODE_DIRECTION_LEFT,
@@ -114,6 +117,7 @@ enum class Direction : uint32_t
 };
 const char * toString( Direction );
 
+/** How the colors of a mode are set */
 enum class ColorMode : uint32_t
 {
 	NONE           = MODE_COLORS_NONE,           // mode has no colors
@@ -123,6 +127,7 @@ enum class ColorMode : uint32_t
 };
 const char * toString( ColorMode );
 
+/** Type of RGB zone */
 enum class ZoneType : uint32_t
 {
 	SINGLE  = ZONE_TYPE_SINGLE,
@@ -142,8 +147,8 @@ struct ModeDescription
 	uint32_t      flags;
 	uint32_t      speed_min;
 	uint32_t      speed_max;
-	uint32_t      colors_min;  // TODO: what is this?
-	uint32_t      colors_max;  // TODO: what is this?
+	uint32_t      colors_min;
+	uint32_t      colors_max;
 	uint32_t      speed;
 	Direction     direction;
 	ColorMode     color_mode;
@@ -158,9 +163,9 @@ struct ZoneDescription
 {
 	std::string   name;
 	ZoneType      type;
-	uint32_t      leds_min;    // TODO: what is this?
-	uint32_t      leds_max;    // TODO: what is this?
-	uint32_t      leds_count;  // TODO: what is this?
+	uint32_t      leds_min;
+	uint32_t      leds_max;
+	uint32_t      leds_count;
 	uint16_t      matrix_length;
 
 	// optional
@@ -297,6 +302,7 @@ struct ReplyControllerData
 	bool deserializeBody( BufferInputStream & stream );
 };
 
+// sends custom client name when connected
 struct SetClientName
 {
 	Header header = {
@@ -322,6 +328,7 @@ struct SetClientName
 	bool deserializeBody( BufferInputStream & stream );
 };
 
+// this is sent back from the server everytime its device list changes
 struct DeviceListUpdated
 {
 	Header header = {
@@ -449,7 +456,7 @@ struct UpdateSingleLED
 	bool deserializeBody( BufferInputStream & stream );
 };
 
-// TODO: what is this?
+// switches device mode to direct
 struct SetCustomMode
 {
 	Header header = {

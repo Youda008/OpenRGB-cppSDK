@@ -26,7 +26,7 @@ class TcpClientSocket;
 
 //======================================================================================================================
 
-/** TODO */
+/** All the possible ways how the connect operation can end up. */
 enum class ConnectStatus
 {
 	SUCCESS,                 ///< The operation was successful.
@@ -38,7 +38,7 @@ enum class ConnectStatus
 	OTHER_ERROR              ///< Other system error. Call getLastSystemError() for more info.
 };
 
-/** TODO */
+/** All the possible ways how a request can end up. */
 enum class RequestStatus
 {
 	SUCCESS,                 ///< The request was succesful.
@@ -50,6 +50,7 @@ enum class RequestStatus
 	INVALID_REPLY            ///< The reply from the server is invalid.
 };
 
+/** All the possible results of a check whether the locally stored device list is out of date */
 enum class UpdateStatus
 {
 	UP_TO_DATE,              ///< The current device list seems up to date.
@@ -60,7 +61,7 @@ enum class UpdateStatus
 	OTHER_ERROR              ///< Other system error. Call getLastSystemError() for more info.
 };
 
-/** TODO */
+/** Result and output of a device list request */
 struct DeviceListResult
 {
 	RequestStatus status;
@@ -69,7 +70,7 @@ struct DeviceListResult
 
 
 //======================================================================================================================
-/** TODO */
+/** OpenRGB network client. Use this to communicate with the OpenRGB service in order to set colors on your RGB devices. */
 
 class Client
 {
@@ -89,25 +90,35 @@ class Client
 
 	bool isConnected() const;
 
+	/** Sets a timeout for receiving request answers. */
 	bool setTimeout( std::chrono::milliseconds timeout );
 
 	/** Queries the server for information about all its RGB devices. */
 	DeviceListResult requestDeviceList();
 
+	/** Checks if the device list you downloaded earlier via requestDeviceList() hasn't been changed on the server.
+	  * In case it has been changed, you need to call requestDeviceList() again. */
 	UpdateStatus checkForDeviceUpdates();
 
+	/** Sets one unified color for the whole device. */
 	RequestStatus setDeviceColor( const Device & device, Color color );
 
+	/** Sets a color for a particular zone of a device. */
 	RequestStatus setZoneColor( const Zone & zone, Color color );
 
+	/** Resizes a zone of leds, if the device supports it. */
 	RequestStatus setZoneSize( const Zone & zone, uint32_t newSize );
 
+	/** Sets a color for one selected LED. */
 	RequestStatus setColorOfSingleLED( const LED & led, Color color );
 
+	/** Switches the device to a custom/direct mode where you can control individual LEDs and zones manually. */
+	RequestStatus switchToCustomMode( const Device & device );
+
+	// TODO: seems currently unfinished on the server side
 	//RequestStatus modifyMode( const Mode & mode );
 
-	//RequestStatus switchToCustomMode( const Device & device );
-
+	/** Call this if your requests keep failing and you don't know why. */
 	system_error_t getLastSystemError() const;
 	std::string getLastSystemErrorStr( system_error_t errorCode ) const     { return getErrorString( errorCode ); }
 	std::string getLastSystemErrorStr() const             { return getLastSystemErrorStr( getLastSystemError() ); }

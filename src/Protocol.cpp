@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  1.11.2020
-// Description: miscellaneous utilities
+// Description: declaration of the protocol messages and types
 //======================================================================================================================
 
 #include "OpenRGB/private/Protocol.hpp"

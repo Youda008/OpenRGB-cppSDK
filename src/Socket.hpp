@@ -139,7 +139,7 @@ class TcpClientSocket : public _SocketCommon
 
 
 //======================================================================================================================
-/** TODO */
+/** abstraction over low-level UDP socket system calls */
 
 class UdpSocket : public _SocketCommon
 {
