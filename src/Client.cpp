@@ -11,7 +11,7 @@
 #include "Common.hpp"
 
 #include "OpenRGB/private/Protocol.hpp"
-#include "OpenRGB/private/DeviceInfo.hpp"
+#include "OpenRGB/DeviceInfo.hpp"
 #include "BufferStream.hpp"
 #include "Socket.hpp"
 

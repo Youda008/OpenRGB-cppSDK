@@ -10,12 +10,13 @@
 #define OPENRGB_CLIENT_INCLUDED
 
 
-#include "private/Color.hpp"
-#include "private/DeviceInfo.hpp"
+#include "Color.hpp"
+#include "DeviceInfo.hpp"
 #include "private/SystemErrorInfo.hpp"  // error_code_t for getLastError return values
 
 #include <string>  // client name
 #include <memory>  // unique_ptr<Socket>
+#include <chrono>  // timeout
 
 
 namespace orgb {

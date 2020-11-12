@@ -6,7 +6,7 @@
 // Description: data structures containing device information
 //======================================================================================================================
 
-#include "OpenRGB/private/DeviceInfo.hpp"
+#include "OpenRGB/DeviceInfo.hpp"
 
 #include "Common.hpp"
 

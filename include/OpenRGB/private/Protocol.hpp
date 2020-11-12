@@ -10,11 +10,7 @@
 #define OPENRGB_PROTOCOL_INCLUDED
 
 
-// declarations from the OpenRGB project
-#include "../external/NetworkProtocol.h"
-#include "../external/RGBController.h"
-
-#include "OpenRGB/private/Color.hpp"
+#include "OpenRGB/Color.hpp"
 namespace orgb {
 	class BufferOutputStream;
 	class BufferInputStream;
@@ -33,16 +29,16 @@ namespace orgb {
 
 enum class MessageType : uint32_t
 {
-	REQUEST_CONTROLLER_COUNT       = NET_PACKET_ID_REQUEST_CONTROLLER_COUNT,
-	REQUEST_CONTROLLER_DATA        = NET_PACKET_ID_REQUEST_CONTROLLER_DATA,
-	SET_CLIENT_NAME                = NET_PACKET_ID_SET_CLIENT_NAME,
-	DEVICE_LIST_UPDATED            = NET_PACKET_ID_DEVICE_LIST_UPDATED,
-	RGBCONTROLLER_RESIZEZONE       = NET_PACKET_ID_RGBCONTROLLER_RESIZEZONE,
-	RGBCONTROLLER_UPDATELEDS       = NET_PACKET_ID_RGBCONTROLLER_UPDATELEDS,
-	RGBCONTROLLER_UPDATEZONELEDS   = NET_PACKET_ID_RGBCONTROLLER_UPDATEZONELEDS,
-	RGBCONTROLLER_UPDATESINGLELED  = NET_PACKET_ID_RGBCONTROLLER_UPDATESINGLELED,
-	RGBCONTROLLER_SETCUSTOMMODE    = NET_PACKET_ID_RGBCONTROLLER_SETCUSTOMMODE,
-	RGBCONTROLLER_UPDATEMODE       = NET_PACKET_ID_RGBCONTROLLER_UPDATEMODE
+	REQUEST_CONTROLLER_COUNT       = 0,
+	REQUEST_CONTROLLER_DATA        = 1,
+	SET_CLIENT_NAME                = 50,
+	DEVICE_LIST_UPDATED            = 100,
+	RGBCONTROLLER_RESIZEZONE       = 1000,
+	RGBCONTROLLER_UPDATELEDS       = 1050,
+	RGBCONTROLLER_UPDATEZONELEDS   = 1051,
+	RGBCONTROLLER_UPDATESINGLELED  = 1052,
+	RGBCONTROLLER_SETCUSTOMMODE    = 1100,
+	RGBCONTROLLER_UPDATEMODE       = 1101,
 };
 const char * toString( MessageType );
 
@@ -76,63 +72,63 @@ struct Header
 /** Type of device with RGB LEDs */
 enum class DeviceType : uint32_t
 {
-	MOTHERBOARD    = DEVICE_TYPE_MOTHERBOARD,
-	DRAM           = DEVICE_TYPE_DRAM,
-	GPU            = DEVICE_TYPE_GPU,
-	COOLER         = DEVICE_TYPE_COOLER,
-	LEDSTRIP       = DEVICE_TYPE_LEDSTRIP,
-	KEYBOARD       = DEVICE_TYPE_KEYBOARD,
-	MOUSE          = DEVICE_TYPE_MOUSE,
-	MOUSEMAT       = DEVICE_TYPE_MOUSEMAT,
-	HEADSET        = DEVICE_TYPE_HEADSET,
-	HEADSET_STAND  = DEVICE_TYPE_HEADSET_STAND,
-	GAMEPAD        = DEVICE_TYPE_GAMEPAD,
-	UNKNOWN        = DEVICE_TYPE_UNKNOWN
+	MOTHERBOARD   = 0,
+	DRAM          = 1,
+	GPU           = 2,
+	COOLER        = 3,
+	LEDSTRIP      = 4,
+	KEYBOARD      = 5,
+	MOUSE         = 6,
+	MOUSEMAT      = 7,
+	HEADSET       = 8,
+	HEADSET_STAND = 9,
+	GAMEPAD       = 10,
+	UNKNOWN       = 11,
 };
 const char * toString( DeviceType );
 
 /** Which features the mode supports */
 enum ModeFlags : uint32_t
 {
-	HAS_SPEED                = MODE_FLAG_HAS_SPEED,                // the speed attribute in ModeDescription is present
-	HAS_DIRECTION_LR         = MODE_FLAG_HAS_DIRECTION_LR,         // the direction attribute in ModeDescription can have LEFT or RIGHT values
-	HAS_DIRECTION_UD         = MODE_FLAG_HAS_DIRECTION_UD,         // the direction attribute in ModeDescription can have UP or DOWN values
-	HAS_DIRECTION_HV         = MODE_FLAG_HAS_DIRECTION_HV,         // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
-	HAS_BRIGHTNESS           = MODE_FLAG_HAS_BRIGHTNESS,           // the brightness attribute in ModeDescription is present
-	HAS_PER_LED_COLOR        = MODE_FLAG_HAS_PER_LED_COLOR,        // the color_mode attribute in ModeDescription can be set to PER_LED
-	HAS_MODE_SPECIFIC_COLOR  = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR,  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
-	HAS_RANDOM_COLOR         = MODE_FLAG_HAS_RANDOM_COLOR          // the color_mode attribute in ModeDescription can be set to RANDOM
+	HAS_SPEED                = (1 << 0),  // the speed attribute in ModeDescription is present
+	HAS_DIRECTION_LR         = (1 << 1),  // the direction attribute in ModeDescription can have LEFT or RIGHT values
+	HAS_DIRECTION_UD         = (1 << 2),  // the direction attribute in ModeDescription can have UP or DOWN values
+	HAS_DIRECTION_HV         = (1 << 3),  // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
+	HAS_BRIGHTNESS           = (1 << 4),  // the brightness attribute in ModeDescription is present
+	HAS_PER_LED_COLOR        = (1 << 5),  // the color_mode attribute in ModeDescription can be set to PER_LED
+	HAS_MODE_SPECIFIC_COLOR  = (1 << 6),  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
+	HAS_RANDOM_COLOR         = (1 << 7),  // the color_mode attribute in ModeDescription can be set to RANDOM
 };
 std::string modeFlagsToString( uint32_t flags );
 
 /** Direction of the color effect */
 enum class Direction : uint32_t
 {
-	LEFT        = MODE_DIRECTION_LEFT,
-	RIGHT       = MODE_DIRECTION_RIGHT,
-	UP          = MODE_DIRECTION_UP,
-	DOWN        = MODE_DIRECTION_DOWN,
-	HORIZONTAL  = MODE_DIRECTION_HORIZONTAL,
-	VERTICAL    = MODE_DIRECTION_VERTICAL,
+	LEFT        = 0,
+	RIGHT       = 1,
+	UP          = 2,
+	DOWN        = 3,
+	HORIZONTAL  = 4,
+	VERTICAL    = 5
 };
 const char * toString( Direction );
 
 /** How the colors of a mode are set */
 enum class ColorMode : uint32_t
 {
-	NONE           = MODE_COLORS_NONE,           // mode has no colors
-	PER_LED        = MODE_COLORS_PER_LED,        // mode has per LED colors
-	MODE_SPECIFIC  = MODE_COLORS_MODE_SPECIFIC,  // mode specific colors
-	RANDOM         = MODE_COLORS_RANDOM,         // mode has random colors
+	NONE           = 0,  // mode has no colors
+	PER_LED        = 1,  // mode has per LED colors
+	MODE_SPECIFIC  = 2,  // mode specific colors
+	RANDOM         = 3   // mode has random colors
 };
 const char * toString( ColorMode );
 
 /** Type of RGB zone */
 enum class ZoneType : uint32_t
 {
-	SINGLE  = ZONE_TYPE_SINGLE,
-	LINEAR  = ZONE_TYPE_LINEAR,
-	MATRIX  = ZONE_TYPE_MATRIX
+	SINGLE  = 0,
+	LINEAR  = 1,
+	MATRIX  = 2
 };
 const char * toString( ZoneType );
 
@@ -171,7 +167,7 @@ struct ZoneDescription
 	// optional
 	uint32_t      matrix_height;
 	uint32_t      matrix_width;
-	std::vector< uint32_t >  matrix_values;  // TODO: what is this?
+	std::vector< uint32_t >  matrix_values;
 
 	size_t calcSize() const;
 	void serialize( BufferOutputStream & stream ) const;

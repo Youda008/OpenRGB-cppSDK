@@ -6,7 +6,7 @@
 // Description: Representation of a color
 //======================================================================================================================
 
-#include "OpenRGB/private/Color.hpp"
+#include "OpenRGB/Color.hpp"
 
 #include "Common.hpp"
 
