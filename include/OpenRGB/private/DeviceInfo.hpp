@@ -184,6 +184,7 @@ class DeviceList
 	DeviceList & operator=( DeviceList && other ) noexcept = default;
 
 	void append( uint32_t deviceId, DeviceDescription && desc ) { _list.emplace_back( deviceId, std::move( desc ) ); }
+	void clear() { _list.clear(); }
 
 	DeviceListType::const_iterator begin() const  { return _list.begin(); }
 	DeviceListType::const_iterator end() const    { return _list.end(); }

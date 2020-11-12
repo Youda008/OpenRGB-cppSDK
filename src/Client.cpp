@@ -66,7 +66,7 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 		return ConnectStatus::SEND_NAME_FAILED;
 	}
 
-	// The list isn't trully out of date, because there isn't any list yet. But let's say there is, because
+	// The list isn't trully out of date, because there isn't any list yet. But let's say it is, because
 	// it simplifies writing an application loop. This way user can just write
 	//
 	// while (true)
@@ -75,6 +75,8 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	//         client.connect();
 	//     if (client.isDeviceListOutOfDate())
 	//         deviceList = client.requestDeviceList();
+	//     ...
+	//     change colors
 	//     ...
 	// }
 	_isDeviceListOutOfDate = true;
@@ -111,40 +113,49 @@ DeviceListResult Client::requestDeviceList()
 		return { RequestStatus::NOT_CONNECTED, {} };
 	}
 
-	bool sent = sendMessage< RequestControllerCount >();
-	if (!sent)
-	{
-		return { RequestStatus::SEND_REQUEST_FAILED, {} };
-	}
-
-	auto deviceCountResult = awaitMessage< ReplyControllerCount >();
-	if (deviceCountResult.status != RequestStatus::SUCCESS)
-	{
-		return { deviceCountResult.status, {} };
-	}
-
 	DeviceListResult result;
 
-	for (uint32_t deviceIdx = 0; deviceIdx < deviceCountResult.message.count; ++deviceIdx)
+	do
 	{
-		sent = sendMessage< RequestControllerData >( deviceIdx );
+		result.devices.clear();
+		_isDeviceListOutOfDate = false;
+
+		bool sent = sendMessage< RequestControllerCount >();
 		if (!sent)
 		{
 			result.status = RequestStatus::SEND_REQUEST_FAILED;
 			return result;
 		}
 
-		auto deviceDataResult = awaitMessage< ReplyControllerData >();
-		if (deviceDataResult.status != RequestStatus::SUCCESS)
+		auto deviceCountResult = awaitMessage< ReplyControllerCount >();
+		if (deviceCountResult.status != RequestStatus::SUCCESS)
 		{
-			result.status = deviceDataResult.status;
+			result.status = deviceCountResult.status;
 			return result;
 		}
 
-		result.devices.append( deviceIdx, move( deviceDataResult.message.device_desc ) );
-	}
+		for (uint32_t deviceIdx = 0; deviceIdx < deviceCountResult.message.count; ++deviceIdx)
+		{
+			sent = sendMessage< RequestControllerData >( deviceIdx );
+			if (!sent)
+			{
+				result.status = RequestStatus::SEND_REQUEST_FAILED;
+				return result;
+			}
 
-	_isDeviceListOutOfDate = false;
+			auto deviceDataResult = awaitMessage< ReplyControllerData >();
+			if (deviceDataResult.status != RequestStatus::SUCCESS)
+			{
+				result.status = deviceDataResult.status;
+				return result;
+			}
+
+			result.devices.append( deviceIdx, move( deviceDataResult.message.device_desc ) );
+		}
+	}
+	// In the middle of the update we might receive DeviceListUpdated message. In that case we need to start again.
+	while (_isDeviceListOutOfDate);
+
 	result.status = RequestStatus::SUCCESS;
 	return result;
 }
@@ -372,8 +383,14 @@ Client::RecvResult< Message > Client::awaitMessage()
 			result.status = RequestStatus::INVALID_REPLY;
 			return result;
 		}
+
+		// the server may have sent DeviceListUpdated messsage before it received our request
+		if (result.message.header.message_type == MessageType::DEVICE_LIST_UPDATED)
+		{
+			// in that case just set our "out of date" flag and skip it for now
+			_isDeviceListOutOfDate = true;
+		}
 	}
-	// skip over all the DeviceListUpdated messages that have arrived while we were waiting for a request response
 	while (result.message.header.message_type == MessageType::DEVICE_LIST_UPDATED);
 
 	if (result.message.header.message_type != Message::thisType)
