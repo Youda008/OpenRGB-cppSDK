@@ -101,18 +101,18 @@ class Mode
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
 
-	uint32_t      id;
-	std::string   name;
-	uint32_t      value;      ///< device-specific value
-	uint32_t      flags;      ///< see ModeFlags for possible bit flags
-	Direction     direction;  ///< direction of the color effect, this attribute is only valid if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
-	uint32_t      minSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	uint32_t      maxSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	uint32_t      speed;      ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	uint32_t      minColors;  ///< TODO: what is this?
-	uint32_t      maxColors;  ///< TODO: what is this?
-	ColorMode     colorMode;  ///< how the colors of a mode are set
-	std::vector< Color > colors;
+	const uint32_t      id;
+	const std::string   name;
+	const uint32_t      value;      ///< device-specific value
+	const uint32_t      flags;      ///< see ModeFlags for possible bit flags
+	      Direction     direction;  ///< direction of the color effect, this attribute is only valid if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
+	const uint32_t      minSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	const uint32_t      maxSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	      uint32_t      speed;      ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	const uint32_t      minColors;  ///< TODO: what is this?
+	const uint32_t      maxColors;  ///< TODO: what is this?
+	      ColorMode     colorMode;  ///< how the colors of a mode are set
+	      std::vector< Color > colors;
 
  public:
 
@@ -120,7 +120,6 @@ class Mode
 
 	// must be copyable so that vector can reallocate
 	Mode( const Mode & other ) = default;
-	Mode( Mode && other ) noexcept = default;
 
 	Mode & operator=( const Mode & other ) = delete;
 	Mode & operator=( Mode && other ) = delete;
