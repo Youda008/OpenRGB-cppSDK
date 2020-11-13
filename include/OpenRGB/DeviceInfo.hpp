@@ -189,7 +189,37 @@ class DeviceList
 	DeviceListType::const_iterator begin() const  { return _list.begin(); }
 	DeviceListType::const_iterator end() const    { return _list.end(); }
 
-	// TODO: custom search methods for easier device filtering
+	template< typename FuncType >
+	void forEach( DeviceType deviceType, FuncType loopBody )
+	{
+		for (const Device & device : _list)
+			if (device.type == deviceType)
+				loopBody( device );
+	}
+
+	template< typename FuncType >
+	void forEach( const std::string & deviceName, FuncType loopBody )
+	{
+		for (const Device & device : _list)
+			if (device.name == deviceName)
+				loopBody( device );
+	}
+
+	const Device * find( DeviceType deviceType )
+	{
+		for (const Device & device : _list)
+			if (device.type == deviceType)
+				return &device;
+		return nullptr;
+	}
+
+	const Device * find( const std::string & deviceName )
+	{
+		for (const Device & device : _list)
+			if (device.name == deviceName)
+				return &device;
+		return nullptr;
+	}
 
 };
 

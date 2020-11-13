@@ -9,6 +9,7 @@ using orgb::ConnectStatus;
 using orgb::DeviceListResult;
 using orgb::RequestStatus;
 using orgb::DeviceType;
+using orgb::Device;
 using orgb::Color;
 
 
@@ -30,13 +31,14 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		return 2;
 	}
 
-	for (const orgb::Device & device : result.devices)
+	const Device * cpuCooler = result.devices.find( DeviceType::COOLER );
+	if (!cpuCooler)
 	{
-		if (device.type == DeviceType::COOLER)
-		{
-			client.setDeviceColor( device, Color::RED );
-		}
+		fprintf( stderr, "device CPU cooler not found.\n" );
+		return 3;
 	}
+
+	client.setDeviceColor( *cpuCooler, Color::RED );
 
 	return 0;
 }

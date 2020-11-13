@@ -14,6 +14,7 @@ using orgb::UpdateStatus;
 using orgb::DeviceListResult;
 using orgb::DeviceList;
 using orgb::DeviceType;
+using orgb::Device;
 using orgb::Color;
 
 
@@ -36,6 +37,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	signal( SIGINT, signalFunc );
 
 	DeviceList devices;
+	const Device * cpuCooler = nullptr;
 
 	const Color colors [] = {
 		{ 255,   0,   0 },
@@ -80,6 +82,14 @@ int main( int /*argc*/, char * /*argv*/ [] )
 				continue;
 			}
 			devices = std::move( result.devices );
+			cpuCooler = devices.find( DeviceType::COOLER );
+			if (!cpuCooler)
+			{
+				printf( "device CPU cooler not found.\n" );
+				// reset everything and try again
+				client.disconnect();
+				continue;
+			}
 		}
 		else if (updateStatus != UpdateStatus::UP_TO_DATE)
 		{
@@ -93,14 +103,8 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		// connected and updated, let's change our colors
 		currentColorIdx = (currentColorIdx + 1) % (sizeof(colors) / sizeof(Color));
 
-		for (const orgb::Device & device : devices)
-		{
-			if (device.type == DeviceType::COOLER)
-			{
-				printf( "setting CPU cooler to " ); print( nextColor ); putchar('\n');
-				client.setDeviceColor( device, colors[ currentColorIdx ] );
-			}
-		}
+		printf( "setting CPU cooler to " ); print( colors[ currentColorIdx ] ); putchar('\n');
+		client.setDeviceColor( *cpuCooler, colors[ currentColorIdx ] );
 
 		std::this_thread::sleep_for( milliseconds( 1000 ) );
 	}

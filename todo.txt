@@ -1,6 +1,4 @@
-proper build system in CMake
 mode updating vs mode selection ??
-convenience search methods for DeviceList
 more methods for colors, from HSV conversion, mixing, ...
 command line tool for the most basic actions
 alternative API throwing exceptions instead of return values
