@@ -12,17 +12,25 @@
 
 #include "Color.hpp"
 #include "DeviceInfo.hpp"
-#include "private/SystemErrorInfo.hpp"  // error_code_t for getLastError return values
 
 #include <string>  // client name
 #include <memory>  // unique_ptr<Socket>
 #include <chrono>  // timeout
 
+namespace own {
+	class TcpClientSocket;
+}
+
+// HACK: This definition needs to be copied here from SystemErrorInfo.hpp, because that header is now in a submodule,
+// and it isn't visible to the library users that add this to their include directories
+#ifdef _WIN32
+	using system_error_t = uint32_t;  // should be DWORD but let's not include the whole windows.h just because of this
+#else
+	using system_error_t = int;
+#endif
+
 
 namespace orgb {
-
-
-class TcpClientSocket;
 
 
 //======================================================================================================================
@@ -122,8 +130,8 @@ class Client
 
 	/** Call this if your requests keep failing and you don't know why. */
 	system_error_t getLastSystemError() const;
-	std::string getLastSystemErrorStr( system_error_t errorCode ) const     { return getErrorString( errorCode ); }
-	std::string getLastSystemErrorStr() const             { return getLastSystemErrorStr( getLastSystemError() ); }
+	std::string getLastSystemErrorStr( system_error_t errorCode ) const;
+	std::string getLastSystemErrorStr() const;
 
  private: // helpers
 
@@ -146,7 +154,7 @@ class Client
 	std::string _clientName;
 
 	// pointer so that we don't have to include the TcpSocket and all its OS dependancies here
-	std::unique_ptr< TcpClientSocket > _socket;
+	std::unique_ptr< own::TcpClientSocket > _socket;
 
 	bool _isDeviceListOutOfDate;
 

@@ -8,9 +8,9 @@
 
 #include "OpenRGB/DeviceInfo.hpp"
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
-#include "Utils.hpp"
+#include "MiscUtils.hpp"
 
 
 namespace orgb {

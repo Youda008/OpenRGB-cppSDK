@@ -6,19 +6,20 @@
 // Description: miscellaneous utilities
 //======================================================================================================================
 
-#include "Utils.hpp"
+#ifndef OPENRGB_MISC_UTILS_INCLUDED
+#define OPENRGB_MISC_UTILS_INCLUDED
 
-#include <cstdio>
+
+#include "Essential.hpp"
 
 
 namespace orgb {
 
 
-void indent( unsigned int indentLevel )
-{
-	for (uint i = 0; i < indentLevel; ++i)
-		putchar('\t');
-}
+void indent( unsigned int indentLevel );
 
 
 } // namespace orgb
+
+
+#endif // OPENRGB_MISC_UTILS_INCLUDED

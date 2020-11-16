@@ -8,8 +8,10 @@
 
 #include "OpenRGB/private/Protocol.hpp"
 
+#include "MiscUtils.hpp"
 #include "BufferStream.hpp"
-#include "Utils.hpp"
+using own::BufferOutputStream;
+using own::BufferInputStream;
 
 #include <cstring>  // strncmp
 #include <string>

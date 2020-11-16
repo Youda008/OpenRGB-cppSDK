@@ -1,0 +1,6 @@
+[submodule "external/CppUtils-Essential"]
+	path = external/CppUtils-Essential
+	url = git@github.com:Youda008/CppUtils-Essential.git
+[submodule "external/CppUtils-Network"]
+	path = external/CppUtils-Network
+	url = git@github.com:Youda008/CppUtils-Network.git

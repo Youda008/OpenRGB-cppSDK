@@ -8,12 +8,19 @@
 
 #include "OpenRGB/Client.hpp"
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "OpenRGB/private/Protocol.hpp"
 #include "OpenRGB/DeviceInfo.hpp"
 #include "BufferStream.hpp"
+using own::BufferOutputStream;
+using own::BufferInputStream;
 #include "Socket.hpp"
+using own::TcpClientSocket;
+using own::SocketError;
+#include "SystemErrorInfo.hpp"
+using own::getLastError;
+using own::getErrorString;
 
 #include <string>
 using std::string;
@@ -327,6 +334,21 @@ UpdateStatus Client::hasUpdateMessageArrived()
 		// signal to the user that he needs to request the list again.
 		return enableBlockingAndReturn( UpdateStatus::OUT_OF_DATE );
 	}
+}
+
+system_error_t Client::getLastSystemError() const
+{
+	return getLastError();
+}
+
+string Client::getLastSystemErrorStr( system_error_t errorCode ) const
+{
+	return getErrorString( errorCode );
+}
+
+string Client::getLastSystemErrorStr() const
+{
+	return getErrorString( getLastSystemError() );
 }
 
 

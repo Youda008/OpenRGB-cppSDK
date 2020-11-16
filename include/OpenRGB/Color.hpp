@@ -12,7 +12,7 @@
 
 #include <cstdint>
 
-namespace orgb {
+namespace own {
 	class BufferOutputStream;
 	class BufferInputStream;
 }
@@ -48,8 +48,8 @@ class Color
 
 	/** this is here only for the templates in Client implementation */
 	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 
 };
 

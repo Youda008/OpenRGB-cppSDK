@@ -10,7 +10,7 @@
 #define OPENRGB_DEVICE_INCLUDED
 
 
-#include "OpenRGB/private/Protocol.hpp"
+#include "OpenRGB/private/Protocol.hpp"  // enums and flags
 
 #include "Color.hpp"
 

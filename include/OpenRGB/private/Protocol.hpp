@@ -11,14 +11,15 @@
 
 
 #include "OpenRGB/Color.hpp"
-namespace orgb {
-	class BufferOutputStream;
-	class BufferInputStream;
-}
 
 #include <cstdint>
 #include <string>
 #include <vector>
+
+namespace own {
+	class BufferOutputStream;
+	class BufferInputStream;
+}
 
 
 namespace orgb {
@@ -61,8 +62,8 @@ struct Header
 
 	static constexpr size_t size() { return sizeof(Header); }  // all members are equally big, no padding will take place
 
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 };
 
 
@@ -151,8 +152,8 @@ struct ModeDescription
 	std::vector< Color >  colors;
 
 	size_t calcSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 };
 
 struct ZoneDescription
@@ -170,8 +171,8 @@ struct ZoneDescription
 	std::vector< uint32_t >  matrix_values;
 
 	size_t calcSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 };
 
 struct LEDDescription
@@ -180,8 +181,8 @@ struct LEDDescription
 	uint32_t     value;
 
 	size_t calcSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 };
 
 struct DeviceDescription
@@ -199,8 +200,8 @@ struct DeviceDescription
 	std::vector< Color >            colors;
 
 	size_t calcSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserialize( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
 };
 
 
@@ -222,8 +223,8 @@ struct RequestControllerCount
 	RequestControllerCount() {}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct ReplyControllerCount
@@ -246,8 +247,8 @@ struct ReplyControllerCount
 	{}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct RequestControllerData
@@ -268,8 +269,8 @@ struct RequestControllerData
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct ReplyControllerData
@@ -294,8 +295,8 @@ struct ReplyControllerData
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 // sends custom client name when connected
@@ -320,8 +321,8 @@ struct SetClientName
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 // this is sent back from the server everytime its device list changes
@@ -340,8 +341,8 @@ struct DeviceListUpdated
 	DeviceListUpdated() {}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct ResizeZone
@@ -367,8 +368,8 @@ struct ResizeZone
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct UpdateLEDs
@@ -393,8 +394,8 @@ struct UpdateLEDs
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct UpdateZoneLEDs
@@ -421,8 +422,8 @@ struct UpdateZoneLEDs
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 struct UpdateSingleLED
@@ -448,8 +449,8 @@ struct UpdateSingleLED
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 // switches device mode to direct
@@ -471,8 +472,8 @@ struct SetCustomMode
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 // TODO: what does this mean? how to set active mode?
@@ -500,8 +501,8 @@ struct UpdateMode
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( BufferOutputStream & stream ) const;
-	bool deserializeBody( BufferInputStream & stream );
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserializeBody( own::BufferInputStream & stream );
 };
 
 

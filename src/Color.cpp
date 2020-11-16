@@ -8,10 +8,12 @@
 
 #include "OpenRGB/Color.hpp"
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
+#include "MiscUtils.hpp"
 #include "BufferStream.hpp"
-#include "Utils.hpp"
+using own::BufferOutputStream;
+using own::BufferInputStream;
 
 
 namespace orgb {
