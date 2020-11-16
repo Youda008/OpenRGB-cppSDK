@@ -161,6 +161,30 @@ class Device
 	Device & operator=( const Device & other ) = delete;
 	Device & operator=( Device && other ) = delete;
 
+	const Mode * findMode( const std::string & name ) const
+	{
+		for (const Mode & mode : modes)
+			if (mode.name == name)
+				return &mode;
+		return nullptr;
+	}
+
+	const Zone * findZone( const std::string & name ) const
+	{
+		for (const Zone & zone : zones)
+			if (zone.name == name)
+				return &zone;
+		return nullptr;
+	}
+
+	const LED * findLED( const std::string & name ) const
+	{
+		for (const LED & led : leds)
+			if (led.name == name)
+				return &led;
+		return nullptr;
+	}
+
 };
 
 
@@ -189,7 +213,7 @@ class DeviceList
 	DeviceListType::const_iterator end() const    { return _list.end(); }
 
 	template< typename FuncType >
-	void forEach( DeviceType deviceType, FuncType loopBody )
+	void forEach( DeviceType deviceType, FuncType loopBody ) const
 	{
 		for (const Device & device : _list)
 			if (device.type == deviceType)
@@ -197,14 +221,14 @@ class DeviceList
 	}
 
 	template< typename FuncType >
-	void forEach( const std::string & deviceName, FuncType loopBody )
+	void forEach( const std::string & deviceName, FuncType loopBody ) const
 	{
 		for (const Device & device : _list)
 			if (device.name == deviceName)
 				loopBody( device );
 	}
 
-	const Device * find( DeviceType deviceType )
+	const Device * find( DeviceType deviceType ) const
 	{
 		for (const Device & device : _list)
 			if (device.type == deviceType)
@@ -212,7 +236,7 @@ class DeviceList
 		return nullptr;
 	}
 
-	const Device * find( const std::string & deviceName )
+	const Device * find( const std::string & deviceName ) const
 	{
 		for (const Device & device : _list)
 			if (device.name == deviceName)
