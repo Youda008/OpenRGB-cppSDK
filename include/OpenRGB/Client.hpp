@@ -101,6 +101,13 @@ class Client
 	  * In case it has been changed, you need to call requestDeviceList() again. */
 	UpdateStatus checkForDeviceUpdates();
 
+	// TODO: seems currently unfinished on the server side
+	//RequestStatus modifyMode( const Mode & mode );
+
+	/** Changes the color mode of a device to "Direct".
+	  * This needs to be called before any of the methods below, but with at least few milliseconds delay. */
+	RequestStatus switchToDirectMode( const Device & device );
+
 	/** Sets one unified color for the whole device. */
 	RequestStatus setDeviceColor( const Device & device, Color color );
 
@@ -112,9 +119,6 @@ class Client
 
 	/** Sets a color for one selected LED. */
 	RequestStatus setColorOfSingleLED( const LED & led, Color color );
-
-	// TODO: seems currently unfinished on the server side
-	//RequestStatus modifyMode( const Mode & mode );
 
 	/** Call this if your requests keep failing and you don't know why. */
 	system_error_t getLastSystemError() const;

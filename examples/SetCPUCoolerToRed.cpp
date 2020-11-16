@@ -3,6 +3,8 @@
 //======================================================================================================================
 
 #include <cstdio>
+#include <thread>  // sleep
+using std::chrono::milliseconds;
 
 #include "OpenRGB/Client.hpp"
 using orgb::ConnectStatus;
@@ -17,7 +19,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 {
 	orgb::Client client( "My OpenRGB Client" );
 
-	ConnectStatus status = client.connect( "192.168.0.5" );
+	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::SUCCESS)
 	{
 		fprintf( stderr, "failed to connect\n" );
@@ -37,6 +39,12 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		fprintf( stderr, "device CPU cooler not found.\n" );
 		return 3;
 	}
+
+	// some devices don't accept colors until you set them to "Direct" mode
+	client.switchToDirectMode( *cpuCooler );
+
+	// let's wait a little, OpenRGB doesn't like when you send multiple requests at once
+	std::this_thread::sleep_for( milliseconds( 50 ) );
 
 	client.setDeviceColor( *cpuCooler, Color::RED );
 

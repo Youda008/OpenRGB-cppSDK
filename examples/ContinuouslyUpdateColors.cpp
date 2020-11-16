@@ -28,7 +28,7 @@ void signalFunc( int )
 
 int main( int /*argc*/, char * /*argv*/ [] )
 {
-	static const char * hostName = "192.168.0.106";  // you can also use the NetBIOS computer name
+	static const char * hostName = "127.0.0.1";  // you can also use the NetBIOS computer name
 
 	orgb::Client client( "My OpenRGB Client" );
 
@@ -38,6 +38,8 @@ int main( int /*argc*/, char * /*argv*/ [] )
 
 	DeviceList devices;
 	const Device * cpuCooler = nullptr;
+
+	bool isInDirectMode = false;
 
 	const Color colors [] = {
 		{ 255,   0,   0 },
@@ -82,6 +84,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 				continue;
 			}
 			devices = std::move( result.devices );
+
 			cpuCooler = devices.find( DeviceType::COOLER );
 			if (!cpuCooler)
 			{
@@ -100,9 +103,17 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			continue;
 		}
 
+		// some devices don't accept colors until you set them to "Direct" mode
+		if (!isInDirectMode)
+		{
+			client.switchToDirectMode( *cpuCooler );
+			isInDirectMode = true;
+			// let's do this in next iteration, OpenRGB doesn't like when you send multiple requests at once
+			continue;
+		}
+
 		// connected and updated, let's change our colors
 		currentColorIdx = (currentColorIdx + 1) % (sizeof(colors) / sizeof(Color));
-
 		printf( "setting CPU cooler to " ); print( colors[ currentColorIdx ] ); putchar('\n');
 		client.setDeviceColor( *cpuCooler, colors[ currentColorIdx ] );
 

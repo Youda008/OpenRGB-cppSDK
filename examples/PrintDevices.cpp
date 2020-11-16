@@ -14,7 +14,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 {
 	orgb::Client client( "My OpenRGB Client" );
 
-	ConnectStatus status = client.connect( "192.168.0.5" );
+	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::SUCCESS)
 	{
 		fprintf( stderr, "failed to connect\n" );

@@ -21,7 +21,6 @@ using std::string;
 using std::vector;
 #include <array>
 using std::array;
-
 #include <chrono>
 using std::chrono::milliseconds;
 
@@ -160,17 +159,41 @@ DeviceListResult Client::requestDeviceList()
 	return result;
 }
 
-RequestStatus Client::setDeviceColor( const Device & device, Color color )
+/*RequestStatus Client::modifyMode( const Mode & mode )
 {
 	if (!_socket->isConnected())
 	{
 		return RequestStatus::NOT_CONNECTED;
 	}
 
-	// Before setting our own color, first we need to switch to the custom/direct mode.
+	if (!sendMessage< UpdateMode >( mode.parent.id, mode.id, mode.desc ))
+	{
+		return RequestStatus::SEND_REQUEST_FAILED;
+	}
+
+	return RequestStatus::SUCCESS;
+}*/
+
+RequestStatus Client::switchToDirectMode( const Device & device )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NOT_CONNECTED;
+	}
+
 	if (!sendMessage< SetCustomMode >( device.id ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
+	}
+
+	return RequestStatus::SUCCESS;
+}
+
+RequestStatus Client::setDeviceColor( const Device & device, Color color )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NOT_CONNECTED;
 	}
 
 	std::vector< Color > allColorsInDevice( device.leds.size(), color );
@@ -189,12 +212,6 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 		return RequestStatus::NOT_CONNECTED;
 	}
 
-	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >( zone.parent.id ))
-	{
-		return RequestStatus::SEND_REQUEST_FAILED;
-	}
-
 	std::vector< Color > allColorsInZone( zone.numLeds, color );
 	if (!sendMessage< UpdateZoneLEDs >( zone.parent.id, zone.id, allColorsInZone ))
 	{
@@ -209,12 +226,6 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 	if (!_socket->isConnected())
 	{
 		return RequestStatus::NOT_CONNECTED;
-	}
-
-	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >( zone.parent.id ))
-	{
-		return RequestStatus::SEND_REQUEST_FAILED;
 	}
 
 	if (!sendMessage< ResizeZone >( zone.parent.id, zone.id, newSize ))
@@ -232,12 +243,6 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 		return RequestStatus::NOT_CONNECTED;
 	}
 
-	// Before setting our own color, first we need to switch to the custom/direct mode.
-	if (!sendMessage< SetCustomMode >( led.parent.id ))
-	{
-		return RequestStatus::SEND_REQUEST_FAILED;
-	}
-
 	if (!sendMessage< UpdateSingleLED >( led.parent.id, led.id, color ))
 	{
 		return RequestStatus::SEND_REQUEST_FAILED;
@@ -245,21 +250,6 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 
 	return RequestStatus::SUCCESS;
 }
-
-/*RequestStatus Client::modifyMode( const Mode & mode )
-{
-	if (!_socket->isConnected())
-	{
-		return RequestStatus::NOT_CONNECTED;
-	}
-
-	if (!sendMessage< UpdateMode >( mode.parent.id, mode.id, mode.desc ))
-	{
-		return RequestStatus::SEND_REQUEST_FAILED;
-	}
-
-	return RequestStatus::SUCCESS;
-}*/
 
 UpdateStatus Client::checkForDeviceUpdates()
 {
