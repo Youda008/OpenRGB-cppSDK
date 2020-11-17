@@ -150,18 +150,18 @@ const char * toString( DeviceType type )
 {
 	static const char * const deviceTypeStr [] =
 	{
-		"MOTHERBOARD",
+		"Motherboard",
 		"DRAM",
 		"GPU",
-		"COOLER",
-		"LEDSTRIP",
-		"KEYBOARD",
-		"MOUSE",
-		"MOUSEMAT",
-		"HEADSET",
-		"HEADSET_STAND",
-		"GAMEPAD",
-		"UNKNOWN",
+		"Cooler",
+		"LedStrip",
+		"Keyboard",
+		"Mouse",
+		"MouseMat",
+		"Headset",
+		"HeadsetStand",
+		"Gamepad",
+		"Unknown",
 	};
 
 	if (uint( type ) <= uint( DeviceType::Unknown ))
@@ -186,21 +186,21 @@ string modeFlagsToString( uint32_t flags )
 	};
 
 	if (flags & ModeFlags::HasSpeed)
-		addFlag( "HAS_SPEED" );
+		addFlag( "HasSpeed" );
 	if (flags & ModeFlags::HasDirectionLR)
-		addFlag( "HAS_DIRECTION_LR" );
+		addFlag( "HasDirectionLR" );
 	if (flags & ModeFlags::HasDirectionUD)
-		addFlag( "HAS_DIRECTION_UD" );
+		addFlag( "HasDirectionUD" );
 	if (flags & ModeFlags::HasDirectionHV)
-		addFlag( "HAS_DIRECTION_HV" );
+		addFlag( "HasDirectionHV" );
 	if (flags & ModeFlags::HasBrightness)
-		addFlag( "HAS_BRIGHTNESS" );
+		addFlag( "HasBrightness" );
 	if (flags & ModeFlags::HasPerLedColor)
-		addFlag( "HAS_PER_LED_COLOR" );
+		addFlag( "HasPerLedColor" );
 	if (flags & ModeFlags::HasModeSpecificColor)
-		addFlag( "HAS_MODE_SPECIFIC_COLOR" );
+		addFlag( "HasModeSpecificColor" );
 	if (flags & ModeFlags::HasRandomColor)
-		addFlag( "HAS_RANDOM_COLOR" );
+		addFlag( "HasRandomColor" );
 
 	return oss.str();
 }
@@ -209,12 +209,12 @@ const char * toString( Direction dir )
 {
 	static const char * const deviceTypeStr [] =
 	{
-		"LEFT",
-		"RIGHT",
-		"UP",
-		"DOWN",
-		"HORIZONTAL",
-		"VERTICAL",
+		"Left",
+		"Right",
+		"Up",
+		"Down",
+		"Horizontal",
+		"Vertical",
 	};
 
 	if (uint( dir ) <= uint( Direction::Vertical ))
@@ -227,10 +227,10 @@ const char * toString( ColorMode mode )
 {
 	static const char * const colorModeStr [] =
 	{
-		"NONE",
-		"PER_LED",
-		"MODE_SPECIFIC",
-		"RANDOM",
+		"None",
+		"PerLed",
+		"ModeSpecific",
+		"Random",
 	};
 
 	if (uint( mode ) <= uint( ColorMode::Random ) )
@@ -243,9 +243,9 @@ const char * toString( ZoneType type )
 {
 	static const char * const zoneTypeStr [] =
 	{
-		"SINGLE",
-		"LINEAR",
-		"MATRIX",
+		"Single",
+		"Linear",
+		"Matrix",
 	};
 
 	if (uint( type ) <= uint( ZoneType::Matrix ))

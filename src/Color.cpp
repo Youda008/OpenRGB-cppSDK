@@ -22,14 +22,14 @@ namespace orgb {
 //======================================================================================================================
 //  Color
 
-const Color Color::BLACK   (0x00, 0x00, 0x00);
-const Color Color::WHITE   (0xFF, 0xFF, 0xFF);
-const Color Color::RED     (0xFF, 0x00, 0x00);
-const Color Color::GREEN   (0x00, 0xFF, 0x00);
-const Color Color::BLUE    (0x00, 0x00, 0xFF);
-const Color Color::YELLOW  (0xFF, 0xFF, 0x00);
-const Color Color::MAGENTA (0xFF, 0x00, 0xFF);
-const Color Color::CYAN    (0x00, 0xFF, 0xFF);
+const Color Color::Black   (0x00, 0x00, 0x00);
+const Color Color::White   (0xFF, 0xFF, 0xFF);
+const Color Color::Red     (0xFF, 0x00, 0x00);
+const Color Color::Green   (0x00, 0xFF, 0x00);
+const Color Color::Blue    (0x00, 0x00, 0xFF);
+const Color Color::Yellow  (0xFF, 0xFF, 0x00);
+const Color Color::Magenta (0xFF, 0x00, 0xFF);
+const Color Color::Cyan    (0x00, 0xFF, 0xFF);
 
 void Color::serialize( BufferOutputStream & stream ) const
 {
@@ -45,7 +45,7 @@ bool Color::deserialize( BufferInputStream & stream )
 	return !stream.hasFailed();
 }
 
-void print( const Color & color, unsigned int indentLevel )
+void print( const Color & color, unsigned int /*indentLevel*/ )
 {
 	printf( "%02X%02X%02X", color.r, color.g, color.b );
 }

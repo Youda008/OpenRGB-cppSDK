@@ -37,14 +37,14 @@ class Color
 	Color( uint8_t red, uint8_t green, uint8_t blue ) : r( red ), g( green ), b( blue ) {}
 	~Color() {}
 
-	static const Color BLACK;
-	static const Color WHITE;
-	static const Color RED;
-	static const Color GREEN;
-	static const Color BLUE;
-	static const Color YELLOW;
-	static const Color MAGENTA;
-	static const Color CYAN;
+	static const Color Black;
+	static const Color White;
+	static const Color Red;
+	static const Color Green;
+	static const Color Blue;
+	static const Color Yellow;
+	static const Color Magenta;
+	static const Color Cyan;
 
 	/** this is here only for the templates in Client implementation */
 	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
