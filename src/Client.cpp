@@ -54,11 +54,11 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	{
 		switch (result1)
 		{
-			case SocketError::AlreadyConnected:        return ConnectStatus::AlreadyConnected;
-			case SocketError::NetworkingInitFailed:   return ConnectStatus::NetworkingInitFailed;
-			case SocketError::HostNotResolved:        return ConnectStatus::HostNotResolved;
-			case SocketError::ConnectFailed:           return ConnectStatus::ConnectFailed;
-			default:                                    return ConnectStatus::OtherError;
+			case SocketError::AlreadyConnected:      return ConnectStatus::AlreadyConnected;
+			case SocketError::NetworkingInitFailed:  return ConnectStatus::NetworkingInitFailed;
+			case SocketError::HostNotResolved:       return ConnectStatus::HostNotResolved;
+			case SocketError::ConnectFailed:         return ConnectStatus::ConnectFailed;
+			default:                                 return ConnectStatus::OtherError;
 		}
 	}
 
@@ -360,36 +360,38 @@ bool Client::sendMessage( ConstructorArgs ... args )
 {
 	Message message( args ... );
 
-	BufferOutputStream stream;
-	stream.reserveAdditional( message.header.size() + message.header.message_size );
+	// allocate buffer and serialize (header.message_size is calculated in constructor)
+	std::vector< uint8_t > buffer( message.header.size() + message.header.message_size );
+	BufferOutputStream stream( buffer );
 	message.serialize( stream );
 
-	return _socket->send( stream.buffer() ) == SocketError::Success;
+	return _socket->send( buffer ) == SocketError::Success;
 }
 
 template< typename Message >
 Client::RecvResult< Message > Client::awaitMessage()
 {
 	RecvResult< Message > result;
-	vector< uint8_t > buffer;
 
 	do
 	{
 		// receive header into buffer
-		SocketError headerStatus = _socket->receive( buffer, Header::size() );
+		array< uint8_t, Header::size() > headerBuffer; size_t received;
+		SocketError headerStatus = _socket->receive( headerBuffer, received );
 		if (headerStatus != SocketError::Success)
 		{
-			switch (headerStatus)
-			{
-				case SocketError::ConnectionClosed:  result.status = RequestStatus::ConnectionClosed;  break;
-				case SocketError::Timeout:            result.status = RequestStatus::NoReply;           break;
-				default:                              result.status = RequestStatus::ReceiveError;      break;
+			if (headerStatus == SocketError::ConnectionClosed) {
+				result.status = RequestStatus::ConnectionClosed;
+			} else if (headerStatus == SocketError::Timeout) {
+				result.status = RequestStatus::NoReply;
+			} else {
+				result.status = RequestStatus::ReceiveError;
 			}
 			return result;
 		}
 
 		// parse and validate the header
-		BufferInputStream stream( move( buffer ) );
+		BufferInputStream stream( headerBuffer );
 		if (!result.message.header.deserialize( stream ))
 		{
 			result.status = RequestStatus::InvalidReply;
@@ -413,20 +415,22 @@ Client::RecvResult< Message > Client::awaitMessage()
 	}
 
 	// receive the message body
-	SocketError bodyStatus = _socket->receive( buffer, result.message.header.message_size );
+	vector< uint8_t > bodyBuffer;
+	SocketError bodyStatus = _socket->receive( bodyBuffer, result.message.header.message_size );
 	if (bodyStatus != SocketError::Success)
 	{
-		switch (bodyStatus)
-		{
-			case SocketError::ConnectionClosed:  result.status = RequestStatus::ConnectionClosed;  break;
-			case SocketError::Timeout:            result.status = RequestStatus::NoReply;           break;
-			default:                              result.status = RequestStatus::ReceiveError;      break;
+		if (bodyStatus == SocketError::ConnectionClosed) {
+			result.status = RequestStatus::ConnectionClosed;
+		} if (bodyStatus == SocketError::Timeout) {
+			result.status = RequestStatus::NoReply;
+		} else {
+			result.status = RequestStatus::ReceiveError;
 		}
 		return result;
 	}
 
 	// parse and validate the body
-	BufferInputStream stream( move( buffer ) );
+	BufferInputStream stream( bodyBuffer );
 	if (!result.message.deserializeBody( stream ))
 	{
 		result.status = RequestStatus::InvalidReply;

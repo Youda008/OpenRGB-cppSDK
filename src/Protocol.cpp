@@ -12,6 +12,7 @@
 #include "BufferStream.hpp"
 using own::BufferOutputStream;
 using own::BufferInputStream;
+MAKE_LITTLE_ENDIAN_DEFAULT
 
 #include <cstring>  // strncmp
 #include <string>
@@ -19,7 +20,7 @@ using std::string;
 #include <vector>
 using std::vector;
 #include <sstream>
-using std::ostringstream;
+using std::ostringstream;  // flags to string
 
 
 namespace orgb {
@@ -35,15 +36,14 @@ static size_t sizeofORGBString( const string & str )
 
 static void writeORGBString( BufferOutputStream & stream, const string & str )
 {
-	stream.reserveAdditional( 2 + str.size() + 1 );
-	stream.writeIntLE( uint16_t(str.size()) );
+	stream << uint16_t(str.size());
 	stream.writeString0( str );
 }
 
 static bool readORGBString( BufferInputStream & stream, string & str )
 {
 	uint16_t size = 0;
-	stream.readIntLE( size );
+	stream >> size;
 	stream.readString0( str );
 	return !stream.hasFailed() && str.size() == size;
 }
@@ -78,19 +78,17 @@ static size_t sizeofORGBArray( const vector< Type > & vec )
 template< typename Type, typename std::enable_if< std::is_integral<Type>::value, int >::type = 0 >
 static void writeORGBArray( BufferOutputStream & stream, const vector< Type > vec )
 {
-	stream.reserveAdditional( 2 + vec.size() * sizeof(Type) );
-	stream.writeIntLE( uint16_t(vec.size()) );
+	stream << uint16_t(vec.size());
 	for (const Type & elem : vec)
 	{
-		stream.writeIntLE( elem );
+		stream << elem;
 	}
 }
 
 template< typename Type, typename std::enable_if< !std::is_integral<Type>::value, int >::type = 0 >
 static void writeORGBArray( BufferOutputStream & stream, const vector< Type > vec )
 {
-	stream.reserveAdditional( 2 + vec.size() * sizeof(Type) );
-	stream.writeIntLE( uint16_t(vec.size()) );
+	stream << uint16_t(vec.size());
 	for (const Type & elem : vec)
 	{
 		elem.serialize( stream );
@@ -101,11 +99,11 @@ template< typename Type, typename std::enable_if< std::is_integral<Type>::value,
 static bool readORGBArray( BufferInputStream & stream, vector< Type > & vec )
 {
 	uint16_t size = 0;
-	stream.readIntLE( size );
+	stream >> size;
 	vec.resize( size );
 	for (uint16_t i = 0; i < size; ++i)
 	{
-		stream.readIntLE( vec[i] );
+		stream >> vec[i];
 	}
 	return !stream.hasFailed();
 }
@@ -114,7 +112,7 @@ template< typename Type, typename std::enable_if< !std::is_integral<Type>::value
 static bool readORGBArray( BufferInputStream & stream, vector< Type > & vec )
 {
 	uint16_t size = 0;
-	stream.readIntLE( size );
+	stream >> size;
 	vec.resize( size );
 	for (uint16_t i = 0; i < size; ++i)
 	{
@@ -332,17 +330,17 @@ static bool isValidZoneType( ZoneType type )
 void Header::serialize( BufferOutputStream & stream ) const
 {
 	stream << magic[0] << magic[1] << magic[2] << magic[3];
-	stream.writeIntLE( device_idx );
-	stream.writeEnumLE( message_type );
-	stream.writeIntLE( message_size );
+	stream << device_idx;
+	stream << message_type;
+	stream << message_size;
 }
 
 bool Header::deserialize( BufferInputStream & stream )
 {
 	stream >> magic[0] >> magic[1] >> magic[2] >> magic[3];
-	stream.readIntLE( device_idx );
-	stream.readEnumLE( message_type );
-	stream.readIntLE( message_size );
+	stream >> device_idx;
+	stream >> message_type;
+	stream >> message_size;
 
 	if (strncmp( magic, "ORGB", sizeof(magic) ) != 0)
 		stream.setFailed();
@@ -374,30 +372,30 @@ size_t ModeDescription::calcSize() const
 void ModeDescription::serialize( BufferOutputStream & stream ) const
 {
 	writeORGBString( stream, name );
-	stream.writeIntLE( value );
-	stream.writeIntLE( flags );
-	stream.writeIntLE( speed_min );
-	stream.writeIntLE( speed_max );
-	stream.writeIntLE( colors_min );
-	stream.writeIntLE( colors_max );
-	stream.writeIntLE( speed );
-	stream.writeEnumLE( direction );
-	stream.writeEnumLE( color_mode );
+	stream << value;
+	stream << flags;
+	stream << speed_min;
+	stream << speed_max;
+	stream << colors_min;
+	stream << colors_max;
+	stream << speed;
+	stream << direction;
+	stream << color_mode;
 	writeORGBArray( stream, colors );
 }
 
 bool ModeDescription::deserialize( BufferInputStream & stream )
 {
 	readORGBString( stream, name );
-	stream.readIntLE( value );
-	stream.readIntLE( flags );
-	stream.readIntLE( speed_min );
-	stream.readIntLE( speed_max );
-	stream.readIntLE( colors_min );
-	stream.readIntLE( colors_max );
-	stream.readIntLE( speed );
-	stream.readEnumLE( direction );
-	stream.readEnumLE( color_mode );
+	stream >> value;
+	stream >> flags;
+	stream >> speed_min;
+	stream >> speed_max;
+	stream >> colors_min;
+	stream >> colors_max;
+	stream >> speed;
+	stream >> direction;
+	stream >> color_mode;
 	readORGBArray( stream, colors );
 
 	if (!isValidDirection( direction, flags ))
@@ -430,18 +428,18 @@ size_t ZoneDescription::calcSize() const
 void ZoneDescription::serialize( BufferOutputStream & stream ) const
 {
 	writeORGBString( stream, name );
-	stream.writeEnumLE( type );
-	stream.writeIntLE( leds_min );
-	stream.writeIntLE( leds_max );
-	stream.writeIntLE( leds_count );
-	stream.writeIntLE( matrix_length );
+	stream << type;
+	stream << leds_min;
+	stream << leds_max;
+	stream << leds_count;
+	stream << matrix_length;
 	if (matrix_length > 0)
 	{
-		stream.writeIntLE( matrix_height );
-		stream.writeIntLE( matrix_width );
+		stream << matrix_height;
+		stream << matrix_width;
 		for (auto val : matrix_values)
 		{
-			stream.writeIntLE( val );
+			stream << val;
 		}
 	}
 }
@@ -449,20 +447,20 @@ void ZoneDescription::serialize( BufferOutputStream & stream ) const
 bool ZoneDescription::deserialize( BufferInputStream & stream)
 {
 	readORGBString( stream, name );
-	stream.readEnumLE( type );
-	stream.readIntLE( leds_min );
-	stream.readIntLE( leds_max );
-	stream.readIntLE( leds_count );
-	stream.readIntLE( matrix_length );
+	stream >> type;
+	stream >> leds_min;
+	stream >> leds_max;
+	stream >> leds_count;
+	stream >> matrix_length;
 	if (matrix_length > 0)
 	{
-		stream.readIntLE( matrix_height );
-		stream.readIntLE( matrix_width );
+		stream >> matrix_height;
+		stream >> matrix_width;
 		size_t matrixSize = matrix_height * matrix_width;
 		matrix_values.resize( matrixSize );
 		for (size_t i = 0; i < matrixSize; ++i)
 		{
-			stream.readIntLE( matrix_values[i] );
+			stream >> matrix_values[i];
 		}
 	}
 
@@ -483,13 +481,13 @@ size_t LEDDescription::calcSize() const
 void LEDDescription::serialize( BufferOutputStream & stream ) const
 {
 	writeORGBString( stream, name );
-	stream.writeIntLE( value );
+	stream << value;
 }
 
 bool LEDDescription::deserialize( BufferInputStream & stream )
 {
 	readORGBString( stream, name );
-	stream.readIntLE( value );
+	stream >> value;
 
 	return !stream.hasFailed();
 }
@@ -511,14 +509,14 @@ size_t DeviceDescription::calcSize() const
 
 void DeviceDescription::serialize( BufferOutputStream & stream ) const
 {
-	stream.writeEnumLE( device_type );
+	stream << device_type;
 	writeORGBString( stream, name );
 	writeORGBString( stream, description );
 	writeORGBString( stream, version );
 	writeORGBString( stream, serial );
 	writeORGBString( stream, location );
-	stream.writeIntLE( uint16_t( modes.size() ) );  // the size is not directly before the array, so it must be written manually
-	stream.writeIntLE( active_mode );
+	stream << uint16_t( modes.size() );  // the size is not directly before the array, so it must be written manually
+	stream << active_mode;
 	for (const ModeDescription & mode : modes)
 	{
 		mode.serialize( stream );
@@ -530,15 +528,15 @@ void DeviceDescription::serialize( BufferOutputStream & stream ) const
 
 bool DeviceDescription::deserialize( BufferInputStream & stream )
 {
-	stream.readEnumLE( device_type );
+	stream >> device_type;
 	readORGBString( stream, name );
 	readORGBString( stream, description );
 	readORGBString( stream, version );
 	readORGBString( stream, serial );
 	readORGBString( stream, location );
 	uint16_t num_modes;
-	stream.readIntLE( num_modes );  // the size is not directly before the array, so it must be read manually
-	stream.readIntLE( active_mode );
+	stream >> num_modes;  // the size is not directly before the array, so it must be read manually
+	stream >> active_mode;
 	modes.resize( num_modes );
 	for (size_t i = 0; i < num_modes; ++i)
 	{
@@ -588,14 +586,14 @@ void ReplyControllerCount::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( count );
+	stream << count;
 }
 
 bool ReplyControllerCount::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( count );
+	stream >> count;
 
 	return !stream.hasFailed();
 }
@@ -633,7 +631,7 @@ void ReplyControllerData::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( data_size );
+	stream << data_size;
 	device_desc.serialize( stream );
 }
 
@@ -641,7 +639,7 @@ bool ReplyControllerData::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( data_size );
+	stream >> data_size;
 	device_desc.deserialize( stream );
 
 	return !stream.hasFailed();
@@ -707,16 +705,16 @@ void ResizeZone::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( zone_idx );
-	stream.writeIntLE( new_size );
+	stream << zone_idx;
+	stream << new_size;
 }
 
 bool ResizeZone::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( zone_idx );
-	stream.readIntLE( new_size );
+	stream >> zone_idx;
+	stream >> new_size;
 
 	return !stream.hasFailed();
 }
@@ -735,7 +733,7 @@ void UpdateLEDs::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( data_size );
+	stream << data_size;
 	writeORGBArray( stream, colors );
 }
 
@@ -743,7 +741,7 @@ bool UpdateLEDs::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( data_size );
+	stream >> data_size;
 	readORGBArray( stream, colors );
 
 	return !stream.hasFailed();
@@ -764,8 +762,8 @@ void UpdateZoneLEDs::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( data_size );
-	stream.writeIntLE( zone_idx );
+	stream << data_size;
+	stream << zone_idx;
 	writeORGBArray( stream, colors );
 }
 
@@ -773,8 +771,8 @@ bool UpdateZoneLEDs::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( data_size );
-	stream.readIntLE( zone_idx );
+	stream >> data_size;
+	stream >> zone_idx;
 	readORGBArray( stream, colors );
 
 	return !stream.hasFailed();
@@ -794,7 +792,7 @@ void UpdateSingleLED::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( led_idx );
+	stream << led_idx;
 	color.serialize( stream );
 }
 
@@ -802,7 +800,7 @@ bool UpdateSingleLED::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( led_idx );
+	stream >> led_idx;
 	color.deserialize( stream );
 
 	return !stream.hasFailed();
@@ -842,8 +840,8 @@ void UpdateMode::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	stream.writeIntLE( data_size );
-	stream.writeIntLE( mode_idx );
+	stream << data_size;
+	stream << mode_idx;
 	mode_desc.serialize( stream );
 }
 
@@ -851,8 +849,8 @@ bool UpdateMode::deserializeBody( BufferInputStream & stream )
 {
 	// don't read the header, the header will be read in advance in order to recognize message type
 
-	stream.readIntLE( data_size );
-	stream.readIntLE( mode_idx );
+	stream >> data_size;
+	stream >> mode_idx;
 	mode_desc.deserialize( stream );
 
 	return !stream.hasFailed();
