@@ -15,14 +15,14 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	orgb::Client client( "My OpenRGB Client" );
 
 	ConnectStatus status = client.connect( "127.0.0.1" );
-	if (status != ConnectStatus::SUCCESS)
+	if (status != ConnectStatus::Success)
 	{
 		fprintf( stderr, "failed to connect\n" );
 		return 1;
 	}
 
 	DeviceListResult result = client.requestDeviceList();
-	if (result.status != RequestStatus::SUCCESS)
+	if (result.status != RequestStatus::Success)
 	{
 		fprintf( stderr, "failed to get device list\n" );
 		return 2;

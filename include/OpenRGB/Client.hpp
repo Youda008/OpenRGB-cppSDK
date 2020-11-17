@@ -38,36 +38,36 @@ namespace orgb {
 /** All the possible ways how the connect operation can end up. */
 enum class ConnectStatus
 {
-	SUCCESS,                 ///< The operation was successful.
-	NETWORKING_INIT_FAILED,  ///< Operation failed because underlying networking system could not be initialized. Call getLastSystemError() for more info.
-	ALREADY_CONNECTED,       ///< Connect operation failed because the socket is already connected. Call disconnect() first.
-	HOST_NOT_RESOLVED,       ///< The hostname you entered could not be resolved to IP address. Call getLastSystemError() for more info.
-	CONNECT_FAILED,          ///< Could not connect to the target server, either it's down or the port is closed. Call getLastSystemError() for more info.
-	SEND_NAME_FAILED,        ///< Failed to send the client name to the server. Call getLastSystemError() for more info.
-	OTHER_ERROR              ///< Other system error. Call getLastSystemError() for more info.
+	Success,               ///< The operation was successful.
+	NetworkingInitFailed,  ///< Operation failed because underlying networking system could not be initialized. Call getLastSystemError() for more info.
+	AlreadyConnected,      ///< Connect operation failed because the socket is already connected. Call disconnect() first.
+	HostNotResolved,       ///< The hostname you entered could not be resolved to IP address. Call getLastSystemError() for more info.
+	ConnectFailed,         ///< Could not connect to the target server, either it's down or the port is closed. Call getLastSystemError() for more info.
+	SendNameFailed,        ///< Failed to send the client name to the server. Call getLastSystemError() for more info.
+	OtherError             ///< Other system error. Call getLastSystemError() for more info.
 };
 
 /** All the possible ways how a request can end up. */
 enum class RequestStatus
 {
-	SUCCESS,                 ///< The request was succesful.
-	NOT_CONNECTED,           ///< Request failed because the client is not connected. Call connect(...) first.
-	SEND_REQUEST_FAILED,     ///< Failed to send the request message.
-	CONNECTION_CLOSED,       ///< Server has closed the connection.
-	NO_REPLY,                ///< No reply has arrived from the server in given timeout. In case this happens too often, you may try to increase the timeout.
-	RECEIVE_ERROR,           ///< There has been some other error while trying to receive a reply. Call getLastSystemError() for more info.
-	INVALID_REPLY            ///< The reply from the server is invalid.
+	Success,               ///< The request was succesful.
+	NotConnected,          ///< Request failed because the client is not connected. Call connect(...) first.
+	SendRequestFailed,     ///< Failed to send the request message.
+	ConnectionClosed,      ///< Server has closed the connection.
+	NoReply,               ///< No reply has arrived from the server in given timeout. In case this happens too often, you may try to increase the timeout.
+	ReceiveError,          ///< There has been some other error while trying to receive a reply. Call getLastSystemError() for more info.
+	InvalidReply           ///< The reply from the server is invalid.
 };
 
 /** All the possible results of a check whether the locally stored device list is out of date */
 enum class UpdateStatus
 {
-	UP_TO_DATE,              ///< The current device list seems up to date.
-	OUT_OF_DATE,             ///< Server has sent a notification message indicating that the device list has changed. Call requestDeviceList() again.
-	CONNECTION_CLOSED,       ///< Server has closed the connection.
-	UNEXPECTED_MESSAGE,      ///< Server has sent some other kind of message that we didn't expect.
-	CANT_RESTORE_SOCKET,     ///< Error has occured while trying to restore socket to its original state and the socket has been closed. Call getLastSystemError() for more info. This should never happen, but one never knows.
-	OTHER_ERROR              ///< Other system error. Call getLastSystemError() for more info.
+	UpToDate,              ///< The current device list seems up to date.
+	OutOfDate,             ///< Server has sent a notification message indicating that the device list has changed. Call requestDeviceList() again.
+	ConnectionClosed,      ///< Server has closed the connection.
+	UnexpectedMessage,     ///< Server has sent some other kind of message that we didn't expect.
+	CantRestoreSocket,     ///< Error has occured while trying to restore socket to its original state and the socket has been closed. Call getLastSystemError() for more info. This should never happen, but one never knows.
+	OtherError             ///< Other system error. Call getLastSystemError() for more info.
 };
 
 /** Result and output of a device list request */

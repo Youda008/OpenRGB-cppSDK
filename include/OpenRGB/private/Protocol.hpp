@@ -73,63 +73,63 @@ struct Header
 /** Type of device with RGB LEDs */
 enum class DeviceType : uint32_t
 {
-	MOTHERBOARD   = 0,
+	Motherboard   = 0,
 	DRAM          = 1,
 	GPU           = 2,
-	COOLER        = 3,
-	LEDSTRIP      = 4,
-	KEYBOARD      = 5,
-	MOUSE         = 6,
-	MOUSEMAT      = 7,
-	HEADSET       = 8,
-	HEADSET_STAND = 9,
-	GAMEPAD       = 10,
-	UNKNOWN       = 11,
+	Cooler        = 3,
+	LedStrip      = 4,
+	Keyboard      = 5,
+	Mouse         = 6,
+	MouseMat      = 7,
+	Headset       = 8,
+	HeadsetStand  = 9,
+	Gamepad       = 10,
+	Unknown       = 11,
 };
 const char * toString( DeviceType );
 
 /** Which features the mode supports */
 enum ModeFlags : uint32_t
 {
-	HAS_SPEED                = (1 << 0),  // the speed attribute in ModeDescription is present
-	HAS_DIRECTION_LR         = (1 << 1),  // the direction attribute in ModeDescription can have LEFT or RIGHT values
-	HAS_DIRECTION_UD         = (1 << 2),  // the direction attribute in ModeDescription can have UP or DOWN values
-	HAS_DIRECTION_HV         = (1 << 3),  // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
-	HAS_BRIGHTNESS           = (1 << 4),  // the brightness attribute in ModeDescription is present
-	HAS_PER_LED_COLOR        = (1 << 5),  // the color_mode attribute in ModeDescription can be set to PER_LED
-	HAS_MODE_SPECIFIC_COLOR  = (1 << 6),  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
-	HAS_RANDOM_COLOR         = (1 << 7),  // the color_mode attribute in ModeDescription can be set to RANDOM
+	HasSpeed              = (1 << 0),  // the speed attribute in ModeDescription is present
+	HasDirectionLR        = (1 << 1),  // the direction attribute in ModeDescription can have LEFT or RIGHT values
+	HasDirectionUD        = (1 << 2),  // the direction attribute in ModeDescription can have UP or DOWN values
+	HasDirectionHV        = (1 << 3),  // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
+	HasBrightness         = (1 << 4),  // the brightness attribute in ModeDescription is present
+	HasPerLedColor        = (1 << 5),  // the color_mode attribute in ModeDescription can be set to PER_LED
+	HasModeSpecificColor  = (1 << 6),  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
+	HasRandomColor        = (1 << 7),  // the color_mode attribute in ModeDescription can be set to RANDOM
 };
 std::string modeFlagsToString( uint32_t flags );
 
 /** Direction of the color effect */
 enum class Direction : uint32_t
 {
-	LEFT        = 0,
-	RIGHT       = 1,
-	UP          = 2,
-	DOWN        = 3,
-	HORIZONTAL  = 4,
-	VERTICAL    = 5
+	Left        = 0,
+	Right       = 1,
+	Up          = 2,
+	Down        = 3,
+	Horizontal  = 4,
+	Vertical    = 5
 };
 const char * toString( Direction );
 
 /** How the colors of a mode are set */
 enum class ColorMode : uint32_t
 {
-	NONE           = 0,  // mode has no colors
-	PER_LED        = 1,  // mode has per LED colors
-	MODE_SPECIFIC  = 2,  // mode specific colors
-	RANDOM         = 3   // mode has random colors
+	None          = 0,  // mode has no colors
+	PerLed        = 1,  // mode has per LED colors
+	ModeSpecific  = 2,  // mode specific colors
+	Random        = 3   // mode has random colors
 };
 const char * toString( ColorMode );
 
 /** Type of RGB zone */
 enum class ZoneType : uint32_t
 {
-	SINGLE  = 0,
-	LINEAR  = 1,
-	MATRIX  = 2
+	Single  = 0,
+	Linear  = 1,
+	Matrix  = 2
 };
 const char * toString( ZoneType );
 

@@ -50,15 +50,15 @@ Client::~Client() {}
 ConnectStatus Client::connect( const string & host, uint16_t port )
 {
 	SocketError result1 = _socket->connect( host, port );
-	if (result1 != SocketError::SUCCESS)
+	if (result1 != SocketError::Success)
 	{
 		switch (result1)
 		{
-			case SocketError::ALREADY_CONNECTED:        return ConnectStatus::ALREADY_CONNECTED;
-			case SocketError::NETWORKING_INIT_FAILED:   return ConnectStatus::NETWORKING_INIT_FAILED;
-			case SocketError::HOST_NOT_RESOLVED:        return ConnectStatus::HOST_NOT_RESOLVED;
-			case SocketError::CONNECT_FAILED:           return ConnectStatus::CONNECT_FAILED;
-			default:                                    return ConnectStatus::OTHER_ERROR;
+			case SocketError::AlreadyConnected:        return ConnectStatus::AlreadyConnected;
+			case SocketError::NetworkingInitFailed:   return ConnectStatus::NetworkingInitFailed;
+			case SocketError::HostNotResolved:        return ConnectStatus::HostNotResolved;
+			case SocketError::ConnectFailed:           return ConnectStatus::ConnectFailed;
+			default:                                    return ConnectStatus::OtherError;
 		}
 	}
 
@@ -69,7 +69,7 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	if (!result2)
 	{
 		_socket->disconnect();  // let's be consistent, all other errors mean the connection was not opened
-		return ConnectStatus::SEND_NAME_FAILED;
+		return ConnectStatus::SendNameFailed;
 	}
 
 	// The list isn't trully out of date, because there isn't any list yet. But let's say it is, because
@@ -87,7 +87,7 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	// }
 	_isDeviceListOutOfDate = true;
 
-	return ConnectStatus::SUCCESS;
+	return ConnectStatus::Success;
 }
 
 void Client::disconnect()
@@ -116,7 +116,7 @@ DeviceListResult Client::requestDeviceList()
 {
 	if (!_socket->isConnected())
 	{
-		return { RequestStatus::NOT_CONNECTED, {} };
+		return { RequestStatus::NotConnected, {} };
 	}
 
 	DeviceListResult result;
@@ -129,12 +129,12 @@ DeviceListResult Client::requestDeviceList()
 		bool sent = sendMessage< RequestControllerCount >();
 		if (!sent)
 		{
-			result.status = RequestStatus::SEND_REQUEST_FAILED;
+			result.status = RequestStatus::SendRequestFailed;
 			return result;
 		}
 
 		auto deviceCountResult = awaitMessage< ReplyControllerCount >();
-		if (deviceCountResult.status != RequestStatus::SUCCESS)
+		if (deviceCountResult.status != RequestStatus::Success)
 		{
 			result.status = deviceCountResult.status;
 			return result;
@@ -145,12 +145,12 @@ DeviceListResult Client::requestDeviceList()
 			sent = sendMessage< RequestControllerData >( deviceIdx );
 			if (!sent)
 			{
-				result.status = RequestStatus::SEND_REQUEST_FAILED;
+				result.status = RequestStatus::SendRequestFailed;
 				return result;
 			}
 
 			auto deviceDataResult = awaitMessage< ReplyControllerData >();
-			if (deviceDataResult.status != RequestStatus::SUCCESS)
+			if (deviceDataResult.status != RequestStatus::Success)
 			{
 				result.status = deviceDataResult.status;
 				return result;
@@ -162,7 +162,7 @@ DeviceListResult Client::requestDeviceList()
 	// In the middle of the update we might receive DeviceListUpdated message. In that case we need to start again.
 	while (_isDeviceListOutOfDate);
 
-	result.status = RequestStatus::SUCCESS;
+	result.status = RequestStatus::Success;
 	return result;
 }
 
@@ -185,77 +185,77 @@ RequestStatus Client::switchToDirectMode( const Device & device )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
 	if (!sendMessage< SetCustomMode >( device.id ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
+	return RequestStatus::Success;
 }
 
 RequestStatus Client::setDeviceColor( const Device & device, Color color )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
 	std::vector< Color > allColorsInDevice( device.leds.size(), color );
 	if (!sendMessage< UpdateLEDs >( device.id, allColorsInDevice ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
+	return RequestStatus::Success;
 }
 
 RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
 	std::vector< Color > allColorsInZone( zone.numLeds, color );
 	if (!sendMessage< UpdateZoneLEDs >( zone.parent.id, zone.id, allColorsInZone ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
+	return RequestStatus::Success;
 }
 
 RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
 	if (!sendMessage< ResizeZone >( zone.parent.id, zone.id, newSize ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
+	return RequestStatus::Success;
 }
 
 RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
 	if (!sendMessage< UpdateSingleLED >( led.parent.id, led.id, color ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
+	return RequestStatus::Success;
 }
 
 UpdateStatus Client::checkForDeviceUpdates()
@@ -264,12 +264,12 @@ UpdateStatus Client::checkForDeviceUpdates()
 	{
 		// Last time we found DeviceListUpdated message in the socket, and user haven't requested the new list yet,
 		// no need to look again, keep reporting "out of date" until he calls requestDeviceList().
-		return UpdateStatus::OUT_OF_DATE;
+		return UpdateStatus::OutOfDate;
 	}
 
 	// Last time we checked there wasn't any DeviceListUpdated message, but it already might be now, so let's check.
 	UpdateStatus status = hasUpdateMessageArrived();
-	if (status == UpdateStatus::OUT_OF_DATE)
+	if (status == UpdateStatus::OutOfDate)
 	{
 		// DeviceListUpdated message found, cache this discovery until user calls requestDeviceList().
 		_isDeviceListOutOfDate = true;
@@ -285,7 +285,7 @@ UpdateStatus Client::hasUpdateMessageArrived()
 
 	if (!_socket->setBlockingMode( false ))
 	{
-		return UpdateStatus::OTHER_ERROR;
+		return UpdateStatus::OtherError;
 	}
 
 	auto enableBlockingAndReturn = [ this ]( UpdateStatus returnStatus )
@@ -295,7 +295,7 @@ UpdateStatus Client::hasUpdateMessageArrived()
 			// This is bad, we changed the state of the socket and now we're unable to return it back.
 			// So rather burn everything to the ground and start from the beginning, than let things be in undefined state.
 			disconnect();
-			return UpdateStatus::CANT_RESTORE_SOCKET;
+			return UpdateStatus::CantRestoreSocket;
 		}
 		else
 		{
@@ -305,18 +305,18 @@ UpdateStatus Client::hasUpdateMessageArrived()
 
 	vector< uint8_t > buffer;
 	SocketError status = _socket->receive( buffer, Header::size() );
-	if (status == SocketError::WOULD_BLOCK)
+	if (status == SocketError::WouldBlock)
 	{
 		// No message is currently in the socket, no indication that the device list is out of date.
-		return enableBlockingAndReturn( UpdateStatus::UP_TO_DATE );
+		return enableBlockingAndReturn( UpdateStatus::UpToDate );
 	}
-	else if (status == SocketError::CONNECTION_CLOSED)
+	else if (status == SocketError::ConnectionClosed)
 	{
-		return enableBlockingAndReturn( UpdateStatus::CONNECTION_CLOSED );
+		return enableBlockingAndReturn( UpdateStatus::ConnectionClosed );
 	}
-	else if (status != SocketError::SUCCESS)
+	else if (status != SocketError::Success)
 	{
-		return enableBlockingAndReturn( UpdateStatus::OTHER_ERROR );
+		return enableBlockingAndReturn( UpdateStatus::OtherError );
 	}
 
 	// We have some message, so let's check what it is.
@@ -326,13 +326,13 @@ UpdateStatus Client::hasUpdateMessageArrived()
 	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
 	{
 		// We received something, but something totally different than what we expected.
-		return enableBlockingAndReturn( UpdateStatus::UNEXPECTED_MESSAGE );
+		return enableBlockingAndReturn( UpdateStatus::UnexpectedMessage );
 	}
 	else
 	{
 		// We have received a DeviceListUpdated message from the server,
 		// signal to the user that he needs to request the list again.
-		return enableBlockingAndReturn( UpdateStatus::OUT_OF_DATE );
+		return enableBlockingAndReturn( UpdateStatus::OutOfDate );
 	}
 }
 
@@ -364,7 +364,7 @@ bool Client::sendMessage( ConstructorArgs ... args )
 	stream.reserveAdditional( message.header.size() + message.header.message_size );
 	message.serialize( stream );
 
-	return _socket->send( stream.buffer() ) == SocketError::SUCCESS;
+	return _socket->send( stream.buffer() ) == SocketError::Success;
 }
 
 template< typename Message >
@@ -377,13 +377,13 @@ Client::RecvResult< Message > Client::awaitMessage()
 	{
 		// receive header into buffer
 		SocketError headerStatus = _socket->receive( buffer, Header::size() );
-		if (headerStatus != SocketError::SUCCESS)
+		if (headerStatus != SocketError::Success)
 		{
 			switch (headerStatus)
 			{
-				case SocketError::CONNECTION_CLOSED:  result.status = RequestStatus::CONNECTION_CLOSED;  break;
-				case SocketError::TIMEOUT:            result.status = RequestStatus::NO_REPLY;           break;
-				default:                              result.status = RequestStatus::RECEIVE_ERROR;      break;
+				case SocketError::ConnectionClosed:  result.status = RequestStatus::ConnectionClosed;  break;
+				case SocketError::Timeout:            result.status = RequestStatus::NoReply;           break;
+				default:                              result.status = RequestStatus::ReceiveError;      break;
 			}
 			return result;
 		}
@@ -392,7 +392,7 @@ Client::RecvResult< Message > Client::awaitMessage()
 		BufferInputStream stream( move( buffer ) );
 		if (!result.message.header.deserialize( stream ))
 		{
-			result.status = RequestStatus::INVALID_REPLY;
+			result.status = RequestStatus::InvalidReply;
 			return result;
 		}
 
@@ -408,19 +408,19 @@ Client::RecvResult< Message > Client::awaitMessage()
 	if (result.message.header.message_type != Message::thisType)
 	{
 		// the message is neither DeviceListUpdated, nor the type we expected
-		result.status = RequestStatus::INVALID_REPLY;
+		result.status = RequestStatus::InvalidReply;
 		return result;
 	}
 
 	// receive the message body
 	SocketError bodyStatus = _socket->receive( buffer, result.message.header.message_size );
-	if (bodyStatus != SocketError::SUCCESS)
+	if (bodyStatus != SocketError::Success)
 	{
 		switch (bodyStatus)
 		{
-			case SocketError::CONNECTION_CLOSED:  result.status = RequestStatus::CONNECTION_CLOSED;  break;
-			case SocketError::TIMEOUT:            result.status = RequestStatus::NO_REPLY;           break;
-			default:                              result.status = RequestStatus::RECEIVE_ERROR;      break;
+			case SocketError::ConnectionClosed:  result.status = RequestStatus::ConnectionClosed;  break;
+			case SocketError::Timeout:            result.status = RequestStatus::NoReply;           break;
+			default:                              result.status = RequestStatus::ReceiveError;      break;
 		}
 		return result;
 	}
@@ -429,11 +429,11 @@ Client::RecvResult< Message > Client::awaitMessage()
 	BufferInputStream stream( move( buffer ) );
 	if (!result.message.deserializeBody( stream ))
 	{
-		result.status = RequestStatus::INVALID_REPLY;
+		result.status = RequestStatus::InvalidReply;
 	}
 	else
 	{
-		result.status = RequestStatus::SUCCESS;
+		result.status = RequestStatus::Success;
 	}
 
 	return result;

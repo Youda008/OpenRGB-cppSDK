@@ -58,12 +58,12 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		{
 			printf( "trying to connect to %s\n", hostName );
 			ConnectStatus status = client.connect( hostName );
-			if (status == ConnectStatus::HOST_NOT_RESOLVED)
+			if (status == ConnectStatus::HostNotResolved)
 			{
 				printf( "host %s not found\n", hostName );
 				break;
 			}
-			else if (status != ConnectStatus::SUCCESS)
+			else if (status != ConnectStatus::Success)
 			{
 				printf( "connection failed\n" );
 				continue;
@@ -72,11 +72,11 @@ int main( int /*argc*/, char * /*argv*/ [] )
 
 		// update our local device list, if it has changed on the server
 		UpdateStatus updateStatus = client.checkForDeviceUpdates();
-		if (updateStatus == UpdateStatus::OUT_OF_DATE)
+		if (updateStatus == UpdateStatus::OutOfDate)
 		{
 			printf( "updating device list\n" );
 			DeviceListResult result = client.requestDeviceList();
-			if (result.status != RequestStatus::SUCCESS)
+			if (result.status != RequestStatus::Success)
 			{
 				printf( "failed to get device list\n" );
 				// reset everything and try again
@@ -85,7 +85,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			}
 			devices = std::move( result.devices );
 
-			cpuCooler = devices.find( DeviceType::COOLER );
+			cpuCooler = devices.find( DeviceType::Cooler );
 			if (!cpuCooler)
 			{
 				printf( "device CPU cooler not found.\n" );
@@ -94,7 +94,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 				continue;
 			}
 		}
-		else if (updateStatus != UpdateStatus::UP_TO_DATE)
+		else if (updateStatus != UpdateStatus::UpToDate)
 		{
 			// some error occured while trying to find if the device list is up to date
 			// reset everything and try again

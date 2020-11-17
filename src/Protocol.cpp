@@ -164,7 +164,7 @@ const char * toString( DeviceType type )
 		"UNKNOWN",
 	};
 
-	if (uint( type ) <= uint( DeviceType::UNKNOWN ))
+	if (uint( type ) <= uint( DeviceType::Unknown ))
 		return deviceTypeStr[ uint( type ) ];
 	else
 		return "<invalid>";
@@ -185,21 +185,21 @@ string modeFlagsToString( uint32_t flags )
 		oss << flagStr;
 	};
 
-	if (flags & ModeFlags::HAS_SPEED)
+	if (flags & ModeFlags::HasSpeed)
 		addFlag( "HAS_SPEED" );
-	if (flags & ModeFlags::HAS_DIRECTION_LR)
+	if (flags & ModeFlags::HasDirectionLR)
 		addFlag( "HAS_DIRECTION_LR" );
-	if (flags & ModeFlags::HAS_DIRECTION_UD)
+	if (flags & ModeFlags::HasDirectionUD)
 		addFlag( "HAS_DIRECTION_UD" );
-	if (flags & ModeFlags::HAS_DIRECTION_HV)
+	if (flags & ModeFlags::HasDirectionHV)
 		addFlag( "HAS_DIRECTION_HV" );
-	if (flags & ModeFlags::HAS_BRIGHTNESS)
+	if (flags & ModeFlags::HasBrightness)
 		addFlag( "HAS_BRIGHTNESS" );
-	if (flags & ModeFlags::HAS_PER_LED_COLOR)
+	if (flags & ModeFlags::HasPerLedColor)
 		addFlag( "HAS_PER_LED_COLOR" );
-	if (flags & ModeFlags::HAS_MODE_SPECIFIC_COLOR)
+	if (flags & ModeFlags::HasModeSpecificColor)
 		addFlag( "HAS_MODE_SPECIFIC_COLOR" );
-	if (flags & ModeFlags::HAS_RANDOM_COLOR)
+	if (flags & ModeFlags::HasRandomColor)
 		addFlag( "HAS_RANDOM_COLOR" );
 
 	return oss.str();
@@ -217,7 +217,7 @@ const char * toString( Direction dir )
 		"VERTICAL",
 	};
 
-	if (uint( dir ) <= uint( Direction::VERTICAL ))
+	if (uint( dir ) <= uint( Direction::Vertical ))
 		return deviceTypeStr[ uint( dir ) ];
 	else
 		return "<invalid>";
@@ -233,7 +233,7 @@ const char * toString( ColorMode mode )
 		"RANDOM",
 	};
 
-	if (uint( mode ) <= uint( ColorMode::RANDOM ) )
+	if (uint( mode ) <= uint( ColorMode::Random ) )
 		return colorModeStr[ uint( mode ) ];
 	else
 		return "<invalid>";
@@ -248,7 +248,7 @@ const char * toString( ZoneType type )
 		"MATRIX",
 	};
 
-	if (uint( type ) <= uint( ZoneType::MATRIX ))
+	if (uint( type ) <= uint( ZoneType::Matrix ))
 		return zoneTypeStr[ uint( type ) ];
 	else
 		return "<invalid>";
@@ -279,31 +279,31 @@ static bool isValidMessageType( MessageType type )
 static bool isValidDeviceType( DeviceType type )
 {
 	//using Int = std::underlying_type< DeviceType >::type;
-	return int( type ) >= int( DeviceType::MOTHERBOARD ) && int( type ) <= int( DeviceType::UNKNOWN );
+	return int( type ) >= int( DeviceType::Motherboard ) && int( type ) <= int( DeviceType::Unknown );
 }
 
 static bool isValidDirection( Direction dir, uint32_t modeFlags )
 {
-	bool allowedDirections [ uint( Direction::VERTICAL ) + 1 ] = {0};
+	bool allowedDirections [ uint( Direction::Vertical ) + 1 ] = {0};
 	bool hasAnyDirections = false;
 
-	if (modeFlags & ModeFlags::HAS_DIRECTION_LR)
+	if (modeFlags & ModeFlags::HasDirectionLR)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::LEFT ) ] = true;
-		allowedDirections[ uint( Direction::RIGHT ) ] = true;
+		allowedDirections[ uint( Direction::Left ) ] = true;
+		allowedDirections[ uint( Direction::Right ) ] = true;
 	}
-	if (modeFlags & ModeFlags::HAS_DIRECTION_UD)
+	if (modeFlags & ModeFlags::HasDirectionUD)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::UP ) ] = true;
-		allowedDirections[ uint( Direction::DOWN ) ] = true;
+		allowedDirections[ uint( Direction::Up ) ] = true;
+		allowedDirections[ uint( Direction::Down ) ] = true;
 	}
-	if (modeFlags & ModeFlags::HAS_DIRECTION_HV)
+	if (modeFlags & ModeFlags::HasDirectionHV)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::HORIZONTAL ) ] = true;
-		allowedDirections[ uint( Direction::VERTICAL ) ] = true;
+		allowedDirections[ uint( Direction::Horizontal ) ] = true;
+		allowedDirections[ uint( Direction::Vertical ) ] = true;
 	}
 
 	// in case no direction flag is active, direction will be uninitialized value, so it can be anything
@@ -317,12 +317,12 @@ static bool isValidDirection( Direction dir, uint32_t modeFlags )
 
 static bool isValidColorMode( ColorMode mode )
 {
-	return int( mode ) >= int( ColorMode::NONE ) && int( mode ) <= int( ColorMode::RANDOM );
+	return int( mode ) >= int( ColorMode::None ) && int( mode ) <= int( ColorMode::Random );
 }
 
 static bool isValidZoneType( ZoneType type )
 {
-	return int( type ) >= int( ZoneType::SINGLE ) && int( type ) <= int( ZoneType::MATRIX );
+	return int( type ) >= int( ZoneType::Single ) && int( type ) <= int( ZoneType::Matrix );
 }
 
 
