@@ -40,6 +40,9 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		return 3;
 	}
 
+	// let's wait a little, OpenRGB doesn't like when you send multiple requests at once
+	std::this_thread::sleep_for( milliseconds( 50 ) );
+
 	// some devices don't accept colors until you set them to "Direct" mode
 	client.switchToDirectMode( *cpuCooler );
 

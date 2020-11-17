@@ -53,6 +53,9 @@ int main( int /*argc*/, char * /*argv*/ [] )
 
 	while (keepRunning)
 	{
+		// this needs to be in the beginning, so that all 'continue' statements cause a pause
+		std::this_thread::sleep_for( milliseconds( 1000 ) );
+
 		// reconnect if the connection was lost
 		if (!client.isConnected())
 		{
@@ -65,7 +68,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			}
 			else if (status != ConnectStatus::Success)
 			{
-				printf( "connection failed\n" );
+				printf( "connection failed (error code: %d)\n", int(client.getLastSystemError()) );
 				continue;
 			}
 		}
@@ -78,7 +81,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			DeviceListResult result = client.requestDeviceList();
 			if (result.status != RequestStatus::Success)
 			{
-				printf( "failed to get device list\n" );
+				printf( "failed to get device list (error code: %d)\n", int(client.getLastSystemError()) );
 				// reset everything and try again
 				client.disconnect();
 				continue;
@@ -93,6 +96,9 @@ int main( int /*argc*/, char * /*argv*/ [] )
 				client.disconnect();
 				continue;
 			}
+
+			// let's wait for next iteration, OpenRGB doesn't like when you send multiple requests at once
+			continue;
 		}
 		else if (updateStatus != UpdateStatus::UpToDate)
 		{
@@ -106,9 +112,10 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		// some devices don't accept colors until you set them to "Direct" mode
 		if (!isInDirectMode)
 		{
+			printf( "setting CPU cooler to Direct mode\n" );
 			client.switchToDirectMode( *cpuCooler );
 			isInDirectMode = true;
-			// let's do this in next iteration, OpenRGB doesn't like when you send multiple requests at once
+			// let's wait for next iteration, OpenRGB doesn't like when you send multiple requests at once
 			continue;
 		}
 
@@ -116,8 +123,6 @@ int main( int /*argc*/, char * /*argv*/ [] )
 		currentColorIdx = (currentColorIdx + 1) % (sizeof(colors) / sizeof(Color));
 		printf( "setting CPU cooler to " ); print( colors[ currentColorIdx ] ); putchar('\n');
 		client.setDeviceColor( *cpuCooler, colors[ currentColorIdx ] );
-
-		std::this_thread::sleep_for( milliseconds( 1000 ) );
 	}
 
 	return 0;
