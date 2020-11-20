@@ -12,6 +12,7 @@
 
 #include "Color.hpp"
 #include "DeviceInfo.hpp"
+#include "private/SystemErrorInfoFwdDecl.hpp"  // HACK: read the comment at the top of that header file
 
 #include <string>  // client name
 #include <memory>  // unique_ptr<Socket>
@@ -20,14 +21,6 @@
 namespace own {
 	class TcpClientSocket;
 }
-
-// HACK: This definition needs to be copied here from SystemErrorInfo.hpp, because that header is now in a submodule,
-// and it isn't visible to the library users that add this to their include directories
-#ifdef _WIN32
-	using system_error_t = uint32_t;  // should be DWORD but let's not include the whole windows.h just because of this
-#else
-	using system_error_t = int;
-#endif
 
 
 namespace orgb {
@@ -44,7 +37,7 @@ enum class ConnectStatus
 	HostNotResolved,       ///< The hostname you entered could not be resolved to IP address. Call getLastSystemError() for more info.
 	ConnectFailed,         ///< Could not connect to the target server, either it's down or the port is closed. Call getLastSystemError() for more info.
 	SendNameFailed,        ///< Failed to send the client name to the server. Call getLastSystemError() for more info.
-	OtherError             ///< Other system error. Call getLastSystemError() for more info.
+	OtherError,            ///< Other system error. Call getLastSystemError() for more info.
 };
 
 /** All the possible ways how a request can end up. */
@@ -56,7 +49,7 @@ enum class RequestStatus
 	ConnectionClosed,      ///< Server has closed the connection.
 	NoReply,               ///< No reply has arrived from the server in given timeout. In case this happens too often, you may try to increase the timeout.
 	ReceiveError,          ///< There has been some other error while trying to receive a reply. Call getLastSystemError() for more info.
-	InvalidReply           ///< The reply from the server is invalid.
+	InvalidReply,          ///< The reply from the server is invalid.
 };
 
 /** All the possible results of a check whether the locally stored device list is out of date */
@@ -67,7 +60,7 @@ enum class UpdateStatus
 	ConnectionClosed,      ///< Server has closed the connection.
 	UnexpectedMessage,     ///< Server has sent some other kind of message that we didn't expect.
 	CantRestoreSocket,     ///< Error has occured while trying to restore socket to its original state and the socket has been closed. Call getLastSystemError() for more info. This should never happen, but one never knows.
-	OtherError             ///< Other system error. Call getLastSystemError() for more info.
+	OtherError,            ///< Other system error. Call getLastSystemError() for more info.
 };
 
 /** Result and output of a device list request */
@@ -94,6 +87,9 @@ class Client
 	/** Connects to the OpenRGB server and announces our client name. */
 	ConnectStatus connect( const std::string & host = "127.0.0.1", uint16_t port = 6742 );
 
+	/** Exception-throwing variant of connect(...). Check Exceptions.hpp for details. */
+	void connectX( const std::string & host = "127.0.0.1", uint16_t port = 6742 );
+
 	/** Closes connection to the server. */
 	void disconnect();
 
@@ -102,12 +98,21 @@ class Client
 	/** Sets a timeout for receiving request answers. */
 	bool setTimeout( std::chrono::milliseconds timeout );
 
+	/** Exception-throwing variant of setTimeout(...). Check Exceptions.hpp for details. */
+	void setTimeoutX( std::chrono::milliseconds timeout );
+
 	/** Queries the server for information about all its RGB devices. */
 	DeviceListResult requestDeviceList();
+
+	/** Exception-throwing variant of requestDeviceList(...). Check Exceptions.hpp for details. */
+	DeviceList requestDeviceListX();
 
 	/** Checks if the device list you downloaded earlier via requestDeviceList() hasn't been changed on the server.
 	  * In case it has been changed, you need to call requestDeviceList() again. */
 	UpdateStatus checkForDeviceUpdates();
+
+	/** Exception-throwing variant of checkForDeviceUpdates(...). Check Exceptions.hpp for details. */
+	bool isDeviceListOutdated();
 
 	// TODO: seems currently unfinished on the server side
 	//RequestStatus modifyMode( const Mode & mode );
@@ -116,22 +121,37 @@ class Client
 	  * This needs to be called before any of the methods below, but with at least few milliseconds delay. */
 	RequestStatus switchToDirectMode( const Device & device );
 
+	/** Exception-throwing variant of switchToDirectMode(...). Check Exceptions.hpp for details. */
+	void switchToDirectModeX( const Device & device );
+
 	/** Sets one unified color for the whole device. */
 	RequestStatus setDeviceColor( const Device & device, Color color );
+
+	/** Exception-throwing variant of setDeviceColor(...). Check Exceptions.hpp for details. */
+	void setDeviceColorX( const Device & device, Color color );
 
 	/** Sets a color for a particular zone of a device. */
 	RequestStatus setZoneColor( const Zone & zone, Color color );
 
+	/** Exception-throwing variant of setZoneColor(...). Check Exceptions.hpp for details. */
+	void setZoneColorX( const Zone & zone, Color color );
+
 	/** Resizes a zone of leds, if the device supports it. */
 	RequestStatus setZoneSize( const Zone & zone, uint32_t newSize );
+
+	/** Exception-throwing variant of setZoneSize(...). Check Exceptions.hpp for details. */
+	void setZoneSizeX( const Zone & zone, uint32_t newSize );
 
 	/** Sets a color for one selected LED. */
 	RequestStatus setColorOfSingleLED( const LED & led, Color color );
 
+	/** Exception-throwing variant of setColorOfSingleLED(...). Check Exceptions.hpp for details. */
+	void setColorOfSingleLEDX( const LED & led, Color color );
+
 	/** Call this if your requests keep failing and you don't know why. */
 	system_error_t getLastSystemError() const;
-	std::string getLastSystemErrorStr( system_error_t errorCode ) const;
 	std::string getLastSystemErrorStr() const;
+	std::string getSystemErrorStr( system_error_t errorCode ) const;
 
  private: // helpers
 
@@ -148,6 +168,8 @@ class Client
 	RecvResult< Message > awaitMessage();
 
 	UpdateStatus hasUpdateMessageArrived();
+
+	void requestStatusToException( RequestStatus status );
 
  private:
 

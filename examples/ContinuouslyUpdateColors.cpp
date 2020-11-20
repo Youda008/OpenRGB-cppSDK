@@ -1,5 +1,6 @@
 //======================================================================================================================
 //  continuously keep updating colors of CPU cooler until an INTERRUPT signal
+//    - variant handling errors by checking return values
 //======================================================================================================================
 
 #include <cstdio>    // printf

@@ -12,6 +12,7 @@
 
 #include "OpenRGB/private/Protocol.hpp"
 #include "OpenRGB/DeviceInfo.hpp"
+#include "OpenRGB/Exceptions.hpp"
 #include "BufferStream.hpp"
 using own::BufferOutputStream;
 using own::BufferInputStream;
@@ -36,7 +37,43 @@ namespace orgb {
 
 
 //======================================================================================================================
-//  Client: high-level API
+//  enum to string conversion
+
+static const char * const ConnectStatusStr [] =
+{
+	"The operation was successful.",
+	"Operation failed because underlying networking system could not be initialized.",
+	"Connect operation failed because the socket is already connected.",
+	"The hostname you entered could not be resolved to IP address.",
+	"Could not connect to the target server, either it's down or the port is closed.",
+	"Failed to send the client name to the server.",
+	"Other system error.",
+};
+
+static const char * const RequestStatusStr [] =
+{
+	"The request was succesful.",
+	"Request failed because the client is not connected.",
+	"Failed to send the request message.",
+	"Server has closed the connection.",
+	"No reply has arrived from the server in given timeout.",
+	"There has been some other error while trying to receive a reply.",
+	"The reply from the server is invalid.",
+};
+
+static const char * const UpdateStatusStr [] =
+{
+	"The current device list seems up to date.",
+	"Server has sent a notification message indicating that the device list has changed.",
+	"Server has closed the connection.",
+	"Server has sent some other kind of message that we didn't expect.",
+	"Error has occured while trying to restore socket to its original state and the socket has been closed.",
+	"Other system error.",
+};
+
+
+//======================================================================================================================
+//  Client: main API
 
 Client::Client( const string & clientName )
 :
@@ -90,6 +127,24 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	return ConnectStatus::Success;
 }
 
+void Client::connectX( const std::string & host, uint16_t port )
+{
+	ConnectStatus status = connect( host, port );
+	switch (status)
+	{
+		case ConnectStatus::Success:
+			return;
+		case ConnectStatus::AlreadyConnected:
+			throw UserError( ConnectStatusStr[ size_t(status) ] );
+		case ConnectStatus::HostNotResolved:
+		case ConnectStatus::ConnectFailed:
+		case ConnectStatus::SendNameFailed:
+			throw ConnectionError( ConnectStatusStr[ size_t(status) ], getLastSystemError() );
+		default:
+			throw SystemError( ConnectStatusStr[ size_t(status) ], getLastSystemError() );
+	}
+}
+
 void Client::disconnect()
 {
 	_socket->disconnect();
@@ -110,6 +165,14 @@ bool Client::setTimeout( std::chrono::milliseconds timeout )
 	}
 
 	return _socket->setTimeout( timeout );
+}
+
+void Client::setTimeoutX( std::chrono::milliseconds timeout )
+{
+	if (!setTimeout( timeout ))
+	{
+		throw SystemError( "Failed to set timeout", getLastSystemError() );
+	}
 }
 
 DeviceListResult Client::requestDeviceList()
@@ -166,6 +229,25 @@ DeviceListResult Client::requestDeviceList()
 	return result;
 }
 
+DeviceList Client::requestDeviceListX()
+{
+	DeviceListResult result = requestDeviceList();
+	switch (result.status)
+	{
+		case RequestStatus::Success:
+			return move( result.devices );
+		case RequestStatus::NotConnected:
+			throw UserError( RequestStatusStr[ size_t(result.status) ] );
+		case RequestStatus::SendRequestFailed:
+		case RequestStatus::ConnectionClosed:
+		case RequestStatus::NoReply:
+		case RequestStatus::InvalidReply:
+			throw ConnectionError( RequestStatusStr[ size_t(result.status) ], getLastSystemError() );
+		default:
+			throw SystemError( RequestStatusStr[ size_t(result.status) ], getLastSystemError() );
+	}
+}
+
 /*RequestStatus Client::modifyMode( const Mode & mode )
 {
 	if (!_socket->isConnected())
@@ -196,6 +278,12 @@ RequestStatus Client::switchToDirectMode( const Device & device )
 	return RequestStatus::Success;
 }
 
+void Client::switchToDirectModeX( const Device & device )
+{
+	RequestStatus status = switchToDirectMode( device );
+	requestStatusToException( status );
+}
+
 RequestStatus Client::setDeviceColor( const Device & device, Color color )
 {
 	if (!_socket->isConnected())
@@ -210,6 +298,12 @@ RequestStatus Client::setDeviceColor( const Device & device, Color color )
 	}
 
 	return RequestStatus::Success;
+}
+
+void Client::setDeviceColorX( const Device & device, Color color )
+{
+	RequestStatus status = setDeviceColor( device, color );
+	requestStatusToException( status );
 }
 
 RequestStatus Client::setZoneColor( const Zone & zone, Color color )
@@ -228,6 +322,12 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 	return RequestStatus::Success;
 }
 
+void Client::setZoneColorX( const Zone & zone, Color color )
+{
+	RequestStatus status = setZoneColor( zone, color );
+	requestStatusToException( status );
+}
+
 RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 {
 	if (!_socket->isConnected())
@@ -243,6 +343,12 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 	return RequestStatus::Success;
 }
 
+void Client::setZoneSizeX( const Zone & zone, uint32_t newSize )
+{
+	RequestStatus status = setZoneSize( zone, newSize );
+	requestStatusToException( status );
+}
+
 RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 {
 	if (!_socket->isConnected())
@@ -256,6 +362,12 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 	}
 
 	return RequestStatus::Success;
+}
+
+void Client::setColorOfSingleLEDX( const LED & led, Color color )
+{
+	RequestStatus status = setColorOfSingleLED( led, color );
+	requestStatusToException( status );
 }
 
 UpdateStatus Client::checkForDeviceUpdates()
@@ -276,6 +388,23 @@ UpdateStatus Client::checkForDeviceUpdates()
 	}
 
 	return status;
+}
+
+bool Client::isDeviceListOutdated()
+{
+	UpdateStatus status = checkForDeviceUpdates();
+	switch (status)
+	{
+		case UpdateStatus::UpToDate:
+			return false;
+		case UpdateStatus::OutOfDate:
+			return true;
+		case UpdateStatus::ConnectionClosed:
+		case UpdateStatus::UnexpectedMessage:
+			throw ConnectionError( UpdateStatusStr[ size_t(status) ], getLastSystemError() );
+		default:
+			throw SystemError( UpdateStatusStr[ size_t(status) ], getLastSystemError() );
+	}
 }
 
 UpdateStatus Client::hasUpdateMessageArrived()
@@ -338,12 +467,7 @@ UpdateStatus Client::hasUpdateMessageArrived()
 
 system_error_t Client::getLastSystemError() const
 {
-	return getLastError();
-}
-
-string Client::getLastSystemErrorStr( system_error_t errorCode ) const
-{
-	return getErrorString( errorCode );
+	return _socket->getLastSystemError();
 }
 
 string Client::getLastSystemErrorStr() const
@@ -351,9 +475,14 @@ string Client::getLastSystemErrorStr() const
 	return getErrorString( getLastSystemError() );
 }
 
+string Client::getSystemErrorStr( system_error_t errorCode ) const
+{
+	return getErrorString( errorCode );
+}
+
 
 //======================================================================================================================
-//  helpers
+//  Client: helpers
 
 template< typename Message, typename ... ConstructorArgs >
 bool Client::sendMessage( ConstructorArgs ... args )
@@ -441,6 +570,22 @@ Client::RecvResult< Message > Client::awaitMessage()
 	}
 
 	return result;
+}
+
+void Client::requestStatusToException( RequestStatus status )
+{
+	switch (status)
+	{
+		case RequestStatus::Success:
+			return;
+		case RequestStatus::NotConnected:
+			throw UserError( RequestStatusStr[ size_t(status) ] );
+		case RequestStatus::SendRequestFailed:
+		case RequestStatus::ConnectionClosed:
+			throw ConnectionError( RequestStatusStr[ size_t(status) ], getLastSystemError() );
+		default:
+			throw SystemError( RequestStatusStr[ size_t(status) ], getLastSystemError() );
+	}
 }
 
 
