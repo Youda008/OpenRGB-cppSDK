@@ -1,4 +1,2 @@
-mode updating vs mode selection ??
 more methods for colors, from HSV conversion, mixing, ...
 command line tool for the most basic actions
-alternative API throwing exceptions instead of return values

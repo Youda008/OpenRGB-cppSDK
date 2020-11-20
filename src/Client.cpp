@@ -248,20 +248,29 @@ DeviceList Client::requestDeviceListX()
 	}
 }
 
-/*RequestStatus Client::modifyMode( const Mode & mode )
+RequestStatus Client::changeMode( const Device & device, const Mode & mode )
 {
 	if (!_socket->isConnected())
 	{
-		return RequestStatus::NOT_CONNECTED;
+		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< UpdateMode >( mode.parent.id, mode.id, mode.desc ))
+	ModeDescription modeDesc;  // we need to copy all data because this might be user-owned object
+	mode.toProtocolDescription( modeDesc );
+
+	if (!sendMessage< UpdateMode >( device.id, mode.id, modeDesc ))
 	{
-		return RequestStatus::SEND_REQUEST_FAILED;
+		return RequestStatus::SendRequestFailed;
 	}
 
-	return RequestStatus::SUCCESS;
-}*/
+	return RequestStatus::Success;
+}
+
+void Client::changeModeX( const Device & device, const Mode & mode )
+{
+	RequestStatus status = changeMode( device, mode );
+	requestStatusToException( status );
+}
 
 RequestStatus Client::switchToDirectMode( const Device & device )
 {

@@ -115,7 +115,8 @@ class Client
 	bool isDeviceListOutdated();
 
 	// TODO: seems currently unfinished on the server side
-	//RequestStatus modifyMode( const Mode & mode );
+	RequestStatus changeMode( const Device & device, const Mode & mode );
+	void changeModeX( const Device & device, const Mode & mode );
 
 	/** Changes the color mode of a device to "Direct".
 	  * This needs to be called before any of the methods below, but with at least few milliseconds delay. */

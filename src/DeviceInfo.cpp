@@ -84,7 +84,7 @@ Mode::Mode( const Device & parent, uint32_t id, ModeDescription && desc )
 	colors( move( desc.colors ) )
 {}
 
-void Mode::toProtocolDescription( ModeDescription & desc )
+void Mode::toProtocolDescription( ModeDescription & desc ) const
 {
 	desc.name = name;
 	desc.value = value;

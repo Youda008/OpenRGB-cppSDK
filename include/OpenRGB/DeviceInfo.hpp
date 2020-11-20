@@ -124,7 +124,7 @@ class Mode
 	Mode & operator=( const Mode & other ) = delete;
 	Mode & operator=( Mode && other ) = delete;
 
-	void toProtocolDescription( ModeDescription & desc );
+	void toProtocolDescription( ModeDescription & desc ) const;
 
 };
 
