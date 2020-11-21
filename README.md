@@ -93,9 +93,9 @@ try
 
 	const Mode & directMode = cpuCooler->findModeX( "Direct" );
 
-	client.changeMode( cpuCooler, directMode );
+	client.changeModeX( cpuCooler, directMode );
 
-	client.setDeviceColor( cpuCooler, Color::RED );
+	client.setDeviceColorX( cpuCooler, Color::RED );
 }
 catch (const orgb::Exception & ex)
 {
@@ -133,7 +133,7 @@ mkdir build-release
 cd build-release
 cmake -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Release ../
 ```
-Open the solution in Visual Studio and build.
+Then open the resulting solution in Visual Studio and build it.
 
 ### Linux
 ```
