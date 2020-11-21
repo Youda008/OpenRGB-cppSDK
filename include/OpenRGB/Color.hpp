@@ -10,6 +10,7 @@
 #define OPENRGB_COLOR_INCLUDED
 
 
+#include <cstddef>
 #include <cstdint>
 
 namespace own {
@@ -53,7 +54,7 @@ class Color
 
 };
 
-void print( const Color & color, unsigned int indentLevel = 0 );
+void print( const Color & color );
 
 
 //======================================================================================================================
