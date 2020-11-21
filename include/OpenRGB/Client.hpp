@@ -118,8 +118,7 @@ class Client
 	RequestStatus changeMode( const Device & device, const Mode & mode );
 	void changeModeX( const Device & device, const Mode & mode );
 
-	/** Changes the color mode of a device to "Direct".
-	  * This needs to be called before any of the methods below, but with at least few milliseconds delay. */
+	// TODO: this doesn't seem to work on many devices
 	RequestStatus switchToDirectMode( const Device & device );
 
 	/** Exception-throwing variant of switchToDirectMode(...). Check Exceptions.hpp for details. */

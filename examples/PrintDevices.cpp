@@ -17,7 +17,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::Success)
 	{
-		fprintf( stderr, "failed to connect\n" );
+		fprintf( stderr, "failed to connect (error code: %d)\n", int( client.getLastSystemError() ) );
 		return 1;
 	}
 

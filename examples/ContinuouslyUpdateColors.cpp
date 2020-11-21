@@ -69,7 +69,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			}
 			else if (status != ConnectStatus::Success)
 			{
-				printf( "connection failed (error code: %d)\n", int(client.getLastSystemError()) );
+				printf( "connection failed (error code: %d)\n", int( client.getLastSystemError() ) );
 				continue;
 			}
 		}

@@ -12,6 +12,7 @@ using orgb::DeviceListResult;
 using orgb::RequestStatus;
 using orgb::DeviceType;
 using orgb::Device;
+using orgb::Mode;
 using orgb::Color;
 
 
@@ -22,7 +23,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::Success)
 	{
-		fprintf( stderr, "failed to connect\n" );
+		fprintf( stderr, "failed to connect (error code: %d)\n", int( client.getLastSystemError() ) );
 		return 1;
 	}
 
@@ -44,7 +45,13 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	std::this_thread::sleep_for( milliseconds( 50 ) );
 
 	// some devices don't accept colors until you set them to "Direct" mode
-	client.switchToDirectMode( *cpuCooler );
+	const Mode * directMode = cpuCooler->findMode( "Direct" );
+	if (!directMode)
+	{
+		fprintf( stderr, "\"Direct\" mode not found in CPU cooler.\n" );
+		return 4;
+	}
+	client.changeMode( *cpuCooler, *directMode );
 
 	// let's wait a little, OpenRGB doesn't like when you send multiple requests at once
 	std::this_thread::sleep_for( milliseconds( 50 ) );

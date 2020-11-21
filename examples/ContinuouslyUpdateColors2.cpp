@@ -73,16 +73,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			{
 				printf( "updating device list\n" );
 				devices = client.requestDeviceListX();
-
-				cpuCooler = devices.find( DeviceType::Cooler );
-				if (!cpuCooler)
-				{
-					printf( "device CPU cooler not found.\n" );
-					// reset everything and try again
-					client.disconnect();
-					continue;
-				}
-
+				cpuCooler = &devices.findX( DeviceType::Cooler );
 				// let's wait for next iteration, OpenRGB doesn't like when you send multiple requests at once
 				continue;
 			}
