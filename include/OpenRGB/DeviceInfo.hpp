@@ -11,6 +11,7 @@
 
 
 #include "OpenRGB/private/Protocol.hpp"  // enums and flags
+#include "OpenRGB/Exceptions.hpp"
 
 #include "Color.hpp"
 
@@ -169,6 +170,14 @@ class Device
 		return nullptr;
 	}
 
+	const Mode & findModeX( const std::string & name ) const
+	{
+		for (const Mode & mode : modes)
+			if (mode.name == name)
+				return mode;
+		throw NotFound( "Mode of such name was not found" );
+	}
+
 	const Zone * findZone( const std::string & name ) const
 	{
 		for (const Zone & zone : zones)
@@ -177,12 +186,28 @@ class Device
 		return nullptr;
 	}
 
+	const Zone & findZoneX( const std::string & name ) const
+	{
+		for (const Zone & zone : zones)
+			if (zone.name == name)
+				return zone;
+		throw NotFound( "Zone of such name was not found" );
+	}
+
 	const LED * findLED( const std::string & name ) const
 	{
 		for (const LED & led : leds)
 			if (led.name == name)
 				return &led;
 		return nullptr;
+	}
+
+	const LED & findLEDX( const std::string & name ) const
+	{
+		for (const LED & led : leds)
+			if (led.name == name)
+				return led;
+		throw NotFound( "LED of such name was not found" );
 	}
 
 };
@@ -236,12 +261,28 @@ class DeviceList
 		return nullptr;
 	}
 
+	const Device & findX( DeviceType deviceType ) const
+	{
+		for (const Device & device : _list)
+			if (device.type == deviceType)
+				return device;
+		throw NotFound( "Device of such type was not found" );
+	}
+
 	const Device * find( const std::string & deviceName ) const
 	{
 		for (const Device & device : _list)
 			if (device.name == deviceName)
 				return &device;
 		return nullptr;
+	}
+
+	const Device & findX( const std::string & deviceName ) const
+	{
+		for (const Device & device : _list)
+			if (device.name == deviceName)
+				return device;
+		throw NotFound( "Device of such name was not found" );
 	}
 
 };

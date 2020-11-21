@@ -62,6 +62,14 @@ class SystemError : public Exception
 };
 
 
+/** This exception is thrown when the device, mode, zone or LED you searched for was not found. */
+class NotFound : public Exception
+{
+ public:
+	NotFound( const char * message ) : Exception( message ) {}
+};
+
+
 //======================================================================================================================
 
 
