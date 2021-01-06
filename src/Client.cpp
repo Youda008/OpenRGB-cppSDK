@@ -518,13 +518,12 @@ Client::RecvResult< Message > Client::awaitMessage()
 		SocketError headerStatus = _socket->receive( headerBuffer, received );
 		if (headerStatus != SocketError::Success)
 		{
-			if (headerStatus == SocketError::ConnectionClosed) {
+			if (headerStatus == SocketError::ConnectionClosed)
 				result.status = RequestStatus::ConnectionClosed;
-			} else if (headerStatus == SocketError::Timeout) {
+			else if (headerStatus == SocketError::Timeout)
 				result.status = RequestStatus::NoReply;
-			} else {
+			else
 				result.status = RequestStatus::ReceiveError;
-			}
 			return result;
 		}
 
@@ -557,13 +556,12 @@ Client::RecvResult< Message > Client::awaitMessage()
 	SocketError bodyStatus = _socket->receive( bodyBuffer, result.message.header.message_size );
 	if (bodyStatus != SocketError::Success)
 	{
-		if (bodyStatus == SocketError::ConnectionClosed) {
+		if (bodyStatus == SocketError::ConnectionClosed)
 			result.status = RequestStatus::ConnectionClosed;
-		} if (bodyStatus == SocketError::Timeout) {
+		else if (bodyStatus == SocketError::Timeout)
 			result.status = RequestStatus::NoReply;
-		} else {
+		else
 			result.status = RequestStatus::ReceiveError;
-		}
 		return result;
 	}
 
