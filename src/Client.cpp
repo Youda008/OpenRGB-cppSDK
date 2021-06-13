@@ -45,6 +45,8 @@ static const char * const ConnectStatusStr [] =
 	"Connect operation failed because the socket is already connected.",
 	"The hostname you entered could not be resolved to IP address.",
 	"Could not connect to the target server, either it's down or the port is closed.",
+	"Failed to send the client's protocol version or receive the server's protocol version",
+	"The protocol version of the server is not supported. Please update the OpenRGB app.",
 	"Failed to send the client name to the server.",
 	"Other system error.",
 };
@@ -85,10 +87,10 @@ Client::~Client() {}
 
 ConnectStatus Client::connect( const string & host, uint16_t port )
 {
-	SocketError result1 = _socket->connect( host, port );
-	if (result1 != SocketError::Success)
+	SocketError connectRes = _socket->connect( host, port );
+	if (connectRes != SocketError::Success)
 	{
-		switch (result1)
+		switch (connectRes)
 		{
 			case SocketError::AlreadyConnected:      return ConnectStatus::AlreadyConnected;
 			case SocketError::NetworkingInitFailed:  return ConnectStatus::NetworkingInitFailed;
@@ -101,10 +103,31 @@ ConnectStatus Client::connect( const string & host, uint16_t port )
 	// rather set some default timeout for recv operations, user can always override this
 	_socket->setTimeout( milliseconds( 500 ) );
 
-	bool result2 = sendMessage< SetClientName >( _clientName );
-	if (!result2)
+	bool sendVersionRes = sendMessage< RequestProtocolVersion >();
+	if (!sendVersionRes)
 	{
-		_socket->disconnect();  // let's be consistent, all other errors mean the connection was not opened
+		_socket->disconnect();  // revert to the state before this function was called
+		return ConnectStatus::RequestVersionFailed;
+	}
+
+	auto requestVersionRes = awaitMessage< ReplyProtocolVersion >();
+	if (requestVersionRes.status != RequestStatus::Success)
+	{
+		_socket->disconnect();  // revert to the state before this function was called
+		return ConnectStatus::RequestVersionFailed;
+	}
+
+	if (requestVersionRes.message.serverVersion < implementedProtocolVersion)
+	{
+		// Support for older OpenRGB versions will not be maintained. Sorry guys.
+		_socket->disconnect();  // revert to the state before this function was called
+		return ConnectStatus::VersionNotSupported;
+	}
+
+	bool sendNameRes = sendMessage< SetClientName >( _clientName );
+	if (!sendNameRes)
+	{
+		_socket->disconnect();  // revert to the state before this function was called
 		return ConnectStatus::SendNameFailed;
 	}
 
@@ -137,6 +160,8 @@ void Client::connectX( const std::string & host, uint16_t port )
 			throw UserError( ConnectStatusStr[ size_t(status) ] );
 		case ConnectStatus::HostNotResolved:
 		case ConnectStatus::ConnectFailed:
+		case ConnectStatus::RequestVersionFailed:
+		case ConnectStatus::VersionNotSupported:
 		case ConnectStatus::SendNameFailed:
 			throw ConnectionError( ConnectStatusStr[ size_t(status) ], getLastSystemError() );
 		default:
@@ -204,7 +229,7 @@ DeviceListResult Client::requestDeviceList()
 
 		for (uint32_t deviceIdx = 0; deviceIdx < deviceCountResult.message.count; ++deviceIdx)
 		{
-			sent = sendMessage< RequestControllerData >( deviceIdx );
+			sent = sendMessage< RequestControllerData >( deviceIdx, implementedProtocolVersion );
 			if (!sent)
 			{
 				result.status = RequestStatus::SendRequestFailed;

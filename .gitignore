@@ -4,3 +4,4 @@
 *-debug.pro
 /src/debugMain.cpp
 /research/*
+private-*

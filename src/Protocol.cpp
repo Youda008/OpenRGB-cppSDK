@@ -497,6 +497,7 @@ size_t DeviceDescription::calcSize() const
 {
 	return sizeof( device_type )
 	     + sizeofORGBString( name )
+	     + sizeofORGBString( vendor )
 	     + sizeofORGBString( description )
 	     + sizeofORGBString( version )
 	     + sizeofORGBString( serial )
@@ -510,6 +511,7 @@ void DeviceDescription::serialize( BufferOutputStream & stream ) const
 {
 	stream << device_type;
 	writeORGBString( stream, name );
+	writeORGBString( stream, vendor );
 	writeORGBString( stream, description );
 	writeORGBString( stream, version );
 	writeORGBString( stream, serial );
@@ -529,6 +531,7 @@ bool DeviceDescription::deserialize( BufferInputStream & stream )
 {
 	stream >> device_type;
 	readORGBString( stream, name );
+	readORGBString( stream, vendor );
 	readORGBString( stream, description );
 	readORGBString( stream, version );
 	readORGBString( stream, serial );
@@ -590,8 +593,6 @@ void ReplyControllerCount::serialize( BufferOutputStream & stream ) const
 
 bool ReplyControllerCount::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> count;
 
 	return !stream.hasFailed();
@@ -611,8 +612,6 @@ void RequestControllerData::serialize( BufferOutputStream & stream ) const
 
 bool RequestControllerData::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	return !stream.hasFailed();
 }
 
@@ -636,10 +635,50 @@ void ReplyControllerData::serialize( BufferOutputStream & stream ) const
 
 bool ReplyControllerData::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> data_size;
 	device_desc.deserialize( stream );
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t RequestProtocolVersion::calcDataSize() const
+{
+	return sizeof( clientVersion );
+}
+
+void RequestProtocolVersion::serialize( BufferOutputStream & stream ) const
+{
+	header.serialize( stream );
+
+	stream << clientVersion;
+}
+
+bool RequestProtocolVersion::deserializeBody( BufferInputStream & stream )
+{
+	stream >> clientVersion;
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t ReplyProtocolVersion::calcDataSize() const
+{
+	return sizeof( serverVersion );
+}
+
+void ReplyProtocolVersion::serialize( BufferOutputStream & stream ) const
+{
+	header.serialize( stream );
+
+	stream << serverVersion;
+}
+
+bool ReplyProtocolVersion::deserializeBody( BufferInputStream & stream )
+{
+	stream >> serverVersion;
 
 	return !stream.hasFailed();
 }
@@ -657,15 +696,11 @@ void SetClientName::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
 
-	// TODO: verify in OpenRGB source code
 	stream.writeString0( name );
 }
 
 bool SetClientName::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
-	// TODO: verify in OpenRGB source code
 	stream.readString0( name );
 
 	return !stream.hasFailed();
@@ -685,8 +720,6 @@ void DeviceListUpdated::serialize( BufferOutputStream & stream ) const
 
 bool DeviceListUpdated::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	return !stream.hasFailed();
 }
 
@@ -710,8 +743,6 @@ void ResizeZone::serialize( BufferOutputStream & stream ) const
 
 bool ResizeZone::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> zone_idx;
 	stream >> new_size;
 
@@ -738,8 +769,6 @@ void UpdateLEDs::serialize( BufferOutputStream & stream ) const
 
 bool UpdateLEDs::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> data_size;
 	readORGBArray( stream, colors );
 
@@ -768,8 +797,6 @@ void UpdateZoneLEDs::serialize( BufferOutputStream & stream ) const
 
 bool UpdateZoneLEDs::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> data_size;
 	stream >> zone_idx;
 	readORGBArray( stream, colors );
@@ -797,8 +824,6 @@ void UpdateSingleLED::serialize( BufferOutputStream & stream ) const
 
 bool UpdateSingleLED::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> led_idx;
 	color.deserialize( stream );
 
@@ -819,8 +844,6 @@ void SetCustomMode::serialize( BufferOutputStream & stream ) const
 
 bool SetCustomMode::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	return !stream.hasFailed();
 }
 
@@ -846,8 +869,6 @@ void UpdateMode::serialize( BufferOutputStream & stream ) const
 
 bool UpdateMode::deserializeBody( BufferInputStream & stream )
 {
-	// don't read the header, the header will be read in advance in order to recognize message type
-
 	stream >> data_size;
 	stream >> mode_idx;
 	mode_desc.deserialize( stream );

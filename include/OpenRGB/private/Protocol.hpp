@@ -24,13 +24,21 @@ namespace own {
 namespace orgb {
 
 
+/// version of the protocol this client currently implements
+/** The following structs and enums are defined according to this version of the protocol.
+  * Older versions will not be supported, sorry guys. */
+constexpr unsigned int implementedProtocolVersion = 1;
+
+
 //======================================================================================================================
 //  message header
 
+/// a copy of enum in https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/master/NetworkProtocol.h
 enum class MessageType : uint32_t
 {
 	REQUEST_CONTROLLER_COUNT       = 0,
 	REQUEST_CONTROLLER_DATA        = 1,
+	REQUEST_PROTOCOL_VERSION       = 40,
 	SET_CLIENT_NAME                = 50,
 	DEVICE_LIST_UPDATED            = 100,
 	RGBCONTROLLER_RESIZEZONE       = 1000,
@@ -42,6 +50,7 @@ enum class MessageType : uint32_t
 };
 const char * toString( MessageType );
 
+/** Every protocol message starts with this. */
 struct Header
 {
 	char         magic [4];  ///< must always be set to ORGB in all messages
@@ -51,9 +60,9 @@ struct Header
 
 	Header() {}
 	Header( MessageType messageType )
-		: magic{'O','R','G','B'}, message_type( messageType ) {}
+		: magic{'O','R','G','B'}, device_idx(0), message_type( messageType ) {}
 	Header( MessageType messageType, uint32_t messageSize )
-		: magic{'O','R','G','B'}, message_type( messageType ), message_size( messageSize ) {}
+		: magic{'O','R','G','B'}, device_idx(0), message_type( messageType ), message_size( messageSize ) {}
 	Header( uint32_t deviceIdx, MessageType messageType )
 		: magic{'O','R','G','B'}, device_idx( deviceIdx ), message_type( messageType ) {}
 	Header( uint32_t deviceIdx, MessageType messageType, uint32_t messageSize )
@@ -188,6 +197,7 @@ struct DeviceDescription
 {
 	DeviceType    device_type;
 	std::string   name;
+	std::string   vendor;
 	std::string   description;
 	std::string   version;
 	std::string   serial;
@@ -207,6 +217,7 @@ struct DeviceDescription
 //======================================================================================================================
 //  main protocol messages
 
+/** Asks server how many RGB devices (controllers) there are. */
 struct RequestControllerCount
 {
 	Header header = {
@@ -223,9 +234,12 @@ struct RequestControllerCount
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** A reply to RequestControllerCount */
 struct ReplyControllerCount
 {
 	Header header = {
@@ -247,31 +261,39 @@ struct ReplyControllerCount
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** Asks for all information and supported modes about a specific RGB device (controller). */
 struct RequestControllerData
 {
 	Header header = {
 		/*message_type*/ thisType,
-		/*message_size*/ 0
+		/*message_size*/ 4
 	};
+	uint32_t protocolVersion;
 
  // support for templated processing
 
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_DATA;
 
 	RequestControllerData() {}
-	RequestControllerData( uint32_t deviceIdx )
+	RequestControllerData( uint32_t deviceIdx, uint32_t protocolVersion )
 	{
 		header.device_idx = deviceIdx;
+		this->protocolVersion = protocolVersion;
 	}
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** A reply to RequestControllerData */
 struct ReplyControllerData
 {
 	Header header = {
@@ -295,10 +317,65 @@ struct ReplyControllerData
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
-// sends custom client name when connected
+/** Tells the server in what version of the protocol the client wants to communite in. */
+struct RequestProtocolVersion
+{
+	Header header = {
+		/*device_idx*/   0,
+		/*message_type*/ thisType,
+		/*message_size*/ 4
+	};
+	uint32_t clientVersion;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_PROTOCOL_VERSION;
+
+	RequestProtocolVersion()
+	{
+		clientVersion = implementedProtocolVersion;
+	}
+
+	uint32_t calcDataSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
+	bool deserializeBody( own::BufferInputStream & stream );
+};
+
+/** A reply to RequestProtocolVersion. Contains the maximum version the server supports. */
+struct ReplyProtocolVersion
+{
+	Header header = {
+		/*device_idx*/   0,
+		/*message_type*/ thisType,
+		/*message_size*/ 4
+	};
+	uint32_t serverVersion;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_PROTOCOL_VERSION;
+
+	ReplyProtocolVersion() {}
+	ReplyProtocolVersion( uint32_t protocolVersion )
+	{
+		serverVersion = protocolVersion;
+	}
+
+	uint32_t calcDataSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
+	bool deserializeBody( own::BufferInputStream & stream );
+};
+
+/** Announces a custom name of the client to the server. */
 struct SetClientName
 {
 	Header header = {
@@ -321,10 +398,12 @@ struct SetClientName
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
-// this is sent back from the server everytime its device list changes
+/** This is sent from the server everytime its device list has changed. */
 struct DeviceListUpdated
 {
 	Header header = {
@@ -341,9 +420,12 @@ struct DeviceListUpdated
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** Resizes a zone of LEDs, if the device supports it. */
 struct ResizeZone
 {
 	Header header = {
@@ -368,9 +450,12 @@ struct ResizeZone
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** Applies individually selected color to every LED. */
 struct UpdateLEDs
 {
 	Header header = {
@@ -394,9 +479,12 @@ struct UpdateLEDs
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** Applies individually selected color to every LED in a specific zone. */
 struct UpdateZoneLEDs
 {
 	Header header = {
@@ -422,9 +510,12 @@ struct UpdateZoneLEDs
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
+/** Changes color of a single particular LED. */
 struct UpdateSingleLED
 {
 	Header header = {
@@ -449,10 +540,12 @@ struct UpdateSingleLED
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
-// switches device mode to direct
+/** Switches mode of a device to "Direct" mode */
 struct SetCustomMode
 {
 	Header header = {
@@ -472,6 +565,8 @@ struct SetCustomMode
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
@@ -501,6 +596,8 @@ struct UpdateMode
 
 	uint32_t calcDataSize() const;
 	void serialize( own::BufferOutputStream & stream ) const;
+	/** The header must be deserialized separately prior to this, in order to determine the type of message and
+	  * which object to construct and fill up. */
 	bool deserializeBody( own::BufferInputStream & stream );
 };
 
