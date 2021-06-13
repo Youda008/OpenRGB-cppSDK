@@ -12,6 +12,7 @@ using namespace std::chrono;
 using orgb::ConnectStatus;
 using orgb::RequestStatus;
 using orgb::UpdateStatus;
+using orgb::enumString;
 using orgb::DeviceListResult;
 using orgb::DeviceList;
 using orgb::DeviceType;
@@ -69,7 +70,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			}
 			else if (status != ConnectStatus::Success)
 			{
-				printf( "connection failed (error code: %d)\n", int( client.getLastSystemError() ) );
+				printf( "connection failed: %s (error code: %d)\n", enumString( status ), int( client.getLastSystemError() ) );
 				continue;
 			}
 		}

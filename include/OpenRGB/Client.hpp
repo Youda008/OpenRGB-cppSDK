@@ -40,6 +40,7 @@ enum class ConnectStatus
 	SendNameFailed,          ///< Failed to send the client name to the server. Call getLastSystemError() for more info.
 	OtherError,              ///< Other system error. Call getLastSystemError() for more info.
 };
+const char * enumString( ConnectStatus status );
 
 /** All the possible ways how a request can end up. */
 enum class RequestStatus
@@ -52,6 +53,7 @@ enum class RequestStatus
 	ReceiveError,       ///< There has been some other error while trying to receive a reply. Call getLastSystemError() for more info.
 	InvalidReply,       ///< The reply from the server is invalid.
 };
+const char * enumString( RequestStatus status );
 
 /** All the possible results of a check whether the locally stored device list is out of date */
 enum class UpdateStatus
@@ -63,6 +65,7 @@ enum class UpdateStatus
 	CantRestoreSocket,  ///< Error has occured while trying to restore socket to its original state and the socket has been closed. Call getLastSystemError() for more info. This should never happen, but one never knows.
 	OtherError,         ///< Other system error. Call getLastSystemError() for more info.
 };
+const char * enumString( UpdateStatus status );
 
 /** Result and output of a device list request */
 struct DeviceListResult

@@ -50,6 +50,17 @@ static const char * const ConnectStatusStr [] =
 	"Failed to send the client name to the server.",
 	"Other system error.",
 };
+const char * enumString( ConnectStatus status )
+{
+	if (size_t(status) < own::size(ConnectStatusStr))
+	{
+		return ConnectStatusStr[ size_t(status) ];
+	}
+	else
+	{
+		return "<invalid status>";
+	}
+}
 
 static const char * const RequestStatusStr [] =
 {
@@ -61,6 +72,17 @@ static const char * const RequestStatusStr [] =
 	"There has been some other error while trying to receive a reply.",
 	"The reply from the server is invalid.",
 };
+const char * enumString( RequestStatus status )
+{
+	if (size_t(status) < own::size(RequestStatusStr))
+	{
+		return RequestStatusStr[ size_t(status) ];
+	}
+	else
+	{
+		return "<invalid status>";
+	}
+}
 
 static const char * const UpdateStatusStr [] =
 {
@@ -71,6 +93,17 @@ static const char * const UpdateStatusStr [] =
 	"Error has occured while trying to restore socket to its original state and the socket has been closed.",
 	"Other system error.",
 };
+const char * enumString( UpdateStatus status )
+{
+	if (size_t(status) < own::size(UpdateStatusStr))
+	{
+		return UpdateStatusStr[ size_t(status) ];
+	}
+	else
+	{
+		return "<invalid status>";
+	}
+}
 
 
 //======================================================================================================================
@@ -157,15 +190,15 @@ void Client::connectX( const std::string & host, uint16_t port )
 		case ConnectStatus::Success:
 			return;
 		case ConnectStatus::AlreadyConnected:
-			throw UserError( ConnectStatusStr[ size_t(status) ] );
+			throw UserError( enumString( status ) );
 		case ConnectStatus::HostNotResolved:
 		case ConnectStatus::ConnectFailed:
 		case ConnectStatus::RequestVersionFailed:
 		case ConnectStatus::VersionNotSupported:
 		case ConnectStatus::SendNameFailed:
-			throw ConnectionError( ConnectStatusStr[ size_t(status) ], getLastSystemError() );
+			throw ConnectionError( enumString( status ), getLastSystemError() );
 		default:
-			throw SystemError( ConnectStatusStr[ size_t(status) ], getLastSystemError() );
+			throw SystemError( enumString( status ), getLastSystemError() );
 	}
 }
 
@@ -261,14 +294,14 @@ DeviceList Client::requestDeviceListX()
 		case RequestStatus::Success:
 			return move( result.devices );
 		case RequestStatus::NotConnected:
-			throw UserError( RequestStatusStr[ size_t(result.status) ] );
+			throw UserError( enumString( result.status) );
 		case RequestStatus::SendRequestFailed:
 		case RequestStatus::ConnectionClosed:
 		case RequestStatus::NoReply:
 		case RequestStatus::InvalidReply:
-			throw ConnectionError( RequestStatusStr[ size_t(result.status) ], getLastSystemError() );
+			throw ConnectionError( enumString( result.status ), getLastSystemError() );
 		default:
-			throw SystemError( RequestStatusStr[ size_t(result.status) ], getLastSystemError() );
+			throw SystemError( enumString( result.status ), getLastSystemError() );
 	}
 }
 
@@ -434,9 +467,9 @@ bool Client::isDeviceListOutdated()
 			return true;
 		case UpdateStatus::ConnectionClosed:
 		case UpdateStatus::UnexpectedMessage:
-			throw ConnectionError( UpdateStatusStr[ size_t(status) ], getLastSystemError() );
+			throw ConnectionError( enumString( status ), getLastSystemError() );
 		default:
-			throw SystemError( UpdateStatusStr[ size_t(status) ], getLastSystemError() );
+			throw SystemError( enumString( status ), getLastSystemError() );
 	}
 }
 
@@ -610,12 +643,12 @@ void Client::requestStatusToException( RequestStatus status )
 		case RequestStatus::Success:
 			return;
 		case RequestStatus::NotConnected:
-			throw UserError( RequestStatusStr[ size_t(status) ] );
+			throw UserError( enumString( status ) );
 		case RequestStatus::SendRequestFailed:
 		case RequestStatus::ConnectionClosed:
-			throw ConnectionError( RequestStatusStr[ size_t(status) ], getLastSystemError() );
+			throw ConnectionError( enumString( status ), getLastSystemError() );
 		default:
-			throw SystemError( RequestStatusStr[ size_t(status) ], getLastSystemError() );
+			throw SystemError( enumString( status ), getLastSystemError() );
 	}
 }
 

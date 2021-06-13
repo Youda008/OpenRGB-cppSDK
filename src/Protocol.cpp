@@ -124,7 +124,7 @@ static bool readORGBArray( BufferInputStream & stream, vector< Type > & vec )
 //======================================================================================================================
 //  enum strings
 
-const char * toString( MessageType type )
+const char * enumString( MessageType type )
 {
 	// the values of message types are wildly different so we can't use an array
 	switch (type)
@@ -143,7 +143,7 @@ const char * toString( MessageType type )
 	}
 }
 
-const char * toString( DeviceType type )
+const char * enumString( DeviceType type )
 {
 	static const char * const deviceTypeStr [] =
 	{
@@ -202,7 +202,7 @@ string modeFlagsToString( uint32_t flags )
 	return oss.str();
 }
 
-const char * toString( Direction dir )
+const char * enumString( Direction dir )
 {
 	static const char * const deviceTypeStr [] =
 	{
@@ -220,7 +220,7 @@ const char * toString( Direction dir )
 		return "<invalid>";
 }
 
-const char * toString( ColorMode mode )
+const char * enumString( ColorMode mode )
 {
 	static const char * const colorModeStr [] =
 	{
@@ -236,7 +236,7 @@ const char * toString( ColorMode mode )
 		return "<invalid>";
 }
 
-const char * toString( ZoneType type )
+const char * enumString( ZoneType type )
 {
 	static const char * const zoneTypeStr [] =
 	{

@@ -10,6 +10,7 @@ using std::chrono::milliseconds;
 using orgb::ConnectStatus;
 using orgb::DeviceListResult;
 using orgb::RequestStatus;
+using orgb::enumString;
 using orgb::DeviceType;
 using orgb::Device;
 using orgb::Mode;
@@ -23,7 +24,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::Success)
 	{
-		fprintf( stderr, "failed to connect (error code: %d)\n", int( client.getLastSystemError() ) );
+		fprintf( stderr, "failed to connect: %s (error code: %d)\n", enumString( status ), int( client.getLastSystemError() ) );
 		return 1;
 	}
 
@@ -56,7 +57,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	// let's wait a little, OpenRGB doesn't like when you send multiple requests at once
 	std::this_thread::sleep_for( milliseconds( 50 ) );
 
-	client.setDeviceColor( *cpuCooler, Color::RED );
+	client.setDeviceColor( *cpuCooler, Color::Red );
 
 	return 0;
 }

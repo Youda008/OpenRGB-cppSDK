@@ -8,6 +8,7 @@
 using orgb::ConnectStatus;
 using orgb::DeviceListResult;
 using orgb::RequestStatus;
+using orgb::enumString;
 
 
 int main( int /*argc*/, char * /*argv*/ [] )
@@ -17,7 +18,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	ConnectStatus status = client.connect( "127.0.0.1" );
 	if (status != ConnectStatus::Success)
 	{
-		fprintf( stderr, "failed to connect (error code: %d)\n", int( client.getLastSystemError() ) );
+		fprintf( stderr, "failed to connect: %s (error code: %d)\n", enumString( status ), int( client.getLastSystemError() ) );
 		return 1;
 	}
 

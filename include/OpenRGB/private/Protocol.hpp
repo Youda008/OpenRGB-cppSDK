@@ -48,7 +48,7 @@ enum class MessageType : uint32_t
 	RGBCONTROLLER_SETCUSTOMMODE    = 1100,
 	RGBCONTROLLER_UPDATEMODE       = 1101,
 };
-const char * toString( MessageType );
+const char * enumString( MessageType );
 
 /** Every protocol message starts with this. */
 struct Header
@@ -94,7 +94,7 @@ enum class DeviceType : uint32_t
 	Gamepad       = 10,
 	Unknown       = 11,
 };
-const char * toString( DeviceType );
+const char * enumString( DeviceType );
 
 /** Which features the mode supports */
 enum ModeFlags : uint32_t
@@ -120,7 +120,7 @@ enum class Direction : uint32_t
 	Horizontal  = 4,
 	Vertical    = 5
 };
-const char * toString( Direction );
+const char * enumString( Direction );
 
 /** How the colors of a mode are set */
 enum class ColorMode : uint32_t
@@ -130,7 +130,7 @@ enum class ColorMode : uint32_t
 	ModeSpecific  = 2,  // mode specific colors
 	Random        = 3   // mode has random colors
 };
-const char * toString( ColorMode );
+const char * enumString( ColorMode );
 
 /** Type of RGB zone */
 enum class ZoneType : uint32_t
@@ -139,7 +139,7 @@ enum class ZoneType : uint32_t
 	Linear  = 1,
 	Matrix  = 2
 };
-const char * toString( ZoneType );
+const char * enumString( ZoneType );
 
 
 //======================================================================================================================
