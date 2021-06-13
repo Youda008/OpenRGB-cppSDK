@@ -1,6 +1,6 @@
 /Build*
 /build*
-*.pro.user
+*.pro.user*
 *-debug.pro
 /src/debugMain.cpp
 /research/*
