@@ -355,17 +355,21 @@ bool Header::deserialize( BufferInputStream & stream )
 
 size_t ModeDescription::calcSize() const
 {
-	return sizeofORGBString( name )
-	     + sizeof( value )
-	     + sizeof( flags )
-	     + sizeof( speed_min )
-	     + sizeof( speed_max )
-	     + sizeof( colors_min )
-	     + sizeof( colors_max )
-	     + sizeof( speed )
-	     + sizeof( direction )
-	     + sizeof( color_mode )
-	     + sizeofORGBArray( colors );
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( value );
+	size += sizeof( flags );
+	size += sizeof( speed_min );
+	size += sizeof( speed_max );
+	size += sizeof( colors_min );
+	size += sizeof( colors_max );
+	size += sizeof( speed );
+	size += sizeof( direction );
+	size += sizeof( color_mode );
+	size += sizeofORGBArray( colors );
+
+	return size;
 }
 
 void ModeDescription::serialize( BufferOutputStream & stream ) const
@@ -399,7 +403,6 @@ bool ModeDescription::deserialize( BufferInputStream & stream )
 
 	if (!isValidDirection( direction, flags ))
 		stream.setFailed();
-
 	if (!isValidColorMode( color_mode ))
 		stream.setFailed();
 
@@ -410,18 +413,22 @@ bool ModeDescription::deserialize( BufferInputStream & stream )
 
 size_t ZoneDescription::calcSize() const
 {
-	return sizeofORGBString( name )
-	     + sizeof( type )
-	     + sizeof( leds_min )
-	     + sizeof( leds_max )
-	     + sizeof( leds_count )
-	     + sizeof( matrix_length )
-	     + matrix_length == 0 ? 0 :
-	     (
-	           sizeof( matrix_height )
-	         + sizeof( matrix_width )
-	         + sizeofVector( matrix_values )
-	     );
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( type );
+	size += sizeof( leds_min );
+	size += sizeof( leds_max );
+	size += sizeof( leds_count );
+	size += sizeof( matrix_length );
+	if (matrix_length > 0)
+	{
+		size += sizeof( matrix_height );
+		size += sizeof( matrix_width );
+		size += sizeofVector( matrix_values );
+	}
+
+	return size;
 }
 
 void ZoneDescription::serialize( BufferOutputStream & stream ) const
@@ -473,8 +480,12 @@ bool ZoneDescription::deserialize( BufferInputStream & stream)
 
 size_t LEDDescription::calcSize() const
 {
-	return sizeofORGBString( name )
-	     + sizeof( value );
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( value );
+
+	return size;
 }
 
 void LEDDescription::serialize( BufferOutputStream & stream ) const
@@ -495,16 +506,20 @@ bool LEDDescription::deserialize( BufferInputStream & stream )
 
 size_t DeviceDescription::calcSize() const
 {
-	return sizeof( device_type )
-	     + sizeofORGBString( name )
-	     + sizeofORGBString( vendor )
-	     + sizeofORGBString( description )
-	     + sizeofORGBString( version )
-	     + sizeofORGBString( serial )
-	     + sizeofORGBString( location )
-	     + sizeof( uint16_t )
-	     + sizeof( active_mode )
-	     + sizeofVector( modes );
+	size_t size = 0;
+
+	size += sizeof( device_type );
+	size += sizeofORGBString( name );
+	size += sizeofORGBString( vendor );
+	size += sizeofORGBString( description );
+	size += sizeofORGBString( version );
+	size += sizeofORGBString( serial );
+	size += sizeofORGBString( location );
+	size += sizeof( uint16_t );
+	size += sizeof( active_mode );
+	size += sizeofVector( modes );
+
+	return 0;
 }
 
 void DeviceDescription::serialize( BufferOutputStream & stream ) const
@@ -558,31 +573,7 @@ bool DeviceDescription::deserialize( BufferInputStream & stream )
 //======================================================================================================================
 //  main protocol messages
 
-uint32_t RequestControllerCount::calcDataSize() const
-{
-	return 0;
-}
-
-void RequestControllerCount::serialize( BufferOutputStream & stream ) const
-{
-	header.serialize( stream );
-}
-
-bool RequestControllerCount::deserializeBody( BufferInputStream & stream )
-{
-	// don't read the header, the header will be read in advance in order to recognize message type
-
-	return !stream.hasFailed();
-}
-
 //----------------------------------------------------------------------------------------------------------------------
-
-uint32_t ReplyControllerCount::calcDataSize() const
-{
-	return uint32_t(
-		sizeof( count )
-	);
-}
 
 void ReplyControllerCount::serialize( BufferOutputStream & stream ) const
 {
@@ -600,29 +591,14 @@ bool ReplyControllerCount::deserializeBody( BufferInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t RequestControllerData::calcDataSize() const
-{
-	return 0;
-}
-
-void RequestControllerData::serialize( BufferOutputStream & stream ) const
-{
-	header.serialize( stream );
-}
-
-bool RequestControllerData::deserializeBody( BufferInputStream & stream )
-{
-	return !stream.hasFailed();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
 uint32_t ReplyControllerData::calcDataSize() const
 {
-	return uint32_t(
-		  sizeof( data_size )
-		+ device_desc.calcSize()
-	);
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	size += device_desc.calcSize();
+
+	return uint32_t( size );
 }
 
 void ReplyControllerData::serialize( BufferOutputStream & stream ) const
@@ -643,11 +619,6 @@ bool ReplyControllerData::deserializeBody( BufferInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t RequestProtocolVersion::calcDataSize() const
-{
-	return sizeof( clientVersion );
-}
-
 void RequestProtocolVersion::serialize( BufferOutputStream & stream ) const
 {
 	header.serialize( stream );
@@ -663,11 +634,6 @@ bool RequestProtocolVersion::deserializeBody( BufferInputStream & stream )
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-
-uint32_t ReplyProtocolVersion::calcDataSize() const
-{
-	return sizeof( serverVersion );
-}
 
 void ReplyProtocolVersion::serialize( BufferOutputStream & stream ) const
 {
@@ -687,9 +653,11 @@ bool ReplyProtocolVersion::deserializeBody( BufferInputStream & stream )
 
 uint32_t SetClientName::calcDataSize() const
 {
-	return uint32_t(
-		name.size() + 1
-	);
+	size_t size = 0;
+
+	size += name.size() + 1;
+
+	return uint32_t( size );
 }
 
 void SetClientName::serialize( BufferOutputStream & stream ) const
@@ -707,31 +675,6 @@ bool SetClientName::deserializeBody( BufferInputStream & stream )
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-
-uint32_t DeviceListUpdated::calcDataSize() const
-{
-	return 0;
-}
-
-void DeviceListUpdated::serialize( BufferOutputStream & stream ) const
-{
-	header.serialize( stream );
-}
-
-bool DeviceListUpdated::deserializeBody( BufferInputStream & stream )
-{
-	return !stream.hasFailed();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-uint32_t ResizeZone::calcDataSize() const
-{
-	return uint32_t(
-		  sizeof( zone_idx )
-		+ sizeof( new_size )
-	);
-}
 
 void ResizeZone::serialize( BufferOutputStream & stream ) const
 {
@@ -753,10 +696,12 @@ bool ResizeZone::deserializeBody( BufferInputStream & stream )
 
 uint32_t UpdateLEDs::calcDataSize() const
 {
-	return uint32_t(
-		  sizeof( data_size )
-		+ sizeofORGBArray( colors )
-	);
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	size += sizeofORGBArray( colors );
+
+	return uint32_t( size );
 }
 
 void UpdateLEDs::serialize( BufferOutputStream & stream ) const
@@ -779,11 +724,13 @@ bool UpdateLEDs::deserializeBody( BufferInputStream & stream )
 
 uint32_t UpdateZoneLEDs::calcDataSize() const
 {
-	return uint32_t(
-		  sizeof( data_size )
-		+ sizeof( zone_idx )
-		+ sizeofORGBArray( colors )
-	);
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	size += sizeof( zone_idx );
+	size += sizeofORGBArray( colors );
+
+	return uint32_t( size );
 }
 
 void UpdateZoneLEDs::serialize( BufferOutputStream & stream ) const
@@ -808,10 +755,12 @@ bool UpdateZoneLEDs::deserializeBody( BufferInputStream & stream )
 
 uint32_t UpdateSingleLED::calcDataSize() const
 {
-	return uint32_t(
-		  sizeof( led_idx )
-		+ color.calcSize()
-	);
+	size_t size = 0;
+
+	size += sizeof( led_idx );
+	size += color.calcSize();
+
+	return uint32_t( size );
 }
 
 void UpdateSingleLED::serialize( BufferOutputStream & stream ) const
@@ -832,30 +781,15 @@ bool UpdateSingleLED::deserializeBody( BufferInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t SetCustomMode::calcDataSize() const
-{
-	return 0;
-}
-
-void SetCustomMode::serialize( BufferOutputStream & stream ) const
-{
-	header.serialize( stream );
-}
-
-bool SetCustomMode::deserializeBody( BufferInputStream & stream )
-{
-	return !stream.hasFailed();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
 uint32_t UpdateMode::calcDataSize() const
 {
-	return uint32_t(
-		  sizeof( data_size )
-		+ sizeof( mode_idx )
-		+ mode_desc.calcSize()
-	);
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	size += sizeof( mode_idx );
+	size += mode_desc.calcSize();
+
+	return uint32_t( size );
 }
 
 void UpdateMode::serialize( BufferOutputStream & stream ) const
