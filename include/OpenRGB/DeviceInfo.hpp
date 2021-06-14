@@ -9,7 +9,6 @@
 #define OPENRGB_DEVICE_INCLUDED
 
 
-#include "OpenRGB/private/Protocol.hpp"  // enums and flags
 #include "OpenRGB/Exceptions.hpp"
 
 #include "Color.hpp"
@@ -24,9 +23,144 @@ namespace orgb {
 
 class Device;
 
-struct LEDDescription;
-struct ZoneDescription;
-struct DeviceDescription;
+
+//======================================================================================================================
+//  enums
+
+/** Type of device with RGB LEDs */
+enum class DeviceType : uint32_t
+{
+	Motherboard   = 0,
+	DRAM          = 1,
+	GPU           = 2,
+	Cooler        = 3,
+	LedStrip      = 4,
+	Keyboard      = 5,
+	Mouse         = 6,
+	MouseMat      = 7,
+	Headset       = 8,
+	HeadsetStand  = 9,
+	Gamepad       = 10,
+	Unknown       = 11,
+};
+const char * enumString( DeviceType );
+
+/** Which features the mode supports */
+enum ModeFlags : uint32_t
+{
+	HasSpeed              = (1 << 0),  // the speed attribute in ModeDescription is present
+	HasDirectionLR        = (1 << 1),  // the direction attribute in ModeDescription can have LEFT or RIGHT values
+	HasDirectionUD        = (1 << 2),  // the direction attribute in ModeDescription can have UP or DOWN values
+	HasDirectionHV        = (1 << 3),  // the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
+	HasBrightness         = (1 << 4),  // the brightness attribute in ModeDescription is present
+	HasPerLedColor        = (1 << 5),  // the color_mode attribute in ModeDescription can be set to PER_LED
+	HasModeSpecificColor  = (1 << 6),  // the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
+	HasRandomColor        = (1 << 7),  // the color_mode attribute in ModeDescription can be set to RANDOM
+};
+std::string modeFlagsToString( uint32_t flags );
+
+/** Direction of the color effect */
+enum class Direction : uint32_t
+{
+	Left        = 0,
+	Right       = 1,
+	Up          = 2,
+	Down        = 3,
+	Horizontal  = 4,
+	Vertical    = 5
+};
+const char * enumString( Direction );
+
+/** How the colors of a mode are set */
+enum class ColorMode : uint32_t
+{
+	None          = 0,  // mode has no colors
+	PerLed        = 1,  // mode has per LED colors
+	ModeSpecific  = 2,  // mode specific colors
+	Random        = 3   // mode has random colors
+};
+const char * enumString( ColorMode );
+
+/** Type of RGB zone */
+enum class ZoneType : uint32_t
+{
+	Single  = 0,
+	Linear  = 1,
+	Matrix  = 2
+};
+const char * enumString( ZoneType );
+
+
+//======================================================================================================================
+//  info structs
+
+struct ModeDescription
+{
+	std::string   name;
+	uint32_t      value;
+	uint32_t      flags;
+	uint32_t      speed_min;
+	uint32_t      speed_max;
+	uint32_t      colors_min;
+	uint32_t      colors_max;
+	uint32_t      speed;
+	Direction     direction;
+	ColorMode     color_mode;
+	std::vector< Color >  colors;
+
+	size_t calcSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
+};
+
+struct ZoneDescription
+{
+	std::string   name;
+	ZoneType      type;
+	uint32_t      leds_min;
+	uint32_t      leds_max;
+	uint32_t      leds_count;
+	uint16_t      matrix_length;
+
+	// optional
+	uint32_t      matrix_height;
+	uint32_t      matrix_width;
+	std::vector< uint32_t >  matrix_values;
+
+	size_t calcSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
+};
+
+struct LEDDescription
+{
+	std::string  name;
+	uint32_t     value;
+
+	size_t calcSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
+};
+
+struct DeviceDescription
+{
+	DeviceType    device_type;
+	std::string   name;
+	std::string   vendor;
+	std::string   description;
+	std::string   version;
+	std::string   serial;
+	std::string   location;
+	uint32_t      active_mode;
+	std::vector< ModeDescription >  modes;
+	std::vector< ZoneDescription >  zones;
+	std::vector< LEDDescription >   leds;
+	std::vector< Color >            colors;
+
+	size_t calcSize() const;
+	void serialize( own::BufferOutputStream & stream ) const;
+	bool deserialize( own::BufferInputStream & stream );
+};
 
 
 //======================================================================================================================

@@ -9,9 +9,9 @@
 #define OPENRGB_CLIENT_INCLUDED
 
 
-#include "Color.hpp"
 #include "DeviceInfo.hpp"
-#include "private/SystemErrorType.hpp"  // HACK: read the comment at the top of that header file
+#include "Color.hpp"
+#include "SystemErrorType.hpp"  // HACK: read the comment at the top of that header file
 
 #include <string>  // client name
 #include <memory>  // unique_ptr<Socket>

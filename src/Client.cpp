@@ -9,8 +9,7 @@
 
 #include "Essential.hpp"
 
-#include "OpenRGB/private/Protocol.hpp"
-#include "OpenRGB/DeviceInfo.hpp"
+#include "Protocol.hpp"
 #include "OpenRGB/Exceptions.hpp"
 #include "BufferStream.hpp"
 using own::BufferOutputStream;
@@ -21,6 +20,7 @@ using own::SocketError;
 #include "SystemErrorInfo.hpp"
 using own::getLastError;
 using own::getErrorString;
+#include "LangUtils.hpp"
 
 #include <string>
 using std::string;

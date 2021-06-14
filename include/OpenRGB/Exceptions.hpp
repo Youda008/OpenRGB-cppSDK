@@ -9,7 +9,7 @@
 #define OPENRGB_EXCEPTIONS_INCLUDED
 
 
-#include "private/SystemErrorType.hpp"  // HACK: read the comment at the top of that header file
+#include "SystemErrorType.hpp"  // HACK: read the comment at the top of that header file
 
 
 namespace orgb {

@@ -5,7 +5,7 @@
 // Description: declaration of the protocol messages and types
 //======================================================================================================================
 
-#include "OpenRGB/private/Protocol.hpp"
+#include "Protocol.hpp"
 
 #include "MiscUtils.hpp"
 #include "BufferStream.hpp"
