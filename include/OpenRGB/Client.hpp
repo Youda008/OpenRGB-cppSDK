@@ -88,6 +88,12 @@ class Client
 
 	~Client();
 
+	// The connection cannot be shared.
+	Client( const Client & other ) = delete;
+
+	Client( Client && other ) = default;
+	Client & operator=( Client && other ) = default;
+
 	/** Connects to the OpenRGB server and announces our client name. */
 	ConnectStatus connect( const std::string & host = "127.0.0.1", uint16_t port = 6742 );
 
