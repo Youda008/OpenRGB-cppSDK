@@ -9,10 +9,404 @@
 
 #include "Essential.hpp"
 
+#include "ProtocolCommon.hpp"
+#include "BinaryStream.hpp"
+using own::BinaryOutputStream;
+using own::BinaryInputStream;
 #include "MiscUtils.hpp"
+
+#include <string>
+using std::string;
+#include <sstream>
+using std::ostringstream;  // flags to string
 
 
 namespace orgb {
+
+
+//======================================================================================================================
+//  enum strings
+
+const char * enumString( DeviceType type )
+{
+	static const char * const deviceTypeStr [] =
+	{
+		"Motherboard",
+		"DRAM",
+		"GPU",
+		"Cooler",
+		"LedStrip",
+		"Keyboard",
+		"Mouse",
+		"MouseMat",
+		"Headset",
+		"HeadsetStand",
+		"Gamepad",
+		"Unknown",
+	};
+
+	if (uint( type ) <= uint( DeviceType::Unknown ))
+		return deviceTypeStr[ uint( type ) ];
+	else
+		return "<invalid>";
+}
+
+string modeFlagsToString( uint32_t flags )
+{
+	ostringstream oss;
+
+	bool isFirst = true;
+	auto addFlag = [ &isFirst, &oss ]( const char * flagStr )
+	{
+		if (isFirst) {
+			isFirst = false;
+		} else {
+			oss << " | ";
+		}
+		oss << flagStr;
+	};
+
+	if (flags & ModeFlags::HasSpeed)
+		addFlag( "HasSpeed" );
+	if (flags & ModeFlags::HasDirectionLR)
+		addFlag( "HasDirectionLR" );
+	if (flags & ModeFlags::HasDirectionUD)
+		addFlag( "HasDirectionUD" );
+	if (flags & ModeFlags::HasDirectionHV)
+		addFlag( "HasDirectionHV" );
+	if (flags & ModeFlags::HasBrightness)
+		addFlag( "HasBrightness" );
+	if (flags & ModeFlags::HasPerLedColor)
+		addFlag( "HasPerLedColor" );
+	if (flags & ModeFlags::HasModeSpecificColor)
+		addFlag( "HasModeSpecificColor" );
+	if (flags & ModeFlags::HasRandomColor)
+		addFlag( "HasRandomColor" );
+
+	return oss.str();
+}
+
+const char * enumString( Direction dir )
+{
+	static const char * const deviceTypeStr [] =
+	{
+		"Left",
+		"Right",
+		"Up",
+		"Down",
+		"Horizontal",
+		"Vertical",
+	};
+
+	if (uint( dir ) <= uint( Direction::Vertical ))
+		return deviceTypeStr[ uint( dir ) ];
+	else
+		return "<invalid>";
+}
+
+const char * enumString( ColorMode mode )
+{
+	static const char * const colorModeStr [] =
+	{
+		"None",
+		"PerLed",
+		"ModeSpecific",
+		"Random",
+	};
+
+	if (uint( mode ) <= uint( ColorMode::Random ) )
+		return colorModeStr[ uint( mode ) ];
+	else
+		return "<invalid>";
+}
+
+const char * enumString( ZoneType type )
+{
+	static const char * const zoneTypeStr [] =
+	{
+		"Single",
+		"Linear",
+		"Matrix",
+	};
+
+	if (uint( type ) <= uint( ZoneType::Matrix ))
+		return zoneTypeStr[ uint( type ) ];
+	else
+		return "<invalid>";
+}
+
+
+//======================================================================================================================
+//  enum validation
+
+static bool isValidDeviceType( DeviceType type )
+{
+	//using Int = std::underlying_type< DeviceType >::type;
+	return int( type ) >= int( DeviceType::Motherboard ) && int( type ) <= int( DeviceType::Unknown );
+}
+
+static bool isValidDirection( Direction dir, uint32_t modeFlags )
+{
+	bool allowedDirections [ uint( Direction::Vertical ) + 1 ] = {0};
+	bool hasAnyDirections = false;
+
+	if (modeFlags & ModeFlags::HasDirectionLR)
+	{
+		hasAnyDirections = true;
+		allowedDirections[ uint( Direction::Left ) ] = true;
+		allowedDirections[ uint( Direction::Right ) ] = true;
+	}
+	if (modeFlags & ModeFlags::HasDirectionUD)
+	{
+		hasAnyDirections = true;
+		allowedDirections[ uint( Direction::Up ) ] = true;
+		allowedDirections[ uint( Direction::Down ) ] = true;
+	}
+	if (modeFlags & ModeFlags::HasDirectionHV)
+	{
+		hasAnyDirections = true;
+		allowedDirections[ uint( Direction::Horizontal ) ] = true;
+		allowedDirections[ uint( Direction::Vertical ) ] = true;
+	}
+
+	// in case no direction flag is active, direction will be uninitialized value, so it can be anything
+	if (!hasAnyDirections)
+	{
+		return true;
+	}
+
+	return allowedDirections[ uint( dir ) ] == true;
+}
+
+static bool isValidColorMode( ColorMode mode )
+{
+	return int( mode ) >= int( ColorMode::None ) && int( mode ) <= int( ColorMode::Random );
+}
+
+static bool isValidZoneType( ZoneType type )
+{
+	return int( type ) >= int( ZoneType::Single ) && int( type ) <= int( ZoneType::Matrix );
+}
+
+
+//======================================================================================================================
+//  repeated message sub-sections
+
+size_t ModeDescription::calcSize() const
+{
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( value );
+	size += sizeof( flags );
+	size += sizeof( speed_min );
+	size += sizeof( speed_max );
+	size += sizeof( colors_min );
+	size += sizeof( colors_max );
+	size += sizeof( speed );
+	size += sizeof( direction );
+	size += sizeof( color_mode );
+	size += sizeofORGBArray( colors );
+
+	return size;
+}
+
+void ModeDescription::serialize( BinaryOutputStream & stream ) const
+{
+	writeORGBString( stream, name );
+	stream << value;
+	stream << flags;
+	stream << speed_min;
+	stream << speed_max;
+	stream << colors_min;
+	stream << colors_max;
+	stream << speed;
+	stream << direction;
+	stream << color_mode;
+	writeORGBArray( stream, colors );
+}
+
+bool ModeDescription::deserialize( BinaryInputStream & stream )
+{
+	readORGBString( stream, name );
+	stream >> value;
+	stream >> flags;
+	stream >> speed_min;
+	stream >> speed_max;
+	stream >> colors_min;
+	stream >> colors_max;
+	stream >> speed;
+	stream >> direction;
+	stream >> color_mode;
+	readORGBArray( stream, colors );
+
+	if (!isValidDirection( direction, flags ))
+		stream.setFailed();
+	if (!isValidColorMode( color_mode ))
+		stream.setFailed();
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+size_t ZoneDescription::calcSize() const
+{
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( type );
+	size += sizeof( leds_min );
+	size += sizeof( leds_max );
+	size += sizeof( leds_count );
+	size += sizeof( matrix_length );
+	if (matrix_length > 0)
+	{
+		size += sizeof( matrix_height );
+		size += sizeof( matrix_width );
+		size += sizeofVector( matrix_values );
+	}
+
+	return size;
+}
+
+void ZoneDescription::serialize( BinaryOutputStream & stream ) const
+{
+	writeORGBString( stream, name );
+	stream << type;
+	stream << leds_min;
+	stream << leds_max;
+	stream << leds_count;
+	stream << matrix_length;
+	if (matrix_length > 0)
+	{
+		stream << matrix_height;
+		stream << matrix_width;
+		for (auto val : matrix_values)
+		{
+			stream << val;
+		}
+	}
+}
+
+bool ZoneDescription::deserialize( BinaryInputStream & stream)
+{
+	readORGBString( stream, name );
+	stream >> type;
+	stream >> leds_min;
+	stream >> leds_max;
+	stream >> leds_count;
+	stream >> matrix_length;
+	if (matrix_length > 0)
+	{
+		stream >> matrix_height;
+		stream >> matrix_width;
+		size_t matrixSize = matrix_height * matrix_width;
+		matrix_values.resize( matrixSize );
+		for (size_t i = 0; i < matrixSize; ++i)
+		{
+			stream >> matrix_values[i];
+		}
+	}
+
+	if (!isValidZoneType( type ))
+		stream.setFailed();
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+size_t LEDDescription::calcSize() const
+{
+	size_t size = 0;
+
+	size += sizeofORGBString( name );
+	size += sizeof( value );
+
+	return size;
+}
+
+void LEDDescription::serialize( BinaryOutputStream & stream ) const
+{
+	writeORGBString( stream, name );
+	stream << value;
+}
+
+bool LEDDescription::deserialize( BinaryInputStream & stream )
+{
+	readORGBString( stream, name );
+	stream >> value;
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+size_t DeviceDescription::calcSize() const
+{
+	size_t size = 0;
+
+	size += sizeof( device_type );
+	size += sizeofORGBString( name );
+	size += sizeofORGBString( vendor );
+	size += sizeofORGBString( description );
+	size += sizeofORGBString( version );
+	size += sizeofORGBString( serial );
+	size += sizeofORGBString( location );
+	size += sizeof( uint16_t );
+	size += sizeof( active_mode );
+	size += sizeofVector( modes );
+
+	return 0;
+}
+
+void DeviceDescription::serialize( BinaryOutputStream & stream ) const
+{
+	stream << device_type;
+	writeORGBString( stream, name );
+	writeORGBString( stream, vendor );
+	writeORGBString( stream, description );
+	writeORGBString( stream, version );
+	writeORGBString( stream, serial );
+	writeORGBString( stream, location );
+	stream << uint16_t( modes.size() );  // the size is not directly before the array, so it must be written manually
+	stream << active_mode;
+	for (const ModeDescription & mode : modes)
+	{
+		mode.serialize( stream );
+	}
+	writeORGBArray( stream, zones );
+	writeORGBArray( stream, leds );
+	writeORGBArray( stream, colors );
+}
+
+bool DeviceDescription::deserialize( BinaryInputStream & stream )
+{
+	stream >> device_type;
+	readORGBString( stream, name );
+	readORGBString( stream, vendor );
+	readORGBString( stream, description );
+	readORGBString( stream, version );
+	readORGBString( stream, serial );
+	readORGBString( stream, location );
+	uint16_t num_modes;
+	stream >> num_modes;  // the size is not directly before the array, so it must be read manually
+	stream >> active_mode;
+	modes.resize( num_modes );
+	for (size_t i = 0; i < num_modes; ++i)
+	{
+		modes[i].deserialize( stream );
+	}
+	readORGBArray( stream, zones );
+	readORGBArray( stream, leds );
+	readORGBArray( stream, colors );
+
+	if (!isValidDeviceType( device_type ))
+		stream.setFailed();
+
+	return !stream.hasFailed();
+}
 
 
 //======================================================================================================================

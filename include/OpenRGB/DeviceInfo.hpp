@@ -109,8 +109,8 @@ struct ModeDescription
 	std::vector< Color >  colors;
 
 	size_t calcSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 };
 
 struct ZoneDescription
@@ -128,8 +128,8 @@ struct ZoneDescription
 	std::vector< uint32_t >  matrix_values;
 
 	size_t calcSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 };
 
 struct LEDDescription
@@ -138,8 +138,8 @@ struct LEDDescription
 	uint32_t     value;
 
 	size_t calcSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 };
 
 struct DeviceDescription
@@ -158,8 +158,8 @@ struct DeviceDescription
 	std::vector< Color >            colors;
 
 	size_t calcSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 };
 
 

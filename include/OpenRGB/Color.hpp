@@ -13,8 +13,8 @@
 #include <cstdint>
 
 namespace own {
-	class BufferOutputStream;
-	class BufferInputStream;
+	class BinaryOutputStream;
+	class BinaryInputStream;
 }
 
 
@@ -48,8 +48,8 @@ class Color
 
 	/** this is here only for the templates in Client implementation */
 	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 
 };
 

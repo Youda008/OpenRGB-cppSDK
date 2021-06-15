@@ -9,11 +9,11 @@
 
 #include "Essential.hpp"
 
-#include "Protocol.hpp"
+#include "ProtocolMessages.hpp"
 #include "OpenRGB/Exceptions.hpp"
-#include "BufferStream.hpp"
-using own::BufferOutputStream;
-using own::BufferInputStream;
+#include "BinaryStream.hpp"
+using own::BinaryOutputStream;
+using own::BinaryInputStream;
 #include "Socket.hpp"
 using own::TcpClientSocket;
 using own::SocketError;
@@ -21,6 +21,8 @@ using own::SocketError;
 using own::getLastError;
 using own::getErrorString;
 #include "LangUtils.hpp"
+using own::span;
+using own::make_span;
 
 #include <string>
 using std::string;
@@ -517,7 +519,7 @@ UpdateStatus Client::hasUpdateMessageArrived()
 	// We have some message, so let's check what it is.
 
 	Header header;
-	BufferInputStream stream( move( buffer ) );
+	BinaryInputStream stream( make_span( buffer ) );
 	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
 	{
 		// We received something, but something totally different than what we expected.
@@ -557,7 +559,7 @@ bool Client::sendMessage( ConstructorArgs ... args )
 
 	// allocate buffer and serialize (header.message_size is calculated in constructor)
 	std::vector< uint8_t > buffer( message.header.size() + message.header.message_size );
-	BufferOutputStream stream( buffer );
+	BinaryOutputStream stream( make_span( buffer ) );
 	message.serialize( stream );
 
 	return _socket->send( buffer ) == SocketError::Success;
@@ -585,7 +587,7 @@ Client::RecvResult< Message > Client::awaitMessage()
 		}
 
 		// parse and validate the header
-		BufferInputStream stream( headerBuffer );
+		BinaryInputStream stream( make_span( headerBuffer ) );
 		if (!result.message.header.deserialize( stream ))
 		{
 			result.status = RequestStatus::InvalidReply;
@@ -623,7 +625,7 @@ Client::RecvResult< Message > Client::awaitMessage()
 	}
 
 	// parse and validate the body
-	BufferInputStream stream( bodyBuffer );
+	BinaryInputStream stream( make_span( bodyBuffer ) );
 	if (!result.message.deserializeBody( stream ))
 	{
 		result.status = RequestStatus::InvalidReply;

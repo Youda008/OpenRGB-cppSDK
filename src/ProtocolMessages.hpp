@@ -2,7 +2,7 @@
 // Project: OpenRGB - C++ SDK
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: declaration of the protocol messages and types
+// Description: declaration of the protocol messages
 //======================================================================================================================
 /*
 
@@ -60,8 +60,8 @@ How to extend an existing message:
 
 */
 
-#ifndef OPENRGB_PROTOCOL_INCLUDED
-#define OPENRGB_PROTOCOL_INCLUDED
+#ifndef OPENRGB_PROTOCOL_MESSAGES_INCLUDED
+#define OPENRGB_PROTOCOL_MESSAGES_INCLUDED
 
 
 #include "OpenRGB/DeviceInfo.hpp"
@@ -72,8 +72,8 @@ How to extend an existing message:
 #include <vector>
 
 namespace own {
-	class BufferOutputStream;
-	class BufferInputStream;
+	class BinaryOutputStream;
+	class BinaryInputStream;
 }
 
 
@@ -122,8 +122,8 @@ struct Header
 
 	static constexpr size_t size() { return sizeof(Header); }  // all members are equally big, no padding will take place
 
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserialize( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream );
 };
 
 
@@ -152,11 +152,11 @@ struct RequestControllerCount
 	{
 		return 0;
 	}
-	void serialize( own::BufferOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BufferInputStream & )
+	bool deserializeBody( own::BinaryInputStream & )
 	{
 		return true;
 	}
@@ -187,8 +187,8 @@ struct ReplyControllerCount
 	{
 		return sizeof( count );
 	}
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Asks for all information and supported modes about a specific RGB device (controller). */
@@ -216,11 +216,11 @@ struct RequestControllerData
 	{
 		return 0;
 	}
-	void serialize( own::BufferOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BufferInputStream & )
+	bool deserializeBody( own::BinaryInputStream & )
 	{
 		return true;
 	}
@@ -250,8 +250,8 @@ struct ReplyControllerData
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Tells the server in what version of the protocol the client wants to communite in. */
@@ -278,8 +278,8 @@ struct RequestProtocolVersion
 	{
 		return sizeof( clientVersion );
 	}
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** A reply to RequestProtocolVersion. Contains the maximum version the server supports. */
@@ -307,8 +307,8 @@ struct ReplyProtocolVersion
 	{
 		return sizeof( serverVersion );
 	}
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Announces a custom name of the client to the server. */
@@ -334,8 +334,8 @@ struct SetClientName
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** This is sent from the server everytime its device list has changed. */
@@ -360,11 +360,11 @@ struct DeviceListUpdated
 	{
 		return 0;
 	}
-	void serialize( own::BufferOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BufferInputStream & )
+	bool deserializeBody( own::BinaryInputStream & )
 	{
 		return true;
 	}
@@ -397,8 +397,8 @@ struct ResizeZone
 	{
 		return sizeof( zone_idx ) + sizeof( new_size );
 	}
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Applies individually selected color to every LED. */
@@ -425,8 +425,8 @@ struct UpdateLEDs
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Applies individually selected color to every LED in a specific zone. */
@@ -455,8 +455,8 @@ struct UpdateZoneLEDs
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Changes color of a single particular LED. */
@@ -483,8 +483,8 @@ struct UpdateSingleLED
 	{}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 /** Switches mode of a device to "Direct" mode */
@@ -510,11 +510,11 @@ struct SetCustomMode
 	{
 		return 0;
 	}
-	void serialize( own::BufferOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BufferInputStream & )
+	bool deserializeBody( own::BinaryInputStream & )
 	{
 		return true;
 	}
@@ -546,8 +546,8 @@ struct UpdateMode
 	}
 
 	uint32_t calcDataSize() const;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & stream );
 };
 
 
@@ -557,4 +557,4 @@ struct UpdateMode
 } // namespace orgb
 
 
-#endif // OPENRGB_PROTOCOL_INCLUDED
+#endif // OPENRGB_PROTOCOL_MESSAGES_INCLUDED

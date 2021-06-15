@@ -10,9 +10,9 @@
 #include "Essential.hpp"
 
 #include "MiscUtils.hpp"
-#include "BufferStream.hpp"
-using own::BufferOutputStream;
-using own::BufferInputStream;
+#include "BinaryStream.hpp"
+using own::BinaryOutputStream;
+using own::BinaryInputStream;
 
 
 namespace orgb {
@@ -30,13 +30,13 @@ const Color Color::Yellow  (0xFF, 0xFF, 0x00);
 const Color Color::Magenta (0xFF, 0x00, 0xFF);
 const Color Color::Cyan    (0x00, 0xFF, 0xFF);
 
-void Color::serialize( BufferOutputStream & stream ) const
+void Color::serialize( BinaryOutputStream & stream ) const
 {
 	uint8_t padding = 0;
 	stream << r << g << b << padding;
 }
 
-bool Color::deserialize( BufferInputStream & stream )
+bool Color::deserialize( BinaryInputStream & stream )
 {
 	uint8_t padding;
 	stream >> r >> g >> b >> padding;
