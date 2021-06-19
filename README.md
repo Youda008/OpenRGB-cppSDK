@@ -16,15 +16,16 @@ using orgb::RequestStatus;
 using orgb::DeviceType;
 ```
 
-Create the client and connect to OpenRGB server.
+Create the client and connect to an OpenRGB server.
 ```
 orgb::Client client( "My OpenRGB Client" );
 
 ConnectStatus status = client.connect( "127.0.0.1" );  // you can also use Windows computer name
 if (status != ConnectStatus::Success)
 {
-	fprintf( stderr, "failed to connect (error code: %d)\n", int( client.getLastSystemError() ) );
-	return;
+    fprintf( stderr, "failed to connect: %s (error code: %d)\n",
+        enumString( status ), int( client.getLastSystemError() ) );
+    return;
 }
 ```
 
@@ -33,8 +34,9 @@ Download a list of devices and their settings.
 DeviceListResult result = client.requestDeviceList();
 if (result.status != RequestStatus::Success)
 {
-	fprintf( stderr, "failed to get device list\n" );
-	return;
+    fprintf( stderr, "failed to get device list: %s (error code: %d)\n",
+        enumString( result.status ), int( client.getLastSystemError() ) );
+    return;
 }
 ```
 
@@ -43,8 +45,8 @@ Find the device you want to control. You can search by type or name.
 const Device * cpuCooler = result.devices.find( DeviceType::Cooler );
 if (!cpuCooler)
 {
-	fprintf( stderr, "device CPU cooler not found.\n" );
-	return;
+    fprintf( stderr, "device CPU cooler not found.\n" );
+    return;
 }
 ```
 
@@ -54,8 +56,8 @@ This is how you do it.
 const Mode * directMode = cpuCooler->findMode( "Direct" );
 if (!directMode)
 {
-	fprintf( stderr, "\"Direct\" mode not found in CPU cooler.\n" );
-	return;
+    fprintf( stderr, "\"Direct\" mode not found in CPU cooler.\n" );
+    return;
 }
 client.changeMode( *cpuCooler, *directMode );
 ```
@@ -68,6 +70,12 @@ client.setDeviceColor( *cpuCooler, Color::RED );
 You can create any color by using the `Color` constructor.
 ```
 Color customColor( 255, 128, 64 );
+```
+It is also possible to create color from strings "black", "red", "cyan" and from hex notation in format "#1267AB" by using method `fromString`
+```
+Color color;
+if (!color.fromString( input ))
+    fprintf( stderr, "Invalid input.\n" );
 ```
 
 #### !!WARNING!!
@@ -83,23 +91,23 @@ If you don't like the old-school way of checking return values, there are except
 ```
 try
 {
-	orgb::Client client( "My OpenRGB Client" );
+    orgb::Client client( "My OpenRGB Client" );
 
-	client.connectX( "127.0.0.1" );
+    client.connectX( "127.0.0.1" );
 
-	DeviceList devices = client.requestDeviceListX();
+    DeviceList devices = client.requestDeviceListX();
 
-	const Device & cpuCooler = devices.findX( DeviceType::Cooler );
+    const Device & cpuCooler = devices.findX( DeviceType::Cooler );
 
-	const Mode & directMode = cpuCooler->findModeX( "Direct" );
+    const Mode & directMode = cpuCooler->findModeX( "Direct" );
 
-	client.changeModeX( cpuCooler, directMode );
+    client.changeModeX( cpuCooler, directMode );
 
-	client.setDeviceColorX( cpuCooler, Color::RED );
+    client.setDeviceColorX( cpuCooler, Color::Red );
 }
 catch (const orgb::Exception & ex)
 {
-	printf( "Error: %s\n", ex.errorMessage() );
+    printf( "Error: %s\n", ex.errorMessage() );
 }
 ```
 
@@ -107,7 +115,7 @@ catch (const orgb::Exception & ex)
 Complete examples of working apps using this library can be found in directory `examples`, feel free to copy&paste anything.
 
 #### Building your application
-Depending on your IDE or build system, you must add the directory `include` to your include directories and the directory where you built this library to your link library directories. Then you must link library `orgbsdk` to your app. The library is static, so you don't have to worry about moving any dynamic librariess around together with your app.
+Depending on your IDE or build system, you must add the directory `include` to your include directories and the directory where you built this library to your link library directories. Then you must link library `orgbsdk` to your app. The library is static, so you don't have to worry about moving any dynamic libraries around together with your app.
 
 Simpliest example with GCC
 ```
@@ -116,6 +124,13 @@ g++ -I"<path to OpenRGB-cppSDK>/include" -L"<path to OpenRGB-cppSDK>/build" -o m
 
 
 ## How to build the library
+
+First initialize all submodules, either with via any graphical tool or
+```
+git submodule update --init
+```
+Then proceed according to your OS and build chain.
+
 
 ### Windows - Msys2
 

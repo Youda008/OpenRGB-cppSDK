@@ -83,7 +83,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			DeviceListResult result = client.requestDeviceList();
 			if (result.status != RequestStatus::Success)
 			{
-				printf( "failed to get device list (error code: %d)\n", int(client.getLastSystemError()) );
+				printf( "failed to get device list: %s (error code: %d)\n", enumString( result.status ), int( client.getLastSystemError() ) );
 				// reset everything and try again
 				client.disconnect();
 				continue;

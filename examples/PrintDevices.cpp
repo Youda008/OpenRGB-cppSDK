@@ -25,7 +25,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	DeviceListResult result = client.requestDeviceList();
 	if (result.status != RequestStatus::Success)
 	{
-		fprintf( stderr, "failed to get device list\n" );
+		fprintf( stderr, "failed to get device list: %s (error code: %d)\n", enumString( result.status ), int( client.getLastSystemError() ) );
 		return 2;
 	}
 

@@ -278,7 +278,7 @@ static bool list( const ArgList & )
 
 	if (listResult.status != RequestStatus::Success)
 	{
-		cout << " -> failed: " << enumString( listResult.status ) << endl;
+		cout << " -> failed: " << enumString( listResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
 		return false;
 	}
 
