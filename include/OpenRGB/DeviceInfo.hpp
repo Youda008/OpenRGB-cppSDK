@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <memory>
 
 
 namespace orgb {
@@ -173,15 +174,15 @@ class LED
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
 
-	uint32_t      id;
+	uint32_t      idx;
 	std::string   name;
 	uint32_t      value;  ///< device-specific value
 
  public:
 
-	LED( const Device & parent, uint32_t id, LEDDescription && desc );
+	LED( const Device & parent, uint32_t idx, LEDDescription && desc );
 
-	// must be copyable so that vector can reallocate
+	// Must be copyable so that vector can reallocate.
 	LED( const LED & other ) = default;
 	LED( LED && other ) noexcept = default;
 
@@ -201,7 +202,7 @@ class Zone
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
 
-	uint32_t      id;
+	uint32_t      idx;
 	std::string   name;
 	ZoneType      type;
 	uint32_t      minLeds;      ///< minimum size of the zone
@@ -213,9 +214,9 @@ class Zone
 
  public:
 
-	Zone( const Device & parent, uint32_t id, ZoneDescription && desc );
+	Zone( const Device & parent, uint32_t idx, ZoneDescription && desc );
 
-	// must be copyable so that vector can reallocate
+	// Must be copyable so that vector can reallocate.
 	Zone( const Zone & other ) = default;
 	Zone( Zone && other ) noexcept = default;
 
@@ -235,7 +236,7 @@ class Mode
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
 
-	const uint32_t      id;
+	const uint32_t      idx;
 	const std::string   name;
 	const uint32_t      value;      ///< device-specific value
 	const uint32_t      flags;      ///< see ModeFlags for possible bit flags
@@ -250,7 +251,7 @@ class Mode
 
  public:
 
-	Mode( const Device & parent, uint32_t id, ModeDescription && desc );
+	Mode( const Device & parent, uint32_t idx, ModeDescription && desc );
 
 	// must be copyable so that vector can reallocate
 	Mode( const Mode & other ) = default;
@@ -271,9 +272,10 @@ class Device
 
  public:
 
-	uint32_t id;
+	uint32_t idx;
 	DeviceType type;
 	std::string name;
+	std::string vendor;
 	std::string description;
 	std::string version;
 	std::string serial;
@@ -287,9 +289,9 @@ class Device
 
  public:
 
-	Device( uint32_t id, DeviceDescription && descr );
+	Device( uint32_t idx, DeviceDescription && descr );
 
-	// no copies or moves allowed, because they would break the non-owning references in Modes, Zones and LEDs
+	// No copies or moves allowed, because they would break the non-owning references in Modes, Zones and LEDs.
 	Device( const Device & other ) = delete;
 	Device( Device && other ) noexcept = delete;
 	Device & operator=( const Device & other ) = delete;
@@ -347,33 +349,56 @@ class Device
 
 
 //======================================================================================================================
+/** Convenience wrapper around iterator to container of pointers
+  * that skips the additional needed dereference and returns a reference directly. */
+
+template< typename IterType >
+class PointerIterator
+{
+	IterType _origIter;
+ public:
+	PointerIterator( const IterType & origIter ) : _origIter( origIter ) {}
+	auto operator*() -> decltype( **_origIter ) const { return **_origIter; }
+	auto operator->() -> decltype( *_origIter ) const { return *_origIter; }
+	PointerIterator & operator++() { ++_origIter; return *this; }
+	PointerIterator operator++(int) { auto tmp = *this; ++_origIter; return tmp; }
+	friend bool operator==(const PointerIterator & a, const PointerIterator & b) { return a._origIter == b._origIter; }
+	friend bool operator!=(const PointerIterator & a, const PointerIterator & b) { return a._origIter != b._origIter; }
+};
+
+
+//======================================================================================================================
 /** All RGB-capable devices in your computer. */
 
 class DeviceList
 {
-	// this has to be list, because vector would invalidate all references when resized
-	using DeviceListType = std::list< Device >;
+	// This has to ve vector of pointers. Simple vector would invalidate references in Mode, Zone and LED when resized.
+	using DeviceListType = std::vector< std::unique_ptr< Device > >;
 	DeviceListType _list;
 
  public:
 
 	DeviceList() {}
-	// copying is not allowed because it would break the non-owning references in Device sub-objects
+	// Copying is not allowed because it would break the non-owning references in Device sub-objects.
 	DeviceList( const DeviceList & other ) = delete;
 	DeviceList( DeviceList && other ) noexcept = default;
 	DeviceList & operator=( const DeviceList & other ) = delete;
 	DeviceList & operator=( DeviceList && other ) noexcept = default;
 
-	void append( uint32_t deviceId, DeviceDescription && desc ) { _list.emplace_back( deviceId, std::move( desc ) ); }
+	size_t size() const { return _list.size(); }
+
+	void append( DeviceDescription && desc ) { _list.emplace_back( new Device( nextIdx(), std::move( desc ) ) ); }
 	void clear() { _list.clear(); }
 
-	DeviceListType::const_iterator begin() const  { return _list.begin(); }
-	DeviceListType::const_iterator end() const    { return _list.end(); }
+	PointerIterator< DeviceListType::const_iterator > begin() const  { return _list.begin(); }
+	PointerIterator< DeviceListType::const_iterator > end() const    { return _list.end(); }
+
+	const Device & operator[]( uint32_t deviceIdx ) const { return *_list[ deviceIdx ]; }
 
 	template< typename FuncType >
 	void forEach( DeviceType deviceType, FuncType loopBody ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.type == deviceType)
 				loopBody( device );
 	}
@@ -381,14 +406,14 @@ class DeviceList
 	template< typename FuncType >
 	void forEach( const std::string & deviceName, FuncType loopBody ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.name == deviceName)
 				loopBody( device );
 	}
 
 	const Device * find( DeviceType deviceType ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.type == deviceType)
 				return &device;
 		return nullptr;
@@ -396,7 +421,7 @@ class DeviceList
 
 	const Device & findX( DeviceType deviceType ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.type == deviceType)
 				return device;
 		throw NotFound( "Device of such type was not found" );
@@ -404,7 +429,7 @@ class DeviceList
 
 	const Device * find( const std::string & deviceName ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.name == deviceName)
 				return &device;
 		return nullptr;
@@ -412,11 +437,15 @@ class DeviceList
 
 	const Device & findX( const std::string & deviceName ) const
 	{
-		for (const Device & device : _list)
+		for (const Device & device : *this)
 			if (device.name == deviceName)
 				return device;
 		throw NotFound( "Device of such name was not found" );
 	}
+
+ private:
+
+	uint32_t nextIdx() const { return uint32_t( _list.size() ); }
 
 };
 
@@ -424,12 +453,15 @@ class DeviceList
 //======================================================================================================================
 //  printing utils
 
-// TODO: output to abstract C++ stream
-
 void print( const Device & device, unsigned int indentLevel = 0 );
 void print( const Mode & mode, unsigned int indentLevel = 0 );
 void print( const Zone & zone, unsigned int indentLevel = 0 );
 void print( const LED & led, unsigned int indentLevel = 0 );
+
+void print( std::ostream & os, const Device & device, unsigned int indentLevel = 0 );
+void print( std::ostream & os, const Mode & mode, unsigned int indentLevel = 0 );
+void print( std::ostream & os, const Zone & zone, unsigned int indentLevel = 0 );
+void print( std::ostream & os, const LED & led, unsigned int indentLevel = 0 );
 
 
 //======================================================================================================================

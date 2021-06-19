@@ -25,6 +25,9 @@ namespace own {
 namespace orgb {
 
 
+constexpr uint16_t defaultPort = 6742;
+
+
 //======================================================================================================================
 
 /** All the possible ways how the connect operation can end up. */
@@ -95,7 +98,7 @@ class Client
 	Client & operator=( Client && other ) = default;
 
 	/** Connects to the OpenRGB server and announces our client name. */
-	ConnectStatus connect( const std::string & host = "127.0.0.1", uint16_t port = 6742 );
+	ConnectStatus connect( const std::string & host = "127.0.0.1", uint16_t port = defaultPort );
 
 	/** Exception-throwing variant of connect(...). Check Exceptions.hpp for details. */
 	void connectX( const std::string & host = "127.0.0.1", uint16_t port = 6742 );

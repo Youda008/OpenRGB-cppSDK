@@ -1,7 +1,6 @@
-/Build*
-/build*
-*.pro.user*
-*-debug.pro
+Build*
+build*
+*.pro*
 /src/debugMain.cpp
 /research/*
 private-*

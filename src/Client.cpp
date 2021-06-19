@@ -278,7 +278,7 @@ DeviceListResult Client::requestDeviceList()
 				return result;
 			}
 
-			result.devices.append( deviceIdx, move( deviceDataResult.message.device_desc ) );
+			result.devices.append( move( deviceDataResult.message.device_desc ) );
 		}
 	}
 	// In the middle of the update we might receive DeviceListUpdated message. In that case we need to start again.
@@ -317,7 +317,7 @@ RequestStatus Client::changeMode( const Device & device, const Mode & mode )
 	ModeDescription modeDesc;  // we need to copy all data because this might be user-owned object
 	mode.toProtocolDescription( modeDesc );
 
-	if (!sendMessage< UpdateMode >( device.id, mode.id, modeDesc ))
+	if (!sendMessage< UpdateMode >( device.idx, mode.idx, modeDesc ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -338,7 +338,7 @@ RequestStatus Client::switchToDirectMode( const Device & device )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< SetCustomMode >( device.id ))
+	if (!sendMessage< SetCustomMode >( device.idx ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -360,7 +360,7 @@ RequestStatus Client::setDeviceColor( const Device & device, Color color )
 	}
 
 	std::vector< Color > allColorsInDevice( device.leds.size(), color );
-	if (!sendMessage< UpdateLEDs >( device.id, allColorsInDevice ))
+	if (!sendMessage< UpdateLEDs >( device.idx, allColorsInDevice ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -382,7 +382,7 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color )
 	}
 
 	std::vector< Color > allColorsInZone( zone.numLeds, color );
-	if (!sendMessage< UpdateZoneLEDs >( zone.parent.id, zone.id, allColorsInZone ))
+	if (!sendMessage< UpdateZoneLEDs >( zone.parent.idx, zone.idx, allColorsInZone ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -403,7 +403,7 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< ResizeZone >( zone.parent.id, zone.id, newSize ))
+	if (!sendMessage< ResizeZone >( zone.parent.idx, zone.idx, newSize ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -424,7 +424,7 @@ RequestStatus Client::setColorOfSingleLED( const LED & led, Color color )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< UpdateSingleLED >( led.parent.id, led.id, color ))
+	if (!sendMessage< UpdateSingleLED >( led.parent.idx, led.idx, color ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}

@@ -10,9 +10,16 @@
 #include "Essential.hpp"
 
 #include "MiscUtils.hpp"
+#include "StringUtils.hpp"
 #include "BinaryStream.hpp"
 using own::BinaryOutputStream;
 using own::BinaryInputStream;
+
+#include <cstdio>
+#include <iostream>
+#include <ios>
+#include <iomanip>
+#include <unordered_map>
 
 
 namespace orgb {
@@ -30,6 +37,44 @@ const Color Color::Yellow  (0xFF, 0xFF, 0x00);
 const Color Color::Magenta (0xFF, 0x00, 0xFF);
 const Color Color::Cyan    (0x00, 0xFF, 0xFF);
 
+static const std::unordered_map< std::string, Color > colorNames =
+{
+	{ "black", Color::Black },
+	{ "white", Color::White },
+	{ "red", Color::Red },
+	{ "green", Color::Green },
+	{ "blue", Color::Blue },
+	{ "yellow", Color::Yellow },
+	{ "magenta", Color::Magenta },
+	{ "cyan", Color::Cyan },
+};
+
+bool Color::fromString( const std::string & str )
+{
+	if (str.empty())
+		return false;
+
+	if (str[0] == '#' && sscanf( str.c_str() + 1, "%02x%02x%02x", &r, &g, &b ) == 3)
+	{
+		return true;
+	}
+	else if (sscanf( str.c_str(), "%02x%02x%02x", &r, &g, &b ) == 3)  // TODO: uint
+	{
+		return true;
+	}
+	else
+	{
+		std::string strLower = own::to_lower( str );
+		auto colorIter = colorNames.find( strLower );
+		if (colorIter != colorNames.end())
+		{
+			*this = colorIter->second;
+			return true;
+		}
+	}
+	return false;
+}
+
 void Color::serialize( BinaryOutputStream & stream ) const
 {
 	uint8_t padding = 0;
@@ -44,9 +89,29 @@ bool Color::deserialize( BinaryInputStream & stream )
 	return !stream.hasFailed();
 }
 
+std::ostream & operator<<( std::ostream & os, const Color & color )
+{
+	std::ios_base::fmtflags origFlags( os.flags() );
+	os << std::uppercase << std::hex << std::setfill('0');
+	os << std::setw(2) << uint(color.r) << std::setw(2) << uint(color.g) << std::setw(2) << uint(color.b);
+	os.flags( origFlags );
+	return os;
+}
+
+std::istream & operator>>( std::istream & is, Color & color )
+{
+	std::string colorStr;
+	is >> colorStr;
+	if (!color.fromString( colorStr ))
+	{
+		is.setstate( std::ios::failbit );
+	}
+	return is;
+}
+
 void print( const Color & color )
 {
-	printf( "%02X%02X%02X", color.r, color.g, color.b );
+	printf( "%02X%02X%02X", uint(color.r), uint(color.g), uint(color.b) );
 }
 
 

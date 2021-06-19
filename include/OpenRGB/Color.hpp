@@ -9,8 +9,8 @@
 #define OPENRGB_COLOR_INCLUDED
 
 
-#include <cstddef>
 #include <cstdint>
+#include <string>
 
 namespace own {
 	class BinaryOutputStream;
@@ -37,6 +37,13 @@ class Color
 	Color( uint8_t red, uint8_t green, uint8_t blue ) : r( red ), g( green ), b( blue ) {}
 	~Color() {}
 
+	/// Attempts to deduce a color from a string description.
+	/** Possible ways to define a color are:
+	  * 1. hex number of 6 digits, for example "AB34EF", may be preceeded by '#' character
+	  * 2. a word, for example "red", "cyan", "black", case doesn't matter */
+	bool fromString( const std::string & str );
+
+	// predefined basic colors for instant use
 	static const Color Black;
 	static const Color White;
 	static const Color Red;
@@ -46,10 +53,12 @@ class Color
 	static const Color Magenta;
 	static const Color Cyan;
 
-	/** this is here only for the templates in Client implementation */
 	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
 	void serialize( own::BinaryOutputStream & stream ) const;
 	bool deserialize( own::BinaryInputStream & stream );
+
+	friend std::ostream & operator<<( std::ostream & os, const Color & color );
+	friend std::istream & operator>>( std::istream & is, Color & color );
 
 };
 

@@ -17,6 +17,8 @@ namespace orgb {
 
 void indent( unsigned int indentLevel );
 
+void indent( std::ostream & os, unsigned int indentLevel );
+
 
 } // namespace orgb
 
