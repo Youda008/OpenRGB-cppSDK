@@ -1,6 +1,5 @@
 Build*
 build*
-*.pro*
-/src/debugMain.cpp
+*.pro.user*
 /research/*
 private-*

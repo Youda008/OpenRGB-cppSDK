@@ -1,2 +1,4 @@
 more methods for colors, from HSV conversion, mixing, ...
-command line tool for the most basic actions
+better and more consistent documentation
+noexcept where applicable
+proper CMake build system for CLI

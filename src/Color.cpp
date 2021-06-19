@@ -54,12 +54,19 @@ bool Color::fromString( const std::string & str )
 	if (str.empty())
 		return false;
 
-	if (str[0] == '#' && sscanf( str.c_str() + 1, "%02x%02x%02x", &r, &g, &b ) == 3)
+	uint red, green, blue;
+	if (str[0] == '#' && sscanf( str.c_str() + 1, "%02x%02x%02x", &red, &green, &blue ) == 3)
 	{
+		r = uint8_t( red );
+		g = uint8_t( green );
+		b = uint8_t( blue );
 		return true;
 	}
-	else if (sscanf( str.c_str(), "%02x%02x%02x", &r, &g, &b ) == 3)  // TODO: uint
+	else if (sscanf( str.c_str(), "%02x%02x%02x", &red, &green, &blue ) == 3)
 	{
+		r = uint8_t( red );
+		g = uint8_t( green );
+		b = uint8_t( blue );
 		return true;
 	}
 	else

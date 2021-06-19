@@ -220,7 +220,6 @@ REGISTER_SPECIAL_COMMAND( connect, "<host_name>[:<port>]", "connects to an OpenR
 		endpoint.port = orgb::defaultPort;
 
 	cout << "Connecting to " << endpoint.hostName << ":" << endpoint.port << endl;
-
 	ConnectStatus status = client.connect( endpoint.hostName, endpoint.port );
 
 	if (status == ConnectStatus::Success)
@@ -245,7 +244,6 @@ REGISTER_SPECIAL_COMMAND( disconnect, "", "disconnects from the currently connec
 REGISTER_COMMAND( list, "", "lists all devices and their properties, modes, zones and LEDs", HANDLER(
 {
 	cout << "Requesting the device list." << endl;
-
 	DeviceListResult result = client.requestDeviceList();
 
 	if (result.status != RequestStatus::Success)
@@ -290,7 +288,7 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a 
 	RequestStatus status;
 	if (partSpec.isEmpty())
 	{
-		cout << "Changing the color of device " << deviceID.str << " to " << color << endl;
+		cout << "Changing color of device " << deviceID.str << " to " << color << endl;
 		status = client.setDeviceColor( *device, color );
 	}
 	else if (partSpec.type == PartSpec::Type::Zone)
@@ -298,7 +296,7 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a 
 		const Zone * zone = findZone( *device, partSpec.id );
 		if (!zone)
 			return false;
-		cout << "Changing the color of zone " << partSpec.id.str << " to " << color << endl;
+		cout << "Changing color of zone " << partSpec.id.str << " to " << color << endl;
 		status = client.setZoneColor( *zone, color );
 	}
 	else
@@ -306,7 +304,7 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a 
 		const LED * led = findLED( *device, partSpec.id );
 		if (!led)
 			return false;
-		cout << "Changing the color of LED " << partSpec.id.str << " to " << color << endl;
+		cout << "Changing color of LED " << partSpec.id.str << " to " << color << endl;
 		status = client.setColorOfSingleLED( *led, color );
 	}
 
@@ -344,6 +342,7 @@ REGISTER_COMMAND( setmode, "<device_id> <mode>", "TODO", HANDLER(
 	if (!mode)
 		return false;
 
+	cout << "Changing mode of device " << deviceID.str << " to " << modeID.str << endl;
 	RequestStatus status = client.changeMode( *device, *mode );
 
 	if (status == RequestStatus::Success)
@@ -381,6 +380,7 @@ REGISTER_COMMAND( resizezone, "<device_id> <zone_id> <size>", "TODO", HANDLER(
 	if (!zone)
 		return false;
 
+	cout << "Changing size of zone " << zoneID.str << " to " << zoneSize << endl;
 	RequestStatus status = client.setZoneSize( *zone, zoneSize );
 
 	if (status == RequestStatus::Success)
