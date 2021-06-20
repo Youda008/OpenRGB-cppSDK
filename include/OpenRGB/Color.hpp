@@ -10,7 +10,7 @@
 
 
 #include <cstdint>
-#include <string>
+#include <iosfwd>
 
 namespace own {
 	class BinaryOutputStream;

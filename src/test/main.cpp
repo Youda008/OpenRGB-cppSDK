@@ -4,6 +4,7 @@
 using namespace orgb;
 
 #include "StringUtils.hpp"
+#include "StreamUtils.hpp"
 
 #include <iostream>
 #include <sstream>

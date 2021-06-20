@@ -19,8 +19,10 @@ debug:DEFINES += DEBUG
 
 SOURCES += \
         shared/CppUtils-Essential/LangUtils.cpp \
+        shared/CppUtils-Essential/StreamUtils.cpp \
         shared/CppUtils-Essential/StringUtils.cpp \
         shared/CppUtils-Network/BinaryStream.cpp \
+        shared/CppUtils-Network/NetAddress.cpp \
         shared/CppUtils-Network/Socket.cpp \
         shared/CppUtils-Network/SystemErrorInfo.cpp \
         src/Client.cpp \
@@ -38,8 +40,11 @@ HEADERS += \
         shared/CppUtils-Essential/Essential.hpp \
         shared/CppUtils-Essential/LangUtils.hpp \
         shared/CppUtils-Essential/Safety.hpp \
+        shared/CppUtils-Essential/Span.hpp \
+        shared/CppUtils-Essential/StreamUtils.hpp \
         shared/CppUtils-Essential/StringUtils.hpp \
         shared/CppUtils-Network/BinaryStream.hpp \
+        shared/CppUtils-Network/NetAddress.hpp \
         shared/CppUtils-Network/Socket.hpp \
         shared/CppUtils-Network/SystemErrorInfo.hpp \
         include/OpenRGB/Client.hpp \

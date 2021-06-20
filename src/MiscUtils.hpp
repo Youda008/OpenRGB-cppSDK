@@ -11,6 +11,8 @@
 
 #include "Essential.hpp"
 
+#include <iosfwd>
+
 
 namespace orgb {
 

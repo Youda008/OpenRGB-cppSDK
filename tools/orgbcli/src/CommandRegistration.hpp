@@ -3,7 +3,7 @@
 
 #include "Essential.hpp"
 
-#include "StringUtils.hpp"
+#include "StringUtils.hpp"  // from_string
 
 #include <string>
 #include <vector>

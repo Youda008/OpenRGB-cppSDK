@@ -2,6 +2,7 @@
 
 #include "Essential.hpp"
 #include "LangUtils.hpp"
+#include "StreamUtils.hpp"
 
 #include "OpenRGB/Client.hpp"
 using namespace orgb;

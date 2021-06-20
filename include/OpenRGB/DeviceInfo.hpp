@@ -15,7 +15,7 @@
 
 #include <string>
 #include <vector>
-#include <memory>
+#include <memory>  // unique_ptr<Device>
 
 
 namespace orgb {

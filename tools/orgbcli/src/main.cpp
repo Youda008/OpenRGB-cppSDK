@@ -5,7 +5,7 @@ using namespace orgb;
 
 #include "Commands.hpp"
 
-#include "StringUtils.hpp"
+#include "StreamUtils.hpp"
 
 #include <iostream>
 #include <sstream>

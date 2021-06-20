@@ -1,5 +1,7 @@
 #include "CommandRegistration.hpp"
 
+#include "StreamUtils.hpp"  // repeat_char
+
 #include <iostream>
 
 

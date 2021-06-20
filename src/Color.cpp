@@ -19,6 +19,7 @@ using own::BinaryInputStream;
 #include <iostream>
 #include <ios>
 #include <iomanip>
+#include <string>
 #include <unordered_map>
 
 
