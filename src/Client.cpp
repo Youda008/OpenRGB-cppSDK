@@ -21,6 +21,7 @@ using own::SocketError;
 using own::getLastError;
 using own::getErrorString;
 #include "LangUtils.hpp"
+#include "ContainerUtils.hpp"
 using own::span;
 using own::make_span;
 
@@ -562,7 +563,7 @@ bool Client::sendMessage( ConstructorArgs ... args )
 	BinaryOutputStream stream( make_span( buffer ) );
 	message.serialize( stream );
 
-	return _socket->send( buffer ) == SocketError::Success;
+	return _socket->send( make_span( buffer ) ) == SocketError::Success;
 }
 
 template< typename Message >
@@ -574,7 +575,7 @@ Client::RecvResult< Message > Client::awaitMessage()
 	{
 		// receive header into buffer
 		array< uint8_t, Header::size() > headerBuffer; size_t received;
-		SocketError headerStatus = _socket->receive( headerBuffer, received );
+		SocketError headerStatus = _socket->receive( make_span( headerBuffer ), received );
 		if (headerStatus != SocketError::Success)
 		{
 			if (headerStatus == SocketError::ConnectionClosed)
