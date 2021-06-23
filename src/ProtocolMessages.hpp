@@ -214,16 +214,10 @@ struct RequestControllerData
 
 	constexpr uint32_t calcDataSize() const
 	{
-		return 0;
+		return sizeof( protocolVersion );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const
-	{
-		header.serialize( stream );
-	}
-	bool deserializeBody( own::BinaryInputStream & )
-	{
-		return true;
-	}
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserializeBody( own::BinaryInputStream & );
 };
 
 /** A reply to RequestControllerData */

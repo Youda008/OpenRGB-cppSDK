@@ -332,7 +332,7 @@ void Client::changeModeX( const Device & device, const Mode & mode )
 	requestStatusToException( status );
 }
 
-RequestStatus Client::switchToDirectMode( const Device & device )
+RequestStatus Client::switchToCustomMode( const Device & device )
 {
 	if (!_socket->isConnected())
 	{
@@ -349,7 +349,7 @@ RequestStatus Client::switchToDirectMode( const Device & device )
 
 void Client::switchToDirectModeX( const Device & device )
 {
-	RequestStatus status = switchToDirectMode( device );
+	RequestStatus status = switchToCustomMode( device );
 	requestStatusToException( status );
 }
 

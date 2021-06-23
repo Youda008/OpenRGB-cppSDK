@@ -32,6 +32,7 @@ const char * enumString( MessageType type )
 	{
 		case MessageType::REQUEST_CONTROLLER_COUNT:       return "REQUEST_CONTROLLER_COUNT";
 		case MessageType::REQUEST_CONTROLLER_DATA:        return "REQUEST_CONTROLLER_DATA";
+		case MessageType::REQUEST_PROTOCOL_VERSION:       return "REQUEST_PROTOCOL_VERSION";
 		case MessageType::SET_CLIENT_NAME:                return "SET_CLIENT_NAME";
 		case MessageType::DEVICE_LIST_UPDATED:            return "DEVICE_LIST_UPDATED";
 		case MessageType::RGBCONTROLLER_RESIZEZONE:       return "RGBCONTROLLER_RESIZEZONE";
@@ -50,6 +51,7 @@ static bool isValidMessageType( MessageType type )
 	{
 		case MessageType::REQUEST_CONTROLLER_COUNT:      return true;
 		case MessageType::REQUEST_CONTROLLER_DATA:       return true;
+		case MessageType::REQUEST_PROTOCOL_VERSION:      return true;
 		case MessageType::SET_CLIENT_NAME:               return true;
 		case MessageType::DEVICE_LIST_UPDATED:           return true;
 		case MessageType::RGBCONTROLLER_RESIZEZONE:      return true;
@@ -101,6 +103,22 @@ void ReplyControllerCount::serialize( BinaryOutputStream & stream ) const
 bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream )
 {
 	stream >> count;
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void RequestControllerData::serialize( own::BinaryOutputStream & stream ) const
+{
+	header.serialize( stream );
+
+	stream << protocolVersion;
+}
+
+bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream )
+{
+	stream >> protocolVersion;
 
 	return !stream.hasFailed();
 }

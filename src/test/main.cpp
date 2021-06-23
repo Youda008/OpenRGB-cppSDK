@@ -86,6 +86,7 @@ istream & operator>>( istream & is, Endpoint & endpoint )
 	own::read_until( is, endpoint.hostName, ':' );  // TODO: until : or space
 	if (!is.good())  // ':' not found
 	{
+		endpoint.port = 0;
 		return is;
 	}
 
@@ -188,7 +189,7 @@ const LED * findLED( const Device & device, const PartID & ledID )
 	if (ledID.idx != 0)
 	{
 		if (ledID.idx >= device.leds.size())
-			cout << "Device with index " << ledID.idx << " does not exist." << endl;
+			cout << "LED with index " << ledID.idx << " does not exist." << endl;
 		else
 			led = &device.leds[ ledID.idx ];
 	}
@@ -196,7 +197,7 @@ const LED * findLED( const Device & device, const PartID & ledID )
 	{
 		led = device.findLED( ledID.str );
 		if (!led)
-			cout << "Device with name " << ledID.str << " not found." << endl;
+			cout << "LED with name " << ledID.str << " not found." << endl;
 		// TODO: maybe according to vendor?
 	}
 	return led;
@@ -216,7 +217,7 @@ const Mode * findMode( const Device & device, const PartID & modeID )
 	{
 		mode = device.findMode( modeID.str );
 		if (!mode)
-			cout << "Device with name " << modeID.str << " not found." << endl;
+			cout << "Mode with name " << modeID.str << " not found." << endl;
 		// TODO: maybe according to vendor?
 	}
 	return mode;
@@ -238,6 +239,7 @@ static bool help( const ArgList & )
 	cout << "  setzonecolor <device_id> <zone_id> <color>         # orgb::Client::setZoneColor\n";
 	cout << "  setledcolor <device_id> <led_id> <color>           # orgb::Client::setColorOfSingleLED\n";
 	cout << "  changemode <device_id> <mode>                      # orgb::Client::changeMode\n";
+	cout << "  custommode <device_id>                             # orgb::Client::switchToCustomMode\n";
 	cout << "  setzonesize <device_id> <zone_id> <size>           # orgb::Client::setZoneSize\n";
 	cout << endl;
 	return true;
@@ -426,6 +428,35 @@ static bool changemode( const ArgList & args )
 	}
 }
 
+static bool custommode( const ArgList & args )
+{
+	PartID deviceID = args.getNext< PartID >();
+
+	if (listResult.status != RequestStatus::Success)
+	{
+		cout << "Device list not initialized, run 'list' first" << endl;
+		return false;
+	}
+
+	const Device * device = findDevice( listResult.devices, deviceID );
+	if (!device)
+		return false;
+
+	cout << "Swithing device " << deviceID.str << " to custom mode" << endl;
+	RequestStatus status = client.switchToCustomMode( *device );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}
+
 static bool setzonesize( const ArgList & args )
 {
 	PartID deviceID = args.getNext< PartID >();
@@ -520,10 +551,15 @@ static void executeCommand( const Command & command, const ArgList & args )
 		handler = setledcolor;
 	else if (command.name == "changemode")
 		handler = changemode;
+	else if (command.name == "custommode")
+		handler = custommode;
 	else if (command.name == "setzonesize")
 		handler = setzonesize;
 	else
+	{
 		cout << "Unknown command. Use 'help' to see the list of all possible commands" << endl;
+		return;
+	}
 
 	try
 	{

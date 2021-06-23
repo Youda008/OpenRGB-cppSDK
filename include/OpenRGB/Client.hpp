@@ -132,7 +132,7 @@ class Client
 	void changeModeX( const Device & device, const Mode & mode );
 
 	// TODO: this doesn't seem to work on many devices
-	RequestStatus switchToDirectMode( const Device & device );
+	RequestStatus switchToCustomMode( const Device & device );
 
 	/** Exception-throwing variant of switchToDirectMode(...). Check Exceptions.hpp for details. */
 	void switchToDirectModeX( const Device & device );
