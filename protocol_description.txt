@@ -8,6 +8,7 @@ It uses a pseudo-language which shall be understood as follows:
  * 'optional' means the following element might or might not be present depending on some field that preceeds it
  * all integers are in little-endian
  * all messages and sections are "packed" - there are no padding bytes, integer fields might not be alligned to offsets that are multiples of their size
+ * all strings must be terminated by '\0' character, and the 2-byte length field that preceeds them counts the terminating character too
 
 
 enum MessageType : uint32
