@@ -86,6 +86,8 @@ static Command argvToCommandLine( char * argv [], int argc )
 {
 	Command command;
 
+	// TODO: take into account quotes on Windows
+
 	if (argc >= 1)
 	{
 		command.name = own::to_lower( argv[0] );
@@ -98,6 +100,61 @@ static Command argvToCommandLine( char * argv [], int argc )
 
 	return command;
 }
+// takes into account quotes
+bool readArg( istringstream & is, std::string & arg )
+{
+	bool singleQuotes = false;
+	bool doubleQuotes = false;
+
+	// first skip leading whitespaces
+	while (true)
+	{
+		char c = char( is.get() );
+		if (!is.good())
+			return false;
+
+		if (!isspace( c ))
+		{
+			if (c == '\'')
+				singleQuotes = true;
+			else if (c == '"')
+				doubleQuotes = true;
+			else
+				arg += c;
+			break;
+		}
+	}
+
+	while (true)
+	{
+		char c = char( is.get() );
+		if (!is.good())
+			break;
+
+		if (c == '\'' && !doubleQuotes)
+		{
+			if (singleQuotes)
+				break;
+			else
+				singleQuotes = true;
+			continue;
+		}
+		if (c == '"' && !singleQuotes)
+		{
+			if (doubleQuotes)
+				break;
+			else
+				doubleQuotes = true;
+			continue;
+		}
+		if (isspace( c ) && !singleQuotes && !doubleQuotes)
+		{
+			break;
+		}
+		arg += c;
+	}
+	return is.eof() || !is.fail();
+}
 
 static Command splitCommandLine( const string & line )
 {
@@ -105,15 +162,14 @@ static Command splitCommandLine( const string & line )
 
 	istringstream stream( line );
 
-	if (!(stream >> command.name))
+	if (!readArg(stream, command.name))
 	{
 		return command;
 	}
 	own::to_lower_in_place( command.name );
 
-	// TODO: take into account ""
 	string arg;
-	while (stream >> arg)
+	while (readArg(stream, arg))
 	{
 		command.args.addArg( move(arg) );
 	}

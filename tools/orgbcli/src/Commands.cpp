@@ -69,10 +69,10 @@ struct PartID
 };
 istream & operator>>( istream & is, PartID & partID )
 {
-	is >> partID.str;
+	getline( is, partID.str );
 	// int representation is optional, don't make the stream fail if it's not int
 	if (sscanf( partID.str.c_str(), "%u", &partID.idx ) != 1)
-		partID.idx = 0;
+		partID.idx = UINT32_MAX;
 	return is;
 }
 
@@ -112,7 +112,7 @@ istream & operator>>( istream & is, PartSpec & partSpec )
 const Device * findDevice( const DeviceList & devices, const PartID & deviceID )
 {
 	const Device * device = nullptr;
-	if (deviceID.idx != 0)
+	if (deviceID.idx != UINT32_MAX)
 	{
 		if (deviceID.idx >= devices.size())
 			cout << "Device with index " << deviceID.idx << " does not exist." << endl;
@@ -132,7 +132,7 @@ const Device * findDevice( const DeviceList & devices, const PartID & deviceID )
 const Zone * findZone( const Device & device, const PartID & zoneID )
 {
 	const Zone * zone = nullptr;
-	if (zoneID.idx != 0)
+	if (zoneID.idx != UINT32_MAX)
 	{
 		if (zoneID.idx >= device.zones.size())
 			cout << "Zone with index " << zoneID.idx << " does not exist." << endl;
@@ -152,7 +152,7 @@ const Zone * findZone( const Device & device, const PartID & zoneID )
 const LED * findLED( const Device & device, const PartID & ledID )
 {
 	const LED * led = nullptr;
-	if (ledID.idx != 0)
+	if (ledID.idx != UINT32_MAX)
 	{
 		if (ledID.idx >= device.leds.size())
 			cout << "LED with index " << ledID.idx << " does not exist." << endl;
@@ -172,7 +172,7 @@ const LED * findLED( const Device & device, const PartID & ledID )
 const Mode * findMode( const Device & device, const PartID & modeID )
 {
 	const Mode * mode = nullptr;
-	if (modeID.idx != 0)
+	if (modeID.idx != UINT32_MAX)
 	{
 		if (modeID.idx >= device.modes.size())
 			cout << "Mode with index " << modeID.idx << " does not exist." << endl;
@@ -215,11 +215,15 @@ REGISTER_SPECIAL_COMMAND( exit, "", "quits this application", HANDLER(
 	return true;
 }))
 
-REGISTER_SPECIAL_COMMAND( connect, "<host_name>[:<port>]", "connects to an OpenRGB server", HANDLER(
+REGISTER_SPECIAL_COMMAND( connect, "[<host_name>[:<port>]]", "connects to an OpenRGB server", HANDLER(
 {
-	Endpoint endpoint = args.getNext< Endpoint >();
-	if (endpoint.port == 0)
-		endpoint.port = orgb::defaultPort;
+	Endpoint endpoint = { "127.0.0.1", orgb::defaultPort };
+	if (args.size() > 0)
+	{
+		endpoint = args.getNext< Endpoint >();
+		if (endpoint.port == 0)
+			endpoint.port = orgb::defaultPort;
+	}
 
 	cout << "Connecting to " << endpoint.hostName << ":" << endpoint.port << endl;
 	ConnectStatus status = client.connect( endpoint.hostName, endpoint.port );

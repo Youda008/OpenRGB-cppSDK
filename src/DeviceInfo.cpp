@@ -594,7 +594,7 @@ void print( const Device & device, unsigned int indentLevel )
 	indent( indentLevel ); printf( "[%u] = {\n", device.idx );
 	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", device.name.c_str() );
 	indent( indentLevel + 1 ); printf( "type = %s;\n", enumString( device.type ) );
-	indent( indentLevel + 1 ); printf( "vendor = %s;\n", device.vendor.c_str() );
+	indent( indentLevel + 1 ); printf( "vendor = \"%s\";\n", device.vendor.c_str() );
 	indent( indentLevel + 1 ); printf( "description = \"%s\";\n", device.description.c_str() );
 	indent( indentLevel + 1 ); printf( "version = \"%s\";\n", device.version.c_str() );
 	indent( indentLevel + 1 ); printf( "serial = \"%s\";\n", device.serial.c_str() );
@@ -632,7 +632,7 @@ void print( std::ostream & os, const Device & device, unsigned int indentLevel )
 	indent( os, indentLevel ); os << "["<<device.idx<<"] = {\n";
 	indent( os, indentLevel + 1 ); os << "name = \""<<device.name<<"\";\n";
 	indent( os, indentLevel + 1 ); os << "type = "<<enumString( device.type )<<";\n";
-	indent( os, indentLevel + 1 ); os << "vendor = "<<device.vendor<<";\n";
+	indent( os, indentLevel + 1 ); os << "vendor = \""<<device.vendor<<"\";\n";
 	indent( os, indentLevel + 1 ); os << "description = \""<<device.description<<"\";\n";
 	indent( os, indentLevel + 1 ); os << "version = \""<<device.version<<"\";\n";
 	indent( os, indentLevel + 1 ); os << "serial = \""<<device.serial<<"\";\n";

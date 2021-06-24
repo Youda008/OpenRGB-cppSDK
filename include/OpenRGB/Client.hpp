@@ -127,7 +127,8 @@ class Client
 	/** Exception-throwing variant of checkForDeviceUpdates(...). Check Exceptions.hpp for details. */
 	bool isDeviceListOutdated();
 
-	// TODO: seems currently unfinished on the server side
+	/** Updates the parameters of a mode and also switches the device to this mode.
+	  * If you just want to switch to this mode, use the Mode object received from the server. */
 	RequestStatus changeMode( const Device & device, const Mode & mode );
 	void changeModeX( const Device & device, const Mode & mode );
 

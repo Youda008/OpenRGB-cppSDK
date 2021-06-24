@@ -29,7 +29,7 @@ inline size_t sizeofORGBString( const std::string & str )
 
 inline void writeORGBString( own::BinaryOutputStream & stream, const std::string & str )
 {
-	stream << uint16_t(str.size());
+	stream << uint16_t( str.size() + 1 );
 	stream.writeString0( str );
 }
 
@@ -38,7 +38,7 @@ inline bool readORGBString( own::BinaryInputStream & stream, std::string & str )
 	uint16_t size = 0;
 	stream >> size;
 	stream.readString0( str );
-	return !stream.hasFailed() && str.size() == size;
+	return !stream.hasFailed() && str.size() + 1 == size;
 }
 
 

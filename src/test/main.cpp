@@ -103,10 +103,10 @@ struct PartID
 };
 istream & operator>>( istream & is, PartID & partID )
 {
-	is >> partID.str;
+	getline( is, partID.str );
 	// int representation is optional, don't make the stream fail if it's not int
 	if (sscanf( partID.str.c_str(), "%u", &partID.idx ) != 1)
-		partID.idx = 0;
+		partID.idx = UINT32_MAX;
 	return is;
 }
 
@@ -146,7 +146,7 @@ istream & operator>>( istream & is, PartSpec & partSpec )
 const Device * findDevice( const DeviceList & devices, const PartID & deviceID )
 {
 	const Device * device = nullptr;
-	if (deviceID.idx != 0)
+	if (deviceID.idx != UINT32_MAX)
 	{
 		if (deviceID.idx >= devices.size())
 			cout << "Device with index " << deviceID.idx << " does not exist." << endl;
@@ -166,7 +166,7 @@ const Device * findDevice( const DeviceList & devices, const PartID & deviceID )
 const Zone * findZone( const Device & device, const PartID & zoneID )
 {
 	const Zone * zone = nullptr;
-	if (zoneID.idx != 0)
+	if (zoneID.idx != UINT32_MAX)
 	{
 		if (zoneID.idx >= device.zones.size())
 			cout << "Zone with index " << zoneID.idx << " does not exist." << endl;
@@ -186,7 +186,7 @@ const Zone * findZone( const Device & device, const PartID & zoneID )
 const LED * findLED( const Device & device, const PartID & ledID )
 {
 	const LED * led = nullptr;
-	if (ledID.idx != 0)
+	if (ledID.idx != UINT32_MAX)
 	{
 		if (ledID.idx >= device.leds.size())
 			cout << "LED with index " << ledID.idx << " does not exist." << endl;
@@ -206,7 +206,7 @@ const LED * findLED( const Device & device, const PartID & ledID )
 const Mode * findMode( const Device & device, const PartID & modeID )
 {
 	const Mode * mode = nullptr;
-	if (modeID.idx != 0)
+	if (modeID.idx != UINT32_MAX)
 	{
 		if (modeID.idx >= device.modes.size())
 			cout << "Mode with index " << modeID.idx << " does not exist." << endl;
@@ -247,9 +247,13 @@ static bool help( const ArgList & )
 
 static bool connect( const ArgList & args )
 {
-	Endpoint endpoint = args.getNext< Endpoint >();
-	if (endpoint.port == 0)
-		endpoint.port = orgb::defaultPort;
+	Endpoint endpoint = { "127.0.0.1", orgb::defaultPort };
+	if (args.size() > 0)
+	{
+		endpoint = args.getNext< Endpoint >();
+		if (endpoint.port == 0)
+			endpoint.port = orgb::defaultPort;
+	}
 
 	cout << "Connecting to " << endpoint.hostName << ":" << endpoint.port << endl;
 	ConnectStatus status = client.connect( endpoint.hostName, endpoint.port );
@@ -504,6 +508,62 @@ static void printBanner()
 	<< endl;
 }
 
+// takes into account quotes
+bool readArg( istringstream & is, std::string & arg )
+{
+	bool singleQuotes = false;
+	bool doubleQuotes = false;
+
+	// first skip leading whitespaces
+	while (true)
+	{
+		char c = char( is.get() );
+		if (!is.good())
+			return false;
+
+		if (!isspace( c ))
+		{
+			if (c == '\'')
+				singleQuotes = true;
+			else if (c == '"')
+				doubleQuotes = true;
+			else
+				arg += c;
+			break;
+		}
+	}
+
+	while (true)
+	{
+		char c = char( is.get() );
+		if (!is.good())
+			break;
+
+		if (c == '\'' && !doubleQuotes)
+		{
+			if (singleQuotes)
+				break;
+			else
+				singleQuotes = true;
+			continue;
+		}
+		if (c == '"' && !singleQuotes)
+		{
+			if (doubleQuotes)
+				break;
+			else
+				doubleQuotes = true;
+			continue;
+		}
+		if (isspace( c ) && !singleQuotes && !doubleQuotes)
+		{
+			break;
+		}
+		arg += c;
+	}
+	return is.eof() || !is.fail();
+}
+
 struct Command
 {
 	string name;
@@ -515,15 +575,14 @@ static Command splitCommandLine( const string & line )
 
 	istringstream stream( line );
 
-	if (!(stream >> command.name))
+	if (!readArg(stream, command.name))
 	{
 		return command;
 	}
 	own::to_lower_in_place( command.name );
 
-	// TODO: take into account ""
 	string arg;
-	while (stream >> arg)
+	while (readArg(stream, arg))
 	{
 		command.args.addArg( move(arg) );
 	}
