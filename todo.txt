@@ -1,4 +1,3 @@
 more methods for colors, from HSV conversion, mixing, ...
 better and more consistent documentation
 noexcept where applicable
-proper CMake build system for CLI
