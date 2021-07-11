@@ -425,65 +425,57 @@ bool DeviceDescription::deserialize( BinaryInputStream & stream ) noexcept
 //======================================================================================================================
 //  LED
 
-LED::LED( const Device & parent, uint32_t idx, LEDDescription && desc ) noexcept
+LED::LED( const Device & parent, uint32_t idx, LEDDescription && descr ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
-	name( move( desc.name ) ),
-	value( desc.value )
+	desc( move(descr) )
 {}
 
 void print( const LED & led, unsigned int indentLevel )
 {
-	indent( indentLevel ); printf( "[%u] = { name = \"%s\"; value = %u },\n", led.idx, led.name.c_str(), led.value );
+	indent( indentLevel ); printf( "[%u] = { name = \"%s\"; value = %u },\n", led.idx, led.desc.name.c_str(), led.desc.value );
 }
 
 void print( std::ostream & os, const LED & led, unsigned int indentLevel )
 {
-	indent( os, indentLevel ); os << "["<<led.idx<<"] = { name = \""<<led.name<<"\"; value = "<<led.value<<" },\n";
+	indent( os, indentLevel ); os << "["<<led.idx<<"] = { name = \""<<led.desc.name<<"\"; value = "<<led.desc.value<<" },\n";
 }
 
 
 //======================================================================================================================
 //  Zone
 
-Zone::Zone( const Device & parent, uint32_t idx, ZoneDescription && desc ) noexcept
+Zone::Zone( const Device & parent, uint32_t idx, ZoneDescription && descr ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
-	name( move( desc.name ) ),
-	type( desc.type ),
-	minLeds( desc.leds_min ),
-	maxLeds( desc.leds_max ),
-	numLeds( desc.leds_count ),
-	matrixHeight( desc.matrix_height ),
-	matrixWidth( desc.matrix_width )
-	// TODO: matrix itself when it's clear what it contains
+	desc( move(descr) )
 {}
 
 void print( const Zone & zone, unsigned int indentLevel )
 {
 	indent( indentLevel ); printf( "[%u] = {\n", zone.idx );
-	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", zone.name.c_str() );
-	indent( indentLevel + 1 ); printf( "type = %s;\n", enumString( zone.type ) );
-	indent( indentLevel + 1 ); printf( "minLeds = %u;\n", zone.minLeds );
-	indent( indentLevel + 1 ); printf( "maxLeds = %u;\n", zone.maxLeds );
-	indent( indentLevel + 1 ); printf( "numLeds = %u;\n", zone.numLeds );
-	indent( indentLevel + 1 ); printf( "matrixHeight = %u;\n", zone.matrixHeight );
-	indent( indentLevel + 1 ); printf( "matrixWidth = %u;\n", zone.matrixWidth );
+	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", zone.desc.name.c_str() );
+	indent( indentLevel + 1 ); printf( "type = %s;\n", enumString( zone.desc.type ) );
+	indent( indentLevel + 1 ); printf( "leds_min = %u;\n", zone.desc.leds_min );
+	indent( indentLevel + 1 ); printf( "leds_max = %u;\n", zone.desc.leds_max );
+	indent( indentLevel + 1 ); printf( "leds_count = %u;\n", zone.desc.leds_count );
+	indent( indentLevel + 1 ); printf( "matrix_height = %u;\n", zone.desc.matrix_height );
+	indent( indentLevel + 1 ); printf( "matrix_width = %u;\n", zone.desc.matrix_width );
 	indent( indentLevel ); printf( "},\n" );
 }
 
 void print( std::ostream & os, const Zone & zone, unsigned int indentLevel )
 {
 	indent( os, indentLevel ); os << "["<<zone.idx<<"] = {\n";
-	indent( os, indentLevel + 1 ); os << "name = \""<<zone.name.c_str()<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "type = "<<enumString( zone.type )<<";\n";
-	indent( os, indentLevel + 1 ); os << "minLeds = "<<zone.minLeds<<";\n";
-	indent( os, indentLevel + 1 ); os << "maxLeds = "<<zone.maxLeds<<";\n";
-	indent( os, indentLevel + 1 ); os << "numLeds = "<<zone.numLeds<<";\n";
-	indent( os, indentLevel + 1 ); os << "matrixHeight = "<<zone.matrixHeight<<";\n";
-	indent( os, indentLevel + 1 ); os << "matrixWidth = "<<zone.matrixWidth<<";\n";
+	indent( os, indentLevel + 1 ); os << "name = \""<<zone.desc.name.c_str()<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "type = "<<enumString( zone.desc.type )<<";\n";
+	indent( os, indentLevel + 1 ); os << "leds_min = "<<zone.desc.leds_min<<";\n";
+	indent( os, indentLevel + 1 ); os << "leds_max = "<<zone.desc.leds_max<<";\n";
+	indent( os, indentLevel + 1 ); os << "leds_count = "<<zone.desc.leds_count<<";\n";
+	indent( os, indentLevel + 1 ); os << "matrix_height = "<<zone.desc.matrix_height<<";\n";
+	indent( os, indentLevel + 1 ); os << "matrix_width = "<<zone.desc.matrix_width<<";\n";
 	indent( os, indentLevel ); os << "},\n";
 }
 
@@ -491,51 +483,37 @@ void print( std::ostream & os, const Zone & zone, unsigned int indentLevel )
 //======================================================================================================================
 //  Mode
 
-Mode::Mode( const Device & parent, uint32_t idx, ModeDescription && desc ) noexcept
+Mode::Mode( const Device & parent, uint32_t idx, ModeDescription && descr ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
-	name( move( desc.name ) ),
-	value( desc.value ),
-	flags( desc.flags ),
+	desc( move(descr) ),
 	direction( desc.direction ),
-	minSpeed( desc.speed_min ),
-	maxSpeed( desc.speed_max ),
 	speed( desc.speed ),
-	minColors( desc.colors_min ),
-	maxColors( desc.colors_max ),
-	colorMode( desc.color_mode ),
-	colors( move( desc.colors ) )
+	colors( desc.colors )
 {}
 
-void Mode::toProtocolDescription( ModeDescription & desc ) const
+void Mode::toProtocolDescription( ModeDescription & descr ) const
 {
-	desc.name = name;
-	desc.value = value;
-	desc.flags = flags;
-	desc.speed_min = minSpeed;
-	desc.speed_max = maxSpeed;
-	desc.colors_min = minColors;
-	desc.colors_max = maxColors;
-	desc.speed = speed;
-	desc.direction = direction;
-	desc.color_mode = colorMode;
-	desc.colors = colors;
+	descr = desc;
+	descr.direction = direction;
+	descr.speed = speed;
+	descr.colors = colors;
 }
 
 void print( const Mode & mode, unsigned int indentLevel )
 {
 	indent( indentLevel ); printf( "[%u] = {\n", mode.idx );
-	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", mode.name.c_str() );
-	indent( indentLevel + 1 ); printf( "value = %u;\n", mode.value );
-	indent( indentLevel + 1 ); printf( "flags = %s;\n", modeFlagsToString( mode.flags ).c_str() );
+	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", mode.desc.name.c_str() );
+	indent( indentLevel + 1 ); printf( "value = %u;\n", mode.desc.value );
+	indent( indentLevel + 1 ); printf( "flags = %s;\n", modeFlagsToString( mode.desc.flags ).c_str() );
 	indent( indentLevel + 1 ); printf( "direction = %s;\n", enumString( mode.direction ) );
-	indent( indentLevel + 1 ); printf( "minSpeed = %u;\n", mode.minSpeed );
-	indent( indentLevel + 1 ); printf( "maxSpeed = %u;\n", mode.maxSpeed );
-	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.speed );
-	indent( indentLevel + 1 ); printf( "minColors = %u;\n", mode.minColors );
-	indent( indentLevel + 1 ); printf( "maxColors = %u;\n", mode.maxColors );
-	indent( indentLevel + 1 ); printf( "colorMode = %s;\n", enumString( mode.colorMode ) );
+	indent( indentLevel + 1 ); printf( "speed_min = %u;\n", mode.desc.speed_min );
+	indent( indentLevel + 1 ); printf( "speed_max = %u;\n", mode.desc.speed_max );
+	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.desc.speed );
+	indent( indentLevel + 1 ); printf( "colors_min = %u;\n", mode.desc.colors_min );
+	indent( indentLevel + 1 ); printf( "colors_max = %u;\n", mode.desc.colors_max );
+	indent( indentLevel + 1 ); printf( "color_mode = %s;\n", enumString( mode.desc.color_mode ) );
 	indent( indentLevel + 1 ); printf( "colors = {\n" );
 	for (Color color : mode.colors)
 	{
@@ -548,16 +526,16 @@ void print( const Mode & mode, unsigned int indentLevel )
 void print( std::ostream & os, const Mode & mode, unsigned int indentLevel )
 {
 	indent( os, indentLevel ); os << "["<<mode.idx<<"] = {\n";
-	indent( os, indentLevel + 1 ); os << "name = \""<<mode.name<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "value = "<<mode.value<<";\n";
-	indent( os, indentLevel + 1 ); os << "flags = "<<modeFlagsToString( mode.flags )<<";\n";
+	indent( os, indentLevel + 1 ); os << "name = \""<<mode.desc.name<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "value = "<<mode.desc.value<<";\n";
+	indent( os, indentLevel + 1 ); os << "flags = "<<modeFlagsToString( mode.desc.flags )<<";\n";
 	indent( os, indentLevel + 1 ); os << "direction = "<<enumString( mode.direction )<<";\n";
-	indent( os, indentLevel + 1 ); os << "minSpeed = "<<mode.minSpeed<<";\n";
-	indent( os, indentLevel + 1 ); os << "maxSpeed = "<<mode.maxSpeed<<";\n";
+	indent( os, indentLevel + 1 ); os << "speed_min = "<<mode.desc.speed_min<<";\n";
+	indent( os, indentLevel + 1 ); os << "speed_max = "<<mode.desc.speed_max<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed = "<<mode.speed<<";\n";
-	indent( os, indentLevel + 1 ); os << "minColors = "<<mode.minColors<<";\n";
-	indent( os, indentLevel + 1 ); os << "maxColors = "<<mode.maxColors<<";\n";
-	indent( os, indentLevel + 1 ); os << "colorMode = "<<enumString( mode.colorMode )<<";\n";
+	indent( os, indentLevel + 1 ); os << "colors_min = "<<mode.desc.colors_min<<";\n";
+	indent( os, indentLevel + 1 ); os << "colors_max = "<<mode.desc.colors_max<<";\n";
+	indent( os, indentLevel + 1 ); os << "color_mode = "<<enumString( mode.desc.color_mode )<<";\n";
 	indent( os, indentLevel + 1 ); os << "colors = {\n";
 	for (Color color : mode.colors)
 	{
@@ -571,48 +549,44 @@ void print( std::ostream & os, const Mode & mode, unsigned int indentLevel )
 //======================================================================================================================
 //  Device
 
-Device::Device( uint32_t idx, DeviceDescription && desc )
+Device::Device( uint32_t idx, DeviceDescription && descr )
 :
 	idx( idx ),
-	type( desc.type ),
-	name( move( desc.name ) ),
-	vendor( move( desc.vendor ) ),
-	description( move( desc.description ) ),
-	version( move( desc.version ) ),
-	serial( move( desc.serial ) ),
-	location( move( desc.location ) ),
-	activeMode( desc.active_mode )
+	desc( move(descr) )
 {
 	// create modes
 	for (uint32_t modeIdx = 0; modeIdx < desc.modes.size(); ++modeIdx)
 	{
 		modes.emplace_back( *this, modeIdx, move( desc.modes[ modeIdx ] ) );
 	}
+	desc.modes.clear();
 
 	// create zones
 	for (uint32_t zoneIdx = 0; zoneIdx < desc.zones.size(); ++zoneIdx)
 	{
 		zones.emplace_back( *this, zoneIdx, move( desc.zones[ zoneIdx ] ) );
 	}
+	desc.zones.clear();
 
 	// create leds
 	for (uint32_t ledIdx = 0; ledIdx < desc.leds.size(); ++ledIdx)
 	{
 		leds.emplace_back( *this, ledIdx, move( desc.leds[ ledIdx ] ) );
 	}
+	desc.leds.clear();
 }
 
 void print( const Device & device, unsigned int indentLevel )
 {
 	indent( indentLevel ); printf( "[%u] = {\n", device.idx );
-	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", device.name.c_str() );
-	indent( indentLevel + 1 ); printf( "type = %s;\n", enumString( device.type ) );
-	indent( indentLevel + 1 ); printf( "vendor = \"%s\";\n", device.vendor.c_str() );
-	indent( indentLevel + 1 ); printf( "description = \"%s\";\n", device.description.c_str() );
-	indent( indentLevel + 1 ); printf( "version = \"%s\";\n", device.version.c_str() );
-	indent( indentLevel + 1 ); printf( "serial = \"%s\";\n", device.serial.c_str() );
-	indent( indentLevel + 1 ); printf( "location = \"%s\";\n", device.location.c_str() );
-	indent( indentLevel + 1 ); printf( "activeMode = %u;\n", device.activeMode );
+	indent( indentLevel + 1 ); printf( "name = \"%s\";\n", device.desc.name.c_str() );
+	indent( indentLevel + 1 ); printf( "type = %s;\n", enumString( device.desc.type ) );
+	indent( indentLevel + 1 ); printf( "vendor = \"%s\";\n", device.desc.vendor.c_str() );
+	indent( indentLevel + 1 ); printf( "description = \"%s\";\n", device.desc.description.c_str() );
+	indent( indentLevel + 1 ); printf( "version = \"%s\";\n", device.desc.version.c_str() );
+	indent( indentLevel + 1 ); printf( "serial = \"%s\";\n", device.desc.serial.c_str() );
+	indent( indentLevel + 1 ); printf( "location = \"%s\";\n", device.desc.location.c_str() );
+	indent( indentLevel + 1 ); printf( "active_mode = %u;\n", device.desc.active_mode );
 	indent( indentLevel + 1 ); printf( "modes = {\n" );
 	for (const Mode & mode : device.modes)
 	{
@@ -643,14 +617,14 @@ void print( const Device & device, unsigned int indentLevel )
 void print( std::ostream & os, const Device & device, unsigned int indentLevel )
 {
 	indent( os, indentLevel ); os << "["<<device.idx<<"] = {\n";
-	indent( os, indentLevel + 1 ); os << "name = \""<<device.name<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "type = "<<enumString( device.type )<<";\n";
-	indent( os, indentLevel + 1 ); os << "vendor = \""<<device.vendor<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "description = \""<<device.description<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "version = \""<<device.version<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "serial = \""<<device.serial<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "location = \""<<device.location<<"\";\n";
-	indent( os, indentLevel + 1 ); os << "activeMode = "<<device.activeMode<<";\n";
+	indent( os, indentLevel + 1 ); os << "name = \""<<device.desc.name<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "type = "<<enumString( device.desc.type )<<";\n";
+	indent( os, indentLevel + 1 ); os << "vendor = \""<<device.desc.vendor<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "description = \""<<device.desc.description<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "version = \""<<device.desc.version<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "serial = \""<<device.desc.serial<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "location = \""<<device.desc.location<<"\";\n";
+	indent( os, indentLevel + 1 ); os << "active_mode = "<<device.desc.active_mode<<";\n";
 	indent( os, indentLevel + 1 ); os << "modes = {\n";
 	for (const Mode & mode : device.modes)
 	{

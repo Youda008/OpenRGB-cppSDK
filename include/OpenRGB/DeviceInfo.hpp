@@ -94,7 +94,7 @@ const char * enumString( ZoneType ) noexcept;
 //======================================================================================================================
 //  parts of messages used by the network protocol
 
-/// Description of a device's color mode
+/// Description of a device's color mode. Part of the network protocol.
 struct ModeDescription
 {
 	std::string   name;
@@ -105,7 +105,7 @@ struct ModeDescription
 	uint32_t      colors_min;  ///< minimum number of mode colors
 	uint32_t      colors_max;  ///< maximum number of mode colors
 	uint32_t      speed;       ///< speed of the effect, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	Direction     direction;   ///< direction of the color effect, this attribute is only valid if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
+	Direction     direction;   ///< direction of the color effect, this attribute is valid only if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
 	ColorMode     color_mode;  ///< how the colors of a mode are set
 	std::vector< Color >  colors;  ///< mode-specific list of colors
 
@@ -114,7 +114,7 @@ struct ModeDescription
 	bool deserialize( own::BinaryInputStream & stream ) noexcept;
 };
 
-/// Description of a device's zone
+/// Description of a device's zone. Part of the network protocol.
 struct ZoneDescription
 {
 	std::string   name;
@@ -133,7 +133,7 @@ struct ZoneDescription
 	bool deserialize( own::BinaryInputStream & stream ) noexcept;
 };
 
-/// Description of a LED
+/// Description of a LED. Part of the network protocol.
 struct LEDDescription
 {
 	std::string  name;
@@ -144,7 +144,7 @@ struct LEDDescription
 	bool deserialize( own::BinaryInputStream & stream ) noexcept;
 };
 
-/// Description of an RGB device (controller)
+/// Description of an RGB device (controller). Part of the network protocol.
 struct DeviceDescription
 {
 	DeviceType    type;
@@ -175,10 +175,8 @@ class LED
  public:
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
-
-	uint32_t      idx;
-	std::string   name;
-	uint32_t      value;  ///< device-specific value
+	uint32_t idx;           ///< index of this LED in the device's list of LEDs
+	LEDDescription desc;    ///< details about the LED
 
  public:
 
@@ -203,16 +201,8 @@ class Zone
  public:
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
-
-	uint32_t      idx;
-	std::string   name;
-	ZoneType      type;
-	uint32_t      minLeds;      ///< minimum size of the zone
-	uint32_t      maxLeds;      ///< maximum size of the zone
-	uint32_t      numLeds;      ///< current size of the zone
-	uint32_t      matrixHeight; ///< if the zone type is matrix, this is its height
-	uint32_t      matrixWidth;  ///< if the zone type is matrix, this is its width
-	// TODO: the matrix values
+	uint32_t idx;           ///< index of this zone in the device's list of zones
+	ZoneDescription desc;   ///< details about the Zone
 
  public:
 
@@ -237,19 +227,26 @@ class Mode
  public:
 
 	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
+	const uint32_t idx;     ///< index of this mode in the device's list of modes
+	const ModeDescription desc;  ///< description and parameters of the mode
 
-	const uint32_t      idx;
-	const std::string   name;
-	const uint32_t      value;      ///< device-specific value
-	const uint32_t      flags;      ///< see ModeFlags for possible bit flags
-	      Direction     direction;  ///< direction of the color effect, this attribute is only valid if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
-	const uint32_t      minSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	const uint32_t      maxSpeed;   ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	      uint32_t      speed;      ///< this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	const uint32_t      minColors;  ///< TODO: what is this?
-	const uint32_t      maxColors;  ///< TODO: what is this?
-	      ColorMode     colorMode;  ///< how the colors of a mode are set
-	      std::vector< Color > colors;
+	// these are the mode attributes that can be changed
+
+	/// Direction of the color effect.
+	/** This attribute is enabled only if any of ModeFlags::HAS_DIRECTION_XY is set.
+	  * The possible values are determined by the ModeDescription::flags in #desc.
+	  * The original value received from the server is in ModeDescription::direction in #desc. */
+	Direction direction;
+
+	/// Speed of the effect.
+	/** This attribute is enabled only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized.
+	  * The minimum and maximum value is determined by ModeDescription::speed in #desc.
+	  * The original value received from the server is in ModeDescription::speed in #desc. */
+	uint32_t speed;
+
+	/// Mode-specific list of colors.
+	/** The original mode colors received from the server are in ModeDescription::colors in #desc. */
+	std::vector< Color > colors;
 
  public:
 
@@ -274,15 +271,8 @@ class Device
 
  public:
 
-	uint32_t idx;
-	DeviceType type;
-	std::string name;
-	std::string vendor;
-	std::string description;
-	std::string version;
-	std::string serial;
-	std::string location;
-	uint32_t activeMode;
+	uint32_t idx;  ///< index of this device in the device list
+	DeviceDescription desc;  ///< Details about the device. The modes, zones, leds and colors in this member will be empty, use the direct members of Device instead.
 
 	std::vector< Mode > modes;
 	std::vector< Zone > zones;
@@ -304,7 +294,7 @@ class Device
 	const Mode * findMode( const std::string & name ) const noexcept
 	{
 		for (const Mode & mode : modes)
-			if (mode.name == name)
+			if (mode.desc.name == name)
 				return &mode;
 		return nullptr;
 	}
@@ -314,7 +304,7 @@ class Device
 	const Zone * findZone( const std::string & name ) const noexcept
 	{
 		for (const Zone & zone : zones)
-			if (zone.name == name)
+			if (zone.desc.name == name)
 				return &zone;
 		return nullptr;
 	}
@@ -324,7 +314,7 @@ class Device
 	const LED * findLED( const std::string & name ) const noexcept
 	{
 		for (const LED & led : leds)
-			if (led.name == name)
+			if (led.desc.name == name)
 				return &led;
 		return nullptr;
 	}
@@ -336,7 +326,7 @@ class Device
 	const Mode & findModeX( const std::string & name ) const
 	{
 		for (const Mode & mode : modes)
-			if (mode.name == name)
+			if (mode.desc.name == name)
 				return mode;
 		throw NotFound( "Mode of such name was not found" );
 	}
@@ -346,7 +336,7 @@ class Device
 	const Zone & findZoneX( const std::string & name ) const
 	{
 		for (const Zone & zone : zones)
-			if (zone.name == name)
+			if (zone.desc.name == name)
 				return zone;
 		throw NotFound( "Zone of such name was not found" );
 	}
@@ -356,7 +346,7 @@ class Device
 	const LED & findLEDX( const std::string & name ) const
 	{
 		for (const LED & led : leds)
-			if (led.name == name)
+			if (led.desc.name == name)
 				return led;
 		throw NotFound( "LED of such name was not found" );
 	}
@@ -418,7 +408,7 @@ class DeviceList
 	void forEach( DeviceType deviceType, FuncType loopBody ) const
 	{
 		for (const Device & device : *this)
-			if (device.type == deviceType)
+			if (device.desc.type == deviceType)
 				loopBody( device );
 	}
 
@@ -427,7 +417,7 @@ class DeviceList
 	void forEach( const std::string & vendor, FuncType loopBody ) const
 	{
 		for (const Device & device : *this)
-			if (device.vendor == vendor)
+			if (device.desc.vendor == vendor)
 				loopBody( device );
 	}
 
@@ -436,7 +426,7 @@ class DeviceList
 	const Device * find( DeviceType deviceType ) const noexcept
 	{
 		for (const Device & device : *this)
-			if (device.type == deviceType)
+			if (device.desc.type == deviceType)
 				return &device;
 		return nullptr;
 	}
@@ -446,7 +436,7 @@ class DeviceList
 	const Device * find( const std::string & deviceName ) const noexcept
 	{
 		for (const Device & device : *this)
-			if (device.name == deviceName)
+			if (device.desc.name == deviceName)
 				return &device;
 		return nullptr;
 	}
@@ -458,7 +448,7 @@ class DeviceList
 	const Device & findX( DeviceType deviceType ) const
 	{
 		for (const Device & device : *this)
-			if (device.type == deviceType)
+			if (device.desc.type == deviceType)
 				return device;
 		throw NotFound( "Device of such type was not found" );
 	}
@@ -468,7 +458,7 @@ class DeviceList
 	const Device & findX( const std::string & deviceName ) const
 	{
 		for (const Device & device : *this)
-			if (device.name == deviceName)
+			if (device.desc.name == deviceName)
 				return device;
 		throw NotFound( "Device of such name was not found" );
 	}

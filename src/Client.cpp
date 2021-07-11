@@ -629,7 +629,7 @@ RequestStatus Client::_setZoneColor( const Zone & zone, Color color )
 		return RequestStatus::NotConnected;
 	}
 
-	std::vector< Color > allColorsInZone( zone.numLeds, color );
+	std::vector< Color > allColorsInZone( zone.desc.leds_count, color );
 	if (!sendMessage< UpdateZoneLEDs >( zone.parent.idx, zone.idx, allColorsInZone ))
 	{
 		return RequestStatus::SendRequestFailed;
