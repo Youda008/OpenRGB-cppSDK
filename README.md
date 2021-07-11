@@ -2,6 +2,7 @@
 
 A C++ library allowing you to control OpenRGB (https://gitlab.com/CalcProgrammer1/OpenRGB) via network.
 Designed for minimal CPU and memory overhead, does not create any threads in the background, gives you full control your application main loop.
+It can be built without exception support and should work on any CPU architecture. Requires only C++11.
 
 
 ## Usage
@@ -110,6 +111,7 @@ catch (const orgb::Exception & ex)
     printf( "Error: %s\n", ex.errorMessage() );
 }
 ```
+If you are developing for a platform that does not support exceptions or you just generally don't want to use exceptions, execute the cmake command with additional parameter `-DNO_EXCEPTIONS` and all the code throwing exceptions will be left out of the library.
 
 #### More examples
 Complete examples of working apps using this library can be found in directory `examples`, feel free to copy&paste anything.

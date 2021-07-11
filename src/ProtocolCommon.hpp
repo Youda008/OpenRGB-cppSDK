@@ -22,7 +22,7 @@ namespace orgb {
 //======================================================================================================================
 //  OpenRGB strings
 
-inline size_t sizeofORGBString( const std::string & str )
+inline size_t sizeofORGBString( const std::string & str ) noexcept
 {
 	return 2 + str.size() + 1;
 }
@@ -33,7 +33,7 @@ inline void writeORGBString( own::BinaryOutputStream & stream, const std::string
 	stream.writeString0( str );
 }
 
-inline bool readORGBString( own::BinaryInputStream & stream, std::string & str )
+inline bool readORGBString( own::BinaryInputStream & stream, std::string & str ) noexcept
 {
 	uint16_t size = 0;
 	stream >> size;
@@ -46,13 +46,13 @@ inline bool readORGBString( own::BinaryInputStream & stream, std::string & str )
 //  OpenRGB arrays
 
 template< typename Type, typename std::enable_if< std::is_fundamental<Type>::value, int >::type = 0 >
-size_t sizeofVector( const std::vector< Type > & vec )
+size_t sizeofVector( const std::vector< Type > & vec ) noexcept
 {
 	return vec.size() * sizeof( Type );
 }
 
 template< typename Type, typename std::enable_if< !std::is_fundamental<Type>::value, int >::type = 0 >
-size_t sizeofVector( const std::vector< Type > & vec )
+size_t sizeofVector( const std::vector< Type > & vec ) noexcept
 {
 	size_t size = 0;
 	for (const Type & elem : vec)
@@ -63,7 +63,7 @@ size_t sizeofVector( const std::vector< Type > & vec )
 }
 
 template< typename Type >
-size_t sizeofORGBArray( const std::vector< Type > & vec )
+size_t sizeofORGBArray( const std::vector< Type > & vec ) noexcept
 {
 	return 2 + sizeofVector( vec );
 }
@@ -89,7 +89,7 @@ void writeORGBArray( own::BinaryOutputStream & stream, const std::vector< Type >
 }
 
 template< typename Type, typename std::enable_if< std::is_integral<Type>::value, int >::type = 0 >
-bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec )
+bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
 {
 	uint16_t size = 0;
 	stream >> size;
@@ -102,7 +102,7 @@ bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec )
 }
 
 template< typename Type, typename std::enable_if< !std::is_integral<Type>::value, int >::type = 0 >
-bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec )
+bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
 {
 	uint16_t size = 0;
 	stream >> size;

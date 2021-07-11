@@ -9,7 +9,7 @@
 How to add a new protocol message:
 ----------------------------------
 
-1. Add an element to enum MessageType with the correct code.
+1. Add an element to enum MessageType with the correct code and update the enumString(...) and isValidMessageType(...)
 
 2. Create a struct from the following template.
 struct NewMessage
@@ -21,13 +21,13 @@ struct NewMessage
 
 	static constexpr MessageType thisType = MessageType::NEW_MESSAGE_TYPE;
 
-	NewMessage() {}
+	NewMessage() noexcept {}
 	NewMessage( uint32_t deviceIdx, ... type specific values ... )
 	:
 		header(
-			/*message_type/ thisType,
-			/*device_idx/   deviceIdx,
-			/*message_size/ 0
+			/ *message_type* / thisType,
+			/ *device_idx* /   deviceIdx,
+			/ *message_size* / 0
 		),
 		... type specific initialization ...
 	{
@@ -36,9 +36,9 @@ struct NewMessage
 		header.message_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream );
+	bool deserializeBody( own::BufferInputStream & stream ) noexcept;
 };
 
 3. Implement calcDataSize(), serialize(...) and deserializeBody(...) in the cpp file.
@@ -104,9 +104,9 @@ enum class MessageType : uint32_t
 	RGBCONTROLLER_SETCUSTOMMODE    = 1100,
 	RGBCONTROLLER_UPDATEMODE       = 1101,
 };
-const char * enumString( MessageType );
+const char * enumString( MessageType ) noexcept;
 
-/** Every protocol message starts with this. */
+/// Every protocol message starts with this.
 struct Header
 {
 	char         magic [4];  ///< must always be set to ORGB in all messages
@@ -114,23 +114,23 @@ struct Header
 	MessageType  message_type;
 	uint32_t     message_size;  ///< size of message minus size of this header
 
-	Header() {}
-	Header( MessageType messageType, uint32_t deviceIdx )
+	Header() noexcept {}
+	Header( MessageType messageType, uint32_t deviceIdx ) noexcept
 		: magic{'O','R','G','B'}, device_idx( deviceIdx ), message_type( messageType ) {}
-	Header( MessageType messageType, uint32_t deviceIdx, uint32_t messageSize )
+	Header( MessageType messageType, uint32_t deviceIdx, uint32_t messageSize ) noexcept
 		: magic{'O','R','G','B'}, device_idx( deviceIdx ), message_type( messageType ), message_size( messageSize ) {}
 
-	static constexpr size_t size() { return sizeof(Header); }  // all members are equally big, no padding will take place
+	static constexpr size_t size() noexcept { return sizeof(Header); }  // all members are equally big, no padding will take place
 
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream );
+	bool deserialize( own::BinaryInputStream & stream ) noexcept;
 };
 
 
 //======================================================================================================================
 //  main protocol messages
 
-/** Asks server how many RGB devices (controllers) there are. */
+/// Asks server how many RGB devices (controllers) there are.
 struct RequestControllerCount
 {
 	Header header;
@@ -148,7 +148,7 @@ struct RequestControllerCount
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return 0;
 	}
@@ -156,13 +156,13 @@ struct RequestControllerCount
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & )
+	bool deserializeBody( own::BinaryInputStream & ) noexcept
 	{
 		return true;
 	}
 };
 
-/** A reply to RequestControllerCount */
+/// A reply to RequestControllerCount
 struct ReplyControllerCount
 {
 	Header header;
@@ -172,7 +172,7 @@ struct ReplyControllerCount
 
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_COUNT;
 
-	ReplyControllerCount() {}
+	ReplyControllerCount() noexcept {}
 	ReplyControllerCount( uint32_t count )
 	:
 		header(
@@ -183,15 +183,15 @@ struct ReplyControllerCount
 		count( count )
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return sizeof( count );
 	}
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Asks for all information and supported modes about a specific RGB device (controller). */
+/// Asks for all information and supported modes about a specific RGB device (controller).
 struct RequestControllerData
 {
 	Header header;
@@ -201,7 +201,7 @@ struct RequestControllerData
 
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_DATA;
 
-	RequestControllerData() {}
+	RequestControllerData() noexcept {}
 	RequestControllerData( uint32_t deviceIdx, uint32_t protocolVersion )
 	:
 		header(
@@ -212,15 +212,15 @@ struct RequestControllerData
 		protocolVersion( protocolVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return sizeof( protocolVersion );
 	}
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** A reply to RequestControllerData */
+/// A reply to RequestControllerData
 struct ReplyControllerData
 {
 	Header header;
@@ -231,7 +231,7 @@ struct ReplyControllerData
 
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_DATA;
 
-	ReplyControllerData() {}
+	ReplyControllerData() noexcept {}
 	ReplyControllerData( uint32_t deviceIdx, DeviceDescription && device )
 	:
 		header(
@@ -243,12 +243,12 @@ struct ReplyControllerData
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Tells the server in what version of the protocol the client wants to communite in. */
+/// Tells the server in what version of the protocol the client wants to communite in.
 struct RequestProtocolVersion
 {
 	Header header;
@@ -268,15 +268,15 @@ struct RequestProtocolVersion
 		clientVersion( implementedProtocolVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return sizeof( clientVersion );
 	}
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** A reply to RequestProtocolVersion. Contains the maximum version the server supports. */
+/// A reply to RequestProtocolVersion. Contains the maximum version the server supports.
 struct ReplyProtocolVersion
 {
 	Header header;
@@ -286,7 +286,7 @@ struct ReplyProtocolVersion
 
 	static constexpr MessageType thisType = MessageType::REQUEST_PROTOCOL_VERSION;
 
-	ReplyProtocolVersion() {}
+	ReplyProtocolVersion() noexcept {}
 	ReplyProtocolVersion( uint32_t protocolVersion )
 	:
 		header(
@@ -297,15 +297,15 @@ struct ReplyProtocolVersion
 		serverVersion( protocolVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return sizeof( serverVersion );
 	}
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Announces a custom name of the client to the server. */
+/// Announces a custom name of the client to the server.
 struct SetClientName
 {
 	Header header;
@@ -315,7 +315,7 @@ struct SetClientName
 
 	static constexpr MessageType thisType = MessageType::SET_CLIENT_NAME;
 
-	SetClientName() {}
+	SetClientName() noexcept {}
 	SetClientName( const std::string & name )
 	:
 		header(
@@ -327,12 +327,12 @@ struct SetClientName
 		header.message_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** This is sent from the server everytime its device list has changed. */
+/// This is sent from the server everytime its device list has changed.
 struct DeviceListUpdated
 {
 	Header header;
@@ -350,7 +350,7 @@ struct DeviceListUpdated
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return 0;
 	}
@@ -358,13 +358,13 @@ struct DeviceListUpdated
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & )
+	bool deserializeBody( own::BinaryInputStream & ) noexcept
 	{
 		return true;
 	}
 };
 
-/** Resizes a zone of LEDs, if the device supports it. */
+/// Resizes a zone of LEDs, if the device supports it.
 struct ResizeZone
 {
 	Header header;
@@ -375,7 +375,7 @@ struct ResizeZone
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_RESIZEZONE;
 
-	ResizeZone() {}
+	ResizeZone() noexcept {}
 	ResizeZone( uint32_t deviceIdx, uint32_t zoneIdx, uint32_t newSize )
 	:
 		header(
@@ -387,15 +387,15 @@ struct ResizeZone
 		new_size( newSize )
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return sizeof( zone_idx ) + sizeof( new_size );
 	}
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Applies individually selected color to every LED. */
+/// Applies individually selected color to every LED.
 struct UpdateLEDs
 {
 	Header  header;
@@ -406,7 +406,7 @@ struct UpdateLEDs
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATELEDS;
 
-	UpdateLEDs() {}
+	UpdateLEDs() noexcept {}
 	UpdateLEDs( uint32_t deviceIdx, const std::vector< Color > & colors )
 	:
 		header(
@@ -418,12 +418,12 @@ struct UpdateLEDs
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Applies individually selected color to every LED in a specific zone. */
+/// Applies individually selected color to every LED in a specific zone.
 struct UpdateZoneLEDs
 {
 	Header  header;
@@ -435,7 +435,7 @@ struct UpdateZoneLEDs
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATEZONELEDS;
 
-	UpdateZoneLEDs() {}
+	UpdateZoneLEDs() noexcept {}
 	UpdateZoneLEDs( uint32_t deviceIdx, uint32_t zoneIdx, const std::vector< Color > & colors )
 	:
 		header(
@@ -448,12 +448,12 @@ struct UpdateZoneLEDs
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Changes color of a single particular LED. */
+/// Changes color of a single particular LED.
 struct UpdateSingleLED
 {
 	Header  header;
@@ -464,7 +464,7 @@ struct UpdateSingleLED
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATESINGLELED;
 
-	UpdateSingleLED() {}
+	UpdateSingleLED() noexcept {}
 	UpdateSingleLED( uint32_t deviceIdx, uint32_t ledIdx, Color color )
 	:
 		header(
@@ -476,12 +476,12 @@ struct UpdateSingleLED
 		color( color )
 	{}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
-/** Switches mode of a device to "Direct" mode */
+/// Switches mode of a device to a directly controlled one.
 struct SetCustomMode
 {
 	Header  header;
@@ -490,7 +490,7 @@ struct SetCustomMode
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_SETCUSTOMMODE;
 
-	SetCustomMode() {}
+	SetCustomMode() noexcept {}
 	SetCustomMode( uint32_t deviceIdx )
 	:
 		header(
@@ -500,7 +500,7 @@ struct SetCustomMode
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const
+	constexpr uint32_t calcDataSize() const noexcept
 	{
 		return 0;
 	}
@@ -508,13 +508,13 @@ struct SetCustomMode
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & )
+	bool deserializeBody( own::BinaryInputStream & ) noexcept
 	{
 		return true;
 	}
 };
 
-// TODO: what does this mean? how to set active mode?
+/// Updates the parameters of a mode and also switches the device to this mode.
 struct UpdateMode
 {
 	Header  header;
@@ -526,7 +526,7 @@ struct UpdateMode
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATEMODE;
 
-	UpdateMode() {}
+	UpdateMode() noexcept {}
 	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const ModeDescription & modeDesc )
 	:
 		header(
@@ -539,9 +539,9 @@ struct UpdateMode
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const;
+	uint32_t calcDataSize() const noexcept;
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream );
+	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
 };
 
 

@@ -50,7 +50,7 @@ static const std::unordered_map< std::string, Color > colorNames =
 	{ "cyan", Color::Cyan },
 };
 
-bool Color::fromString( const std::string & str )
+bool Color::fromString( const std::string & str ) noexcept
 {
 	if (str.empty())
 		return false;
@@ -89,7 +89,7 @@ void Color::serialize( BinaryOutputStream & stream ) const
 	stream << r << g << b << padding;
 }
 
-bool Color::deserialize( BinaryInputStream & stream )
+bool Color::deserialize( BinaryInputStream & stream ) noexcept
 {
 	uint8_t padding;
 	stream >> r >> g >> b >> padding;
@@ -97,7 +97,7 @@ bool Color::deserialize( BinaryInputStream & stream )
 	return !stream.hasFailed();
 }
 
-std::ostream & operator<<( std::ostream & os, const Color & color )
+std::ostream & operator<<( std::ostream & os, Color color ) noexcept
 {
 	std::ios_base::fmtflags origFlags( os.flags() );
 	os << std::uppercase << std::hex << std::setfill('0');
@@ -106,7 +106,7 @@ std::ostream & operator<<( std::ostream & os, const Color & color )
 	return os;
 }
 
-std::istream & operator>>( std::istream & is, Color & color )
+std::istream & operator>>( std::istream & is, Color & color ) noexcept
 {
 	std::string colorStr;
 	is >> colorStr;
@@ -117,7 +117,7 @@ std::istream & operator>>( std::istream & is, Color & color )
 	return is;
 }
 
-void print( const Color & color )
+void print( Color color )
 {
 	printf( "%02X%02X%02X", uint(color.r), uint(color.g), uint(color.b) );
 }

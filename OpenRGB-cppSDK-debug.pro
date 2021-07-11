@@ -15,9 +15,15 @@ release:CONFIG += static
 
 QMAKE_CXXFLAGS += -Wno-old-style-cast -Wno-comment
 
-debug:DEFINES += DEBUG
+debug {
+	DEFINES += DEBUG SAFETY_CHECKS
+}
+release {
+	#DEFINES += CRITICALS_CATCHABLE
+}
 
 SOURCES += \
+        shared/CppUtils-Essential/ContainerUtils.cpp \
         shared/CppUtils-Essential/CriticalError.cpp \
         shared/CppUtils-Essential/LangUtils.cpp \
         shared/CppUtils-Essential/StreamUtils.cpp \
@@ -39,6 +45,8 @@ SOURCES += \
 HEADERS += \
         include/OpenRGB/Exceptions.hpp \
         include/OpenRGB/SystemErrorType.hpp \
+        shared/CppUtils-Essential/Assert.hpp \
+        shared/CppUtils-Essential/ContainerUtils.hpp \
         shared/CppUtils-Essential/CriticalError.hpp \
         shared/CppUtils-Essential/Essential.hpp \
         shared/CppUtils-Essential/LangUtils.hpp \
@@ -58,11 +66,16 @@ HEADERS += \
         src/ProtocolCommon.hpp \
         src/ProtocolMessages.hpp
 
+DISTFILES += \
+	protocol_description.txt
+
 INCLUDEPATH += include
 INCLUDEPATH += shared/CppUtils-Essential
 INCLUDEPATH += shared/CppUtils-Network
 
-LIBS += -lws2_32
+win32 {
+	LIBS += -lws2_32
+}
 
 unix {
     target.path = /usr/lib

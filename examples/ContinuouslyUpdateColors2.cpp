@@ -69,7 +69,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			}
 
 			// update our local device list, if it has changed on the server
-			if (client.isDeviceListOutdated())
+			if (client.isDeviceListOutdatedX())
 			{
 				printf( "updating device list\n" );
 				devices = client.requestDeviceListX();

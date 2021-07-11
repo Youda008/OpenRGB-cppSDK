@@ -5,6 +5,8 @@
 // Description: exceptions thrown by OpenRGB network client
 //======================================================================================================================
 
+#ifndef NO_EXCEPTIONS
+
 #include "OpenRGB/Exceptions.hpp"
 
 #include "Essential.hpp"
@@ -19,7 +21,7 @@ namespace orgb {
 
 //======================================================================================================================
 
-const char * Exception::errorMessage() const
+const char * Exception::errorMessage() const noexcept
 {
 	return _message;
 }
@@ -29,3 +31,6 @@ const char * Exception::errorMessage() const
 
 
 } // namespace orgb
+
+
+#endif // NO_EXCEPTIONS

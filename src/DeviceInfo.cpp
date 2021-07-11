@@ -27,9 +27,9 @@ namespace orgb {
 //======================================================================================================================
 //  enum strings
 
-const char * enumString( DeviceType type )
+const char * enumString( DeviceType type ) noexcept
 {
-	static const char * const deviceTypeStr [] =
+	static const char * const DeviceTypeStr [] =
 	{
 		"Motherboard",
 		"DRAM",
@@ -44,11 +44,14 @@ const char * enumString( DeviceType type )
 		"Gamepad",
 		"Unknown",
 	};
+	static_assert( size_t(DeviceType::Unknown) + 1 == own::size(DeviceTypeStr), "update the DeviceTypeStr" );
 
-	if (uint( type ) <= uint( DeviceType::Unknown ))
-		return deviceTypeStr[ uint( type ) ];
+	// Collapse everything else than known classes to Unknown
+	// in case the server adds some classes without increasing protocol version.
+	if (size_t( type ) < size_t( DeviceType::Unknown ))
+		return DeviceTypeStr[ size_t( type ) ];
 	else
-		return "<invalid>";
+		return DeviceTypeStr[ size_t( DeviceType::Unknown ) ];
 }
 
 string modeFlagsToString( uint32_t flags )
@@ -86,9 +89,9 @@ string modeFlagsToString( uint32_t flags )
 	return oss.str();
 }
 
-const char * enumString( Direction dir )
+const char * enumString( Direction dir ) noexcept
 {
-	static const char * const deviceTypeStr [] =
+	static const char * const DirectionStr [] =
 	{
 		"Left",
 		"Right",
@@ -97,40 +100,43 @@ const char * enumString( Direction dir )
 		"Horizontal",
 		"Vertical",
 	};
+	static_assert( size_t(Direction::Vertical) + 1 == own::size(DirectionStr), "update the DirectionStr" );
 
-	if (uint( dir ) <= uint( Direction::Vertical ))
-		return deviceTypeStr[ uint( dir ) ];
+	if (size_t( dir ) <= size_t( Direction::Vertical ))
+		return DirectionStr[ size_t( dir ) ];
 	else
 		return "<invalid>";
 }
 
-const char * enumString( ColorMode mode )
+const char * enumString( ColorMode mode ) noexcept
 {
-	static const char * const colorModeStr [] =
+	static const char * const ColorModeStr [] =
 	{
 		"None",
 		"PerLed",
 		"ModeSpecific",
 		"Random",
 	};
+	static_assert( size_t(ColorMode::Random) + 1 == own::size(ColorModeStr), "update the ColorModeStr" );
 
-	if (uint( mode ) <= uint( ColorMode::Random ) )
-		return colorModeStr[ uint( mode ) ];
+	if (size_t( mode ) <= size_t( ColorMode::Random ) )
+		return ColorModeStr[ size_t( mode ) ];
 	else
 		return "<invalid>";
 }
 
-const char * enumString( ZoneType type )
+const char * enumString( ZoneType type ) noexcept
 {
-	static const char * const zoneTypeStr [] =
+	static const char * const ZoneTypeStr [] =
 	{
 		"Single",
 		"Linear",
 		"Matrix",
 	};
+	static_assert( size_t(ZoneType::Matrix) + 1 == own::size(ZoneTypeStr), "update the ZoneTypeStr" );
 
-	if (uint( type ) <= uint( ZoneType::Matrix ))
-		return zoneTypeStr[ uint( type ) ];
+	if (size_t( type ) <= size_t( ZoneType::Matrix ))
+		return ZoneTypeStr[ size_t( type ) ];
 	else
 		return "<invalid>";
 }
@@ -139,34 +145,33 @@ const char * enumString( ZoneType type )
 //======================================================================================================================
 //  enum validation
 
-static bool isValidDeviceType( DeviceType type )
+/*static bool isValidDeviceType( DeviceType type )
 {
-	//using Int = std::underlying_type< DeviceType >::type;
-	return int( type ) >= int( DeviceType::Motherboard ) && int( type ) <= int( DeviceType::Unknown );
-}
+	return size_t( type ) <= size_t( DeviceType::Unknown );
+}*/
 
 static bool isValidDirection( Direction dir, uint32_t modeFlags )
 {
-	bool allowedDirections [ uint( Direction::Vertical ) + 1 ] = {0};
+	bool allowedDirections [ size_t( Direction::Vertical ) + 1 ] = {0};
 	bool hasAnyDirections = false;
 
 	if (modeFlags & ModeFlags::HasDirectionLR)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::Left ) ] = true;
-		allowedDirections[ uint( Direction::Right ) ] = true;
+		allowedDirections[ size_t( Direction::Left ) ] = true;
+		allowedDirections[ size_t( Direction::Right ) ] = true;
 	}
 	if (modeFlags & ModeFlags::HasDirectionUD)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::Up ) ] = true;
-		allowedDirections[ uint( Direction::Down ) ] = true;
+		allowedDirections[ size_t( Direction::Up ) ] = true;
+		allowedDirections[ size_t( Direction::Down ) ] = true;
 	}
 	if (modeFlags & ModeFlags::HasDirectionHV)
 	{
 		hasAnyDirections = true;
-		allowedDirections[ uint( Direction::Horizontal ) ] = true;
-		allowedDirections[ uint( Direction::Vertical ) ] = true;
+		allowedDirections[ size_t( Direction::Horizontal ) ] = true;
+		allowedDirections[ size_t( Direction::Vertical ) ] = true;
 	}
 
 	// in case no direction flag is active, direction will be uninitialized value, so it can be anything
@@ -175,24 +180,24 @@ static bool isValidDirection( Direction dir, uint32_t modeFlags )
 		return true;
 	}
 
-	return allowedDirections[ uint( dir ) ] == true;
+	return allowedDirections[ size_t( dir ) ] == true;
 }
 
 static bool isValidColorMode( ColorMode mode )
 {
-	return int( mode ) >= int( ColorMode::None ) && int( mode ) <= int( ColorMode::Random );
+	return size_t( mode ) <= size_t( ColorMode::Random );
 }
 
 static bool isValidZoneType( ZoneType type )
 {
-	return int( type ) >= int( ZoneType::Single ) && int( type ) <= int( ZoneType::Matrix );
+	return size_t( type ) <= size_t( ZoneType::Matrix );
 }
 
 
 //======================================================================================================================
 //  repeated message sub-sections
 
-size_t ModeDescription::calcSize() const
+size_t ModeDescription::calcSize() const noexcept
 {
 	size_t size = 0;
 
@@ -226,7 +231,7 @@ void ModeDescription::serialize( BinaryOutputStream & stream ) const
 	writeORGBArray( stream, colors );
 }
 
-bool ModeDescription::deserialize( BinaryInputStream & stream )
+bool ModeDescription::deserialize( BinaryInputStream & stream ) noexcept
 {
 	readORGBString( stream, name );
 	stream >> value;
@@ -250,7 +255,7 @@ bool ModeDescription::deserialize( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-size_t ZoneDescription::calcSize() const
+size_t ZoneDescription::calcSize() const noexcept
 {
 	size_t size = 0;
 
@@ -259,8 +264,9 @@ size_t ZoneDescription::calcSize() const
 	size += sizeof( leds_min );
 	size += sizeof( leds_max );
 	size += sizeof( leds_count );
-	size += sizeof( matrix_length );
-	if (matrix_length > 0)
+
+	size += sizeof( uint16_t );  // length of the optional matrix block
+	if (matrix_values.size() > 0)
 	{
 		size += sizeof( matrix_height );
 		size += sizeof( matrix_width );
@@ -277,6 +283,10 @@ void ZoneDescription::serialize( BinaryOutputStream & stream ) const
 	stream << leds_min;
 	stream << leds_max;
 	stream << leds_count;
+
+	uint16_t matrix_length = uint16_t(
+		matrix_values.size() > 0 ? sizeof( matrix_height ) + sizeof( matrix_width ) + sizeofVector( matrix_values ) : 0
+	);
 	stream << matrix_length;
 	if (matrix_length > 0)
 	{
@@ -289,13 +299,15 @@ void ZoneDescription::serialize( BinaryOutputStream & stream ) const
 	}
 }
 
-bool ZoneDescription::deserialize( BinaryInputStream & stream)
+bool ZoneDescription::deserialize( BinaryInputStream & stream) noexcept
 {
 	readORGBString( stream, name );
 	stream >> type;
 	stream >> leds_min;
 	stream >> leds_max;
 	stream >> leds_count;
+
+	uint16_t matrix_length;
 	stream >> matrix_length;
 	if (matrix_length > 0)
 	{
@@ -317,7 +329,7 @@ bool ZoneDescription::deserialize( BinaryInputStream & stream)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-size_t LEDDescription::calcSize() const
+size_t LEDDescription::calcSize() const noexcept
 {
 	size_t size = 0;
 
@@ -333,7 +345,7 @@ void LEDDescription::serialize( BinaryOutputStream & stream ) const
 	stream << value;
 }
 
-bool LEDDescription::deserialize( BinaryInputStream & stream )
+bool LEDDescription::deserialize( BinaryInputStream & stream ) noexcept
 {
 	readORGBString( stream, name );
 	stream >> value;
@@ -343,11 +355,11 @@ bool LEDDescription::deserialize( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-size_t DeviceDescription::calcSize() const
+size_t DeviceDescription::calcSize() const noexcept
 {
 	size_t size = 0;
 
-	size += sizeof( device_type );
+	size += sizeof( type );
 	size += sizeofORGBString( name );
 	size += sizeofORGBString( vendor );
 	size += sizeofORGBString( description );
@@ -363,7 +375,7 @@ size_t DeviceDescription::calcSize() const
 
 void DeviceDescription::serialize( BinaryOutputStream & stream ) const
 {
-	stream << device_type;
+	stream << type;
 	writeORGBString( stream, name );
 	writeORGBString( stream, vendor );
 	writeORGBString( stream, description );
@@ -381,9 +393,9 @@ void DeviceDescription::serialize( BinaryOutputStream & stream ) const
 	writeORGBArray( stream, colors );
 }
 
-bool DeviceDescription::deserialize( BinaryInputStream & stream )
+bool DeviceDescription::deserialize( BinaryInputStream & stream ) noexcept
 {
-	stream >> device_type;
+	stream >> type;
 	readORGBString( stream, name );
 	readORGBString( stream, vendor );
 	readORGBString( stream, description );
@@ -402,8 +414,9 @@ bool DeviceDescription::deserialize( BinaryInputStream & stream )
 	readORGBArray( stream, leds );
 	readORGBArray( stream, colors );
 
-	if (!isValidDeviceType( device_type ))
-		stream.setFailed();
+	// Let's tolerate invalid device classes in case the server adds some without increasing protocol version
+	//if (!isValidDeviceType( type ))
+	//	stream.setFailed();
 
 	return !stream.hasFailed();
 }
@@ -412,7 +425,7 @@ bool DeviceDescription::deserialize( BinaryInputStream & stream )
 //======================================================================================================================
 //  LED
 
-LED::LED( const Device & parent, uint32_t idx, LEDDescription && desc )
+LED::LED( const Device & parent, uint32_t idx, LEDDescription && desc ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
@@ -434,7 +447,7 @@ void print( std::ostream & os, const LED & led, unsigned int indentLevel )
 //======================================================================================================================
 //  Zone
 
-Zone::Zone( const Device & parent, uint32_t idx, ZoneDescription && desc )
+Zone::Zone( const Device & parent, uint32_t idx, ZoneDescription && desc ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
@@ -478,7 +491,7 @@ void print( std::ostream & os, const Zone & zone, unsigned int indentLevel )
 //======================================================================================================================
 //  Mode
 
-Mode::Mode( const Device & parent, uint32_t idx, ModeDescription && desc )
+Mode::Mode( const Device & parent, uint32_t idx, ModeDescription && desc ) noexcept
 :
 	parent( parent ),
 	idx( idx ),
@@ -561,7 +574,7 @@ void print( std::ostream & os, const Mode & mode, unsigned int indentLevel )
 Device::Device( uint32_t idx, DeviceDescription && desc )
 :
 	idx( idx ),
-	type( desc.device_type ),
+	type( desc.type ),
 	name( move( desc.name ) ),
 	vendor( move( desc.vendor ) ),
 	description( move( desc.description ) ),

@@ -25,7 +25,7 @@ namespace orgb {
 //======================================================================================================================
 //  message header
 
-const char * enumString( MessageType type )
+const char * enumString( MessageType type ) noexcept
 {
 	// the values of message types are wildly different so we can't use an array
 	switch (type)
@@ -72,7 +72,7 @@ void Header::serialize( BinaryOutputStream & stream ) const
 	stream << message_size;
 }
 
-bool Header::deserialize( BinaryInputStream & stream )
+bool Header::deserialize( BinaryInputStream & stream ) noexcept
 {
 	stream >> magic[0] >> magic[1] >> magic[2] >> magic[3];
 	stream >> device_idx;
@@ -100,7 +100,7 @@ void ReplyControllerCount::serialize( BinaryOutputStream & stream ) const
 	stream << count;
 }
 
-bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream )
+bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> count;
 
@@ -116,7 +116,7 @@ void RequestControllerData::serialize( own::BinaryOutputStream & stream ) const
 	stream << protocolVersion;
 }
 
-bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream )
+bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream ) noexcept
 {
 	stream >> protocolVersion;
 
@@ -125,7 +125,7 @@ bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t ReplyControllerData::calcDataSize() const
+uint32_t ReplyControllerData::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -143,7 +143,7 @@ void ReplyControllerData::serialize( BinaryOutputStream & stream ) const
 	device_desc.serialize( stream );
 }
 
-bool ReplyControllerData::deserializeBody( BinaryInputStream & stream )
+bool ReplyControllerData::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	device_desc.deserialize( stream );
@@ -160,7 +160,7 @@ void RequestProtocolVersion::serialize( BinaryOutputStream & stream ) const
 	stream << clientVersion;
 }
 
-bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream )
+bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> clientVersion;
 
@@ -176,7 +176,7 @@ void ReplyProtocolVersion::serialize( BinaryOutputStream & stream ) const
 	stream << serverVersion;
 }
 
-bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream )
+bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> serverVersion;
 
@@ -185,7 +185,7 @@ bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t SetClientName::calcDataSize() const
+uint32_t SetClientName::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -201,7 +201,7 @@ void SetClientName::serialize( BinaryOutputStream & stream ) const
 	stream.writeString0( name );
 }
 
-bool SetClientName::deserializeBody( BinaryInputStream & stream )
+bool SetClientName::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream.readString0( name );
 
@@ -218,7 +218,7 @@ void ResizeZone::serialize( BinaryOutputStream & stream ) const
 	stream << new_size;
 }
 
-bool ResizeZone::deserializeBody( BinaryInputStream & stream )
+bool ResizeZone::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> zone_idx;
 	stream >> new_size;
@@ -228,7 +228,7 @@ bool ResizeZone::deserializeBody( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateLEDs::calcDataSize() const
+uint32_t UpdateLEDs::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -246,7 +246,7 @@ void UpdateLEDs::serialize( BinaryOutputStream & stream ) const
 	writeORGBArray( stream, colors );
 }
 
-bool UpdateLEDs::deserializeBody( BinaryInputStream & stream )
+bool UpdateLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	readORGBArray( stream, colors );
@@ -256,7 +256,7 @@ bool UpdateLEDs::deserializeBody( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateZoneLEDs::calcDataSize() const
+uint32_t UpdateZoneLEDs::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -276,7 +276,7 @@ void UpdateZoneLEDs::serialize( BinaryOutputStream & stream ) const
 	writeORGBArray( stream, colors );
 }
 
-bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream )
+bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	stream >> zone_idx;
@@ -287,7 +287,7 @@ bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateSingleLED::calcDataSize() const
+uint32_t UpdateSingleLED::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -305,7 +305,7 @@ void UpdateSingleLED::serialize( BinaryOutputStream & stream ) const
 	color.serialize( stream );
 }
 
-bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream )
+bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> led_idx;
 	color.deserialize( stream );
@@ -315,7 +315,7 @@ bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateMode::calcDataSize() const
+uint32_t UpdateMode::calcDataSize() const noexcept
 {
 	size_t size = 0;
 
@@ -335,7 +335,7 @@ void UpdateMode::serialize( BinaryOutputStream & stream ) const
 	mode_desc.serialize( stream );
 }
 
-bool UpdateMode::deserializeBody( BinaryInputStream & stream )
+bool UpdateMode::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	stream >> mode_idx;

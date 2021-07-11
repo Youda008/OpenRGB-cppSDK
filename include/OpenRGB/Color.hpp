@@ -22,7 +22,7 @@ namespace orgb {
 
 
 //======================================================================================================================
-/** Simple representation of a color with 3 8-bit values for red, green, blue components */
+/// Simple representation of a color with 3 8-bit values for red, green, blue components
 
 class Color
 {
@@ -33,15 +33,15 @@ class Color
 	uint8_t g;
 	uint8_t b;
 
-	Color() {}
-	Color( uint8_t red, uint8_t green, uint8_t blue ) : r( red ), g( green ), b( blue ) {}
-	~Color() {}
+	Color() noexcept {}
+	Color( uint8_t red, uint8_t green, uint8_t blue ) noexcept : r( red ), g( green ), b( blue ) {}
+	~Color() noexcept {}
 
 	/// Attempts to deduce a color from a string description.
 	/** Possible ways to define a color are:
 	  * 1. hex number of 6 digits, for example "AB34EF", may be preceeded by '#' character
 	  * 2. a word, for example "red", "cyan", "black", case doesn't matter */
-	bool fromString( const std::string & str );
+	bool fromString( const std::string & str ) noexcept;
 
 	// predefined basic colors for instant use
 	static const Color Black;
@@ -53,16 +53,16 @@ class Color
 	static const Color Magenta;
 	static const Color Cyan;
 
-	constexpr size_t calcSize() const { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
+	constexpr size_t calcSize() const noexcept { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
 	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream );
+	bool deserialize( own::BinaryInputStream & stream ) noexcept;
 
-	friend std::ostream & operator<<( std::ostream & os, const Color & color );
-	friend std::istream & operator>>( std::istream & is, Color & color );
+	friend std::ostream & operator<<( std::ostream & os, Color color ) noexcept;
+	friend std::istream & operator>>( std::istream & is, Color & color ) noexcept;
 
 };
 
-void print( const Color & color );
+void print( Color color );
 
 
 //======================================================================================================================
