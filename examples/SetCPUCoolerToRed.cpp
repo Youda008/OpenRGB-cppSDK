@@ -2,6 +2,8 @@
 //  sets all leds of a CPU cooler to red color
 //======================================================================================================================
 
+/// \file
+
 #include <cstdio>
 #include <thread>  // sleep
 using std::chrono::milliseconds;

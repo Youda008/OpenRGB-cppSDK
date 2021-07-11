@@ -3,6 +3,8 @@
 //    - variant handling errors by catching exceptions
 //======================================================================================================================
 
+/// \file
+
 #include <cstdio>    // printf
 #include <cstdlib>   // signal
 #include <thread>    // sleep

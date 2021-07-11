@@ -2,6 +2,8 @@
 //  lists all devices and their properties in console
 //======================================================================================================================
 
+/// \file
+
 #include <cstdio>
 
 #include "OpenRGB/Client.hpp"
