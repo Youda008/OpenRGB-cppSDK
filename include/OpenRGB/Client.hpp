@@ -19,7 +19,7 @@
 #include <chrono>  // timeout
 
 namespace own {
-	class TcpClientSocket;
+	class TcpSocket;
 }
 
 
@@ -258,7 +258,7 @@ class Client
 	std::string _clientName;
 
 	// a pointer so that we don't have to include the TcpSocket and all its OS dependancies here
-	std::unique_ptr< own::TcpClientSocket > _socket;
+	std::unique_ptr< own::TcpSocket > _socket;
 
 	bool _isDeviceListOutOfDate;
 

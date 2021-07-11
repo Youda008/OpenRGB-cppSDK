@@ -15,7 +15,7 @@
 using own::BinaryOutputStream;
 using own::BinaryInputStream;
 #include "Socket.hpp"
-using own::TcpClientSocket;
+using own::TcpSocket;
 using own::SocketError;
 #include "SystemErrorInfo.hpp"
 using own::getLastError;
@@ -125,7 +125,7 @@ const char * enumString( UpdateStatus status ) noexcept
 Client::Client( const std::string & clientName ) noexcept
 :
 	_clientName( clientName ),
-	_socket( new TcpClientSocket ),
+	_socket( new TcpSocket ),
 	_isDeviceListOutOfDate( true )
 {}
 
