@@ -77,8 +77,23 @@ const char * enumString( UpdateStatus status ) noexcept;
 /// Result and output of a device list request
 struct DeviceListResult
 {
-	RequestStatus status;
-	DeviceList devices;
+	RequestStatus status;  ///< whether the request suceeded or why it didn't
+	DeviceList devices;    ///< output of a successfull request
+};
+
+/// Result and output of a device count request
+struct DeviceCountResult
+{
+	RequestStatus status;  ///< whether the request suceeded or why it didn't
+	uint32_t count;        ///< output of a successfull request
+};
+
+/// Result and output of a single device request
+struct DeviceInfoResult
+{
+	RequestStatus status;  ///< whether the request suceeded or why it didn't
+	std::unique_ptr< Device > device;  ///< output of a successfull request
+	// The device has to be a pointer, because moving or copying it would corrupt all the parent references in its members.
 };
 
 
@@ -102,6 +117,11 @@ class Client
 	Client( Client && other ) noexcept = default;
 	Client & operator=( Client && other ) noexcept = default;
 
+	/// Tells whether the client is currently connected to a server.
+	bool isConnected() const noexcept;
+
+	//-- return-value-oriented exception-less API ----------------------------------------------------------------------
+
 	/// Connects to the OpenRGB server determined by a host name and announces our client name.
 	ConnectStatus connect( const std::string & host, uint16_t port = defaultPort ) noexcept;
 
@@ -109,16 +129,22 @@ class Client
 	ConnectStatus connect( own::IPAddr addr = {127,0,0,1}, uint16_t port = defaultPort ) noexcept;
 
 	/// Closes connection to the server.
-	void disconnect() noexcept;
-
-	/// Tells whether the client is currently connected to a server.
-	bool isConnected() const noexcept;
+	/** It will return false if the client is not connected or some rare system error occurs. */
+	bool disconnect() noexcept;
 
 	/// Sets a timeout for receiving request answers.
 	bool setTimeout( std::chrono::milliseconds timeout ) noexcept;
 
 	/// Queries the server for information about all its RGB devices.
 	DeviceListResult requestDeviceList() noexcept;
+
+	/// Queries the server for the number of its RGB devices.
+	/** This is useful when for some reason you want to request the devices manually one by one. */
+	DeviceCountResult requestDeviceCount() noexcept;
+
+	/// Queries the server for information about a single RGB devices.
+	/** After you set a color or change a mode, you can optionally use this to update */
+	DeviceInfoResult requestDeviceInfo( uint32_t deviceIdx ) noexcept;
 
 	/// Checks if the device list you downloaded earlier via requestDeviceList() hasn't been changed on the server.
 	/** In case it has been changed, you need to call requestDeviceList() again. */
@@ -148,67 +174,85 @@ class Client
 
 #ifndef NO_EXCEPTIONS
 
+	//-- exception-oriented API ----------------------------------------------------------------------------------------
+
 	/// Exception-throwing variant of connect( const std::string &, uint16_t ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is already connected
+	  * \throws ConnectionError when the network is down, such host does not exist or the host refuses connection
+	  * \throws SystemError when there was an error inside the operating system */
 	void connectX( const std::string & host, uint16_t port = 6742 );
 
 	/// Exception-throwing variant of connect( own::IPAddr addr, uint16_t port ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is already connected
+	  * \throws ConnectionError when the network is down or the host refuses connection
+	  * \throws SystemError when there was an error inside the operating system */
 	void connectX( own::IPAddr addr = {127,0,0,1}, uint16_t port = 6742 );
 
+	/// Exception-throwing variant of disconnect().
+	/** \throws UserError when the client is not connected */
+	void disconnectX();
+
 	/// Exception-throwing variant of setTimeout( std::chrono::milliseconds ).
-	/** \throws SystemError */
+	/** \throws SystemError when there was an error inside the operating system */
 	void setTimeoutX( std::chrono::milliseconds timeout );
 
 	/// Exception-throwing variant of requestDeviceList().
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent or no valid reply was received
+	  * \throws SystemError when there was an error inside the operating system */
 	DeviceList requestDeviceListX();
 
+	/// Exception-throwing variant of requestDeviceCount().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent or no valid reply was received
+	  * \throws SystemError when there was an error inside the operating system */
+	uint32_t requestDeviceCountX();
+
+	/// Exception-throwing variant of requestDeviceInfo().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent or no valid reply was received
+	  * \throws SystemError when there was an error inside the operating system */
+	std::unique_ptr< Device > requestDeviceInfoX( uint32_t deviceIdx );
+
 	/// Exception-throwing variant of checkForDeviceUpdates().
-	/** \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws ConnectionError when the server closes the connection or sends an invalid packet
+	  * \throws SystemError when there was an error inside the operating system */
 	bool isDeviceListOutdatedX();
 
 	/// Exception-throwing variant of changeMode( const Device &, const Mode & ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void changeModeX( const Device & device, const Mode & mode );
 
 	/// Exception-throwing variant of switchToDirectMode( const Device & ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void switchToDirectModeX( const Device & device );
 
 	/// Exception-throwing variant of setDeviceColor().
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void setDeviceColorX( const Device & device, Color color );
 
 	/// Exception-throwing variant of setZoneColor( const Zone &, Color ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void setZoneColorX( const Zone & zone, Color color );
 
 	/// Exception-throwing variant of setZoneSize( const Zone &, uint32_t ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void setZoneSizeX( const Zone & zone, uint32_t newSize );
 
 	/// Exception-throwing variant of setColorOfSingleLED( const LED &, Color ).
-	/** \throws UserError
-	  * \throws ConnectionError
-	  * \throws SystemError */
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
 	void setColorOfSingleLEDX( const LED & led, Color color );
 
 #endif // NO_EXCEPTIONS
@@ -226,7 +270,12 @@ class Client
 
 	template< typename HostSpec >
 	ConnectStatus _connect( const HostSpec & host, uint16_t port );
+	bool _disconnect() noexcept;
+	bool _setTimeout( std::chrono::milliseconds timeout ) noexcept;
 	DeviceListResult _requestDeviceList();
+	DeviceCountResult _requestDeviceCount();
+	DeviceInfoResult _requestDeviceInfo( uint32_t deviceIdx );
+	UpdateStatus _checkForDeviceUpdates() noexcept;
 	RequestStatus _changeMode( const Device & device, const Mode & mode );
 	RequestStatus _switchToCustomMode( const Device & device );
 	RequestStatus _setDeviceColor( const Device & device, Color color );

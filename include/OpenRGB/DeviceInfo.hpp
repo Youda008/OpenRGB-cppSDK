@@ -395,8 +395,12 @@ class DeviceList
 
 	size_t size() const noexcept { return _list.size(); }
 
+	// this should only be used by the Client when constructing the list from the server response
 	void append( DeviceDescription && desc ) { _list.emplace_back( new Device( nextIdx(), std::move( desc ) ) ); }
 	void clear() noexcept { _list.clear(); }
+
+	/// Use this to update your DeviceList after the call to Client::requestDeviceInfo().
+	void replace( std::unique_ptr< Device > && device ) { _list[ device->idx ] = std::move( device ); }
 
 	PointerIterator< DeviceListType::const_iterator > begin() const noexcept  { return _list.begin(); }
 	PointerIterator< DeviceListType::const_iterator > end() const noexcept    { return _list.end(); }

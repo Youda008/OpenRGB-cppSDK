@@ -21,6 +21,7 @@ using own::SocketError;
 using own::getLastError;
 using own::getErrorString;
 #include "LangUtils.hpp"
+using own::make_unique;
 #include "ContainerUtils.hpp"
 using own::span;
 using own::make_span;
@@ -131,330 +132,12 @@ Client::Client( const std::string & clientName ) noexcept
 
 Client::~Client() noexcept {}
 
-#define CATCH_ALL( ... ) \
-	catch (const std::exception & ex) { \
-		fprintf( stderr, "Unexpected std::exception was thrown: %s\n", ex.what() ); \
-		__VA_ARGS__ \
-	} catch (...) { \
-		fprintf( stderr, "Unexpected unknown exception was thrown\n" ); \
-		__VA_ARGS__ \
-	}
-
-ConnectStatus Client::connect( const std::string & host, uint16_t port ) noexcept
-{
-	try {
-		return _connect( host, port );
-	} CATCH_ALL (
-		return ConnectStatus::UnexpectedError;
-	)
-}
-
-ConnectStatus Client::connect( own::IPAddr addr, uint16_t port ) noexcept
-{
-	try {
-		return _connect( addr, port );
-	} CATCH_ALL (
-		return ConnectStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::connectX( const std::string & host, uint16_t port )
-{
-	ConnectStatus status = _connect( host, port );
-	connectStatusToException( status );
-}
-#endif
-
-#ifndef NO_EXCEPTIONS
-void Client::connectX( own::IPAddr addr, uint16_t port )
-{
-	ConnectStatus status = _connect( addr, port );
-	connectStatusToException( status );
-}
-#endif
-
-void Client::disconnect() noexcept
-{
-	_socket->disconnect();
-}
-
 bool Client::isConnected() const noexcept
 {
 	return _socket->isConnected();
 }
 
-bool Client::setTimeout( std::chrono::milliseconds timeout ) noexcept
-{
-	// Currently we cannot set timeout on a socket that is not connected, because the actual system socket is created
-	// during connect operation, so the preceeding setTimeout calls would go to nowhere.
-	if (!_socket->isConnected())
-	{
-		return false;
-	}
-
-	return _socket->setTimeout( timeout );
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::setTimeoutX( std::chrono::milliseconds timeout )
-{
-	if (!setTimeout( timeout ))
-	{
-		throw SystemError( "Failed to set timeout", getLastSystemError() );
-	}
-}
-#endif
-
-DeviceListResult Client::requestDeviceList() noexcept
-{
-	try {
-		return _requestDeviceList();
-	} CATCH_ALL (
-		return { RequestStatus::UnexpectedError, {} };
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-DeviceList Client::requestDeviceListX()
-{
-	DeviceListResult result = _requestDeviceList();
-	switch (result.status)
-	{
-		case RequestStatus::Success:
-			return move( result.devices );
-		case RequestStatus::NotConnected:
-			throw UserError( enumString( result.status) );
-		case RequestStatus::SendRequestFailed:
-		case RequestStatus::ConnectionClosed:
-		case RequestStatus::NoReply:
-		case RequestStatus::InvalidReply:
-			throw ConnectionError( enumString( result.status ), getLastSystemError() );
-		default:
-			throw SystemError( enumString( result.status ), getLastSystemError() );
-	}
-}
-#endif
-
-RequestStatus Client::changeMode( const Device & device, const Mode & mode ) noexcept
-{
-	try {
-		return _changeMode( device, mode );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::changeModeX( const Device & device, const Mode & mode )
-{
-	RequestStatus status = _changeMode( device, mode );
-	requestStatusToException( status );
-}
-#endif
-
-RequestStatus Client::switchToCustomMode( const Device & device ) noexcept
-{
-	try {
-		return _switchToCustomMode( device );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::switchToDirectModeX( const Device & device )
-{
-	RequestStatus status = _switchToCustomMode( device );
-	requestStatusToException( status );
-}
-#endif
-
-RequestStatus Client::setDeviceColor( const Device & device, Color color ) noexcept
-{
-	try {
-		return _setDeviceColor( device, color );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::setDeviceColorX( const Device & device, Color color )
-{
-	RequestStatus status = _setDeviceColor( device, color );
-	requestStatusToException( status );
-}
-#endif
-
-RequestStatus Client::setZoneColor( const Zone & zone, Color color ) noexcept
-{
-	try {
-		return _setZoneColor( zone, color );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::setZoneColorX( const Zone & zone, Color color )
-{
-	RequestStatus status = _setZoneColor( zone, color );
-	requestStatusToException( status );
-}
-#endif
-
-RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize ) noexcept
-{
-	try {
-		return _setZoneSize( zone, newSize );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::setZoneSizeX( const Zone & zone, uint32_t newSize )
-{
-	RequestStatus status = _setZoneSize( zone, newSize );
-	requestStatusToException( status );
-}
-#endif
-
-RequestStatus Client::setColorOfSingleLED( const LED & led, Color color ) noexcept
-{
-	try {
-		return _setColorOfSingleLED( led, color );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-#ifndef NO_EXCEPTIONS
-void Client::setColorOfSingleLEDX( const LED & led, Color color )
-{
-	RequestStatus status = _setColorOfSingleLED( led, color );
-	requestStatusToException( status );
-}
-#endif
-
-UpdateStatus Client::checkForDeviceUpdates() noexcept
-{
-	if (_isDeviceListOutOfDate)
-	{
-		// Last time we found DeviceListUpdated message in the socket, and user haven't requested the new list yet,
-		// no need to look again, keep reporting "out of date" until he calls requestDeviceList().
-		return UpdateStatus::OutOfDate;
-	}
-
-	// Last time we checked there wasn't any DeviceListUpdated message, but it already might be now, so let's check.
-	UpdateStatus status = checkForUpdateMessageArrival();
-	if (status == UpdateStatus::OutOfDate)
-	{
-		// DeviceListUpdated message found, cache this discovery until user calls requestDeviceList().
-		_isDeviceListOutOfDate = true;
-	}
-
-	return status;
-}
-
-#ifndef NO_EXCEPTIONS
-bool Client::isDeviceListOutdatedX()
-{
-	UpdateStatus status = checkForDeviceUpdates();
-	switch (status)
-	{
-		case UpdateStatus::UpToDate:
-			return false;
-		case UpdateStatus::OutOfDate:
-			return true;
-		case UpdateStatus::ConnectionClosed:
-		case UpdateStatus::UnexpectedMessage:
-			throw ConnectionError( enumString( status ), getLastSystemError() );
-		default:
-			throw SystemError( enumString( status ), getLastSystemError() );
-	}
-}
-#endif
-
-UpdateStatus Client::checkForUpdateMessageArrival() noexcept
-{
-	// We only need to check if there is any TCP message in the system input buffer, but don't wait for it.
-	// So we switch the socket to non-blocking mode and try to receive.
-
-	if (!_socket->setBlockingMode( false ))
-	{
-		return UpdateStatus::OtherSystemError;
-	}
-
-	auto enableBlockingAndReturn = [ this ]( UpdateStatus returnStatus )
-	{
-		if (!_socket->setBlockingMode( true ))
-		{
-			// This is bad, we changed the state of the socket and now we're unable to return it back.
-			// So rather burn everything to the ground and start from the beginning, than let things be in undefined state.
-			disconnect();
-			return UpdateStatus::CantRestoreSocket;
-		}
-		else
-		{
-			return returnStatus;
-		}
-	};
-
-	vector< uint8_t > buffer;
-	SocketError status = _socket->receive( buffer, Header::size() );
-	if (status == SocketError::WouldBlock)
-	{
-		// No message is currently in the socket, no indication that the device list is out of date.
-		return enableBlockingAndReturn( UpdateStatus::UpToDate );
-	}
-	else if (status == SocketError::ConnectionClosed)
-	{
-		return enableBlockingAndReturn( UpdateStatus::ConnectionClosed );
-	}
-	else if (status != SocketError::Success)
-	{
-		return enableBlockingAndReturn( UpdateStatus::OtherSystemError );
-	}
-
-	// We have some message, so let's check what it is.
-
-	Header header;
-	BinaryInputStream stream( make_span( buffer ) );
-	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
-	{
-		// We received something, but something totally different than what we expected.
-		return enableBlockingAndReturn( UpdateStatus::UnexpectedMessage );
-	}
-	else
-	{
-		// We have received a DeviceListUpdated message from the server,
-		// signal to the user that he needs to request the list again.
-		return enableBlockingAndReturn( UpdateStatus::OutOfDate );
-	}
-}
-
-system_error_t Client::getLastSystemError() const noexcept
-{
-	return _socket->getLastSystemError();
-}
-
-string Client::getLastSystemErrorStr() const noexcept
-{
-	return getErrorString( getLastSystemError() );
-}
-
-string Client::getSystemErrorStr( system_error_t errorCode ) const noexcept
-{
-	return getErrorString( errorCode );
-}
-
-
-//======================================================================================================================
-//  Client: helpers
-
-template< typename HostSpec >
+template< typename HostSpec >  // HostSpec is either std::string hostName or own::NetAddress addr
 ConnectStatus Client::_connect( const HostSpec & host, uint16_t port )
 {
 	SocketError connectRes = _socket->connect( host, port );
@@ -519,6 +202,29 @@ ConnectStatus Client::_connect( const HostSpec & host, uint16_t port )
 	return ConnectStatus::Success;
 }
 
+bool Client::_disconnect() noexcept
+{
+	SocketError status = _socket->disconnect();
+	if (status == SocketError::Success)
+		return true;
+	else if (status == SocketError::NotConnected)
+		return false;
+	else
+		critical_error("Unexpected disconnect status.");  // this should never happen, but if it does we want to know
+}
+
+bool Client::_setTimeout( std::chrono::milliseconds timeout ) noexcept
+{
+	// Currently we cannot set timeout on a socket that is not connected, because the actual system socket is created
+	// during connect operation, so the preceeding setTimeout calls would go to nowhere.
+	if (!_socket->isConnected())
+	{
+		return false;
+	}
+
+	return _socket->setTimeout( timeout );
+}
+
 DeviceListResult Client::_requestDeviceList()
 {
 	if (!_socket->isConnected())
@@ -571,6 +277,81 @@ DeviceListResult Client::_requestDeviceList()
 
 	result.status = RequestStatus::Success;
 	return result;
+}
+
+DeviceCountResult Client::_requestDeviceCount()
+{
+	if (!_socket->isConnected())
+	{
+		return { RequestStatus::NotConnected, 0 };
+	}
+
+	DeviceCountResult result;
+
+	bool sent = sendMessage< RequestControllerCount >();
+	if (!sent)
+	{
+		result.status = RequestStatus::SendRequestFailed;
+		return result;
+	}
+
+	auto deviceCountResult = awaitMessage< ReplyControllerCount >();
+	if (deviceCountResult.status != RequestStatus::Success)
+	{
+		result.status = deviceCountResult.status;
+		return result;
+	}
+
+	result.status = RequestStatus::Success;
+	return result;
+}
+
+DeviceInfoResult Client::_requestDeviceInfo( uint32_t deviceIdx )
+{
+	if (!_socket->isConnected())
+	{
+		return { RequestStatus::NotConnected, nullptr };
+	}
+
+	DeviceInfoResult result;
+
+	bool sent = sendMessage< RequestControllerData >( deviceIdx, implementedProtocolVersion );
+	if (!sent)
+	{
+		result.status = RequestStatus::SendRequestFailed;
+		return result;
+	}
+
+	auto deviceDataResult = awaitMessage< ReplyControllerData >();
+	if (deviceDataResult.status != RequestStatus::Success)
+	{
+		result.status = deviceDataResult.status;
+		return result;
+	}
+
+	result.device = make_unique< Device >( deviceIdx, move( deviceDataResult.message.device_desc ) );
+	result.status = RequestStatus::Success;
+	return result;
+}
+
+UpdateStatus Client::_checkForDeviceUpdates() noexcept
+{
+	if (_isDeviceListOutOfDate)
+	{
+		// Last time we found DeviceListUpdated message in the socket, and user haven't requested the new list yet,
+		// no need to look again, keep reporting "out of date" until he calls requestDeviceList().
+		return UpdateStatus::OutOfDate;
+	}
+
+	// Last time we checked there wasn't any DeviceListUpdated message, but it already might be now, so let's check.
+	UpdateStatus status = checkForUpdateMessageArrival();
+	if (status == UpdateStatus::OutOfDate)
+	{
+		// DeviceListUpdated message found, cache this discovery until user calls requestDeviceList().
+		_isDeviceListOutOfDate = true;
+	}
+
+	return status;
 }
 
 RequestStatus Client::_changeMode( const Device & device, const Mode & mode )
@@ -668,6 +449,308 @@ RequestStatus Client::_setColorOfSingleLED( const LED & led, Color color )
 	return RequestStatus::Success;
 }
 
+system_error_t Client::getLastSystemError() const noexcept
+{
+	return _socket->getLastSystemError();
+}
+
+string Client::getLastSystemErrorStr() const noexcept
+{
+	return getErrorString( getLastSystemError() );
+}
+
+string Client::getSystemErrorStr( system_error_t errorCode ) const noexcept
+{
+	return getErrorString( errorCode );
+}
+
+
+//======================================================================================================================
+//  Client: exception-less wrappers of the API
+
+#define CATCH_ALL( ... ) \
+	catch (const std::exception & ex) { \
+		fprintf( stderr, "Unexpected std::exception was thrown: %s\n", ex.what() ); \
+		__VA_ARGS__ \
+	} catch (...) { \
+		fprintf( stderr, "Unexpected unknown exception was thrown\n" ); \
+		__VA_ARGS__ \
+	}
+
+ConnectStatus Client::connect( const std::string & host, uint16_t port ) noexcept
+{
+	try {
+		return _connect( host, port );
+	} CATCH_ALL (
+		return ConnectStatus::UnexpectedError;
+	)
+}
+
+ConnectStatus Client::connect( own::IPAddr addr, uint16_t port ) noexcept
+{
+	try {
+		return _connect( addr, port );
+	} CATCH_ALL (
+		return ConnectStatus::UnexpectedError;
+	)
+}
+
+bool Client::disconnect() noexcept
+{
+	try {
+		return _disconnect();
+	} CATCH_ALL (
+		return false;
+	)
+}
+
+bool Client::setTimeout( std::chrono::milliseconds timeout ) noexcept
+{
+	return _setTimeout( timeout );
+}
+
+DeviceListResult Client::requestDeviceList() noexcept
+{
+	try {
+		return _requestDeviceList();
+	} CATCH_ALL (
+		return { RequestStatus::UnexpectedError, {} };
+	)
+}
+
+DeviceCountResult Client::requestDeviceCount() noexcept
+{
+	try {
+		return _requestDeviceCount();
+	} CATCH_ALL (
+		return { RequestStatus::UnexpectedError, 0 };
+	)
+}
+
+DeviceInfoResult Client::requestDeviceInfo( uint32_t deviceIdx ) noexcept
+{
+	try {
+		return _requestDeviceInfo( deviceIdx );
+	} CATCH_ALL (
+		return { RequestStatus::UnexpectedError, {} };
+	)
+}
+
+UpdateStatus Client::checkForDeviceUpdates() noexcept
+{
+	return _checkForDeviceUpdates();
+}
+
+RequestStatus Client::changeMode( const Device & device, const Mode & mode ) noexcept
+{
+	try {
+		return _changeMode( device, mode );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+RequestStatus Client::switchToCustomMode( const Device & device ) noexcept
+{
+	try {
+		return _switchToCustomMode( device );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+RequestStatus Client::setDeviceColor( const Device & device, Color color ) noexcept
+{
+	try {
+		return _setDeviceColor( device, color );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+RequestStatus Client::setZoneColor( const Zone & zone, Color color ) noexcept
+{
+	try {
+		return _setZoneColor( zone, color );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize ) noexcept
+{
+	try {
+		return _setZoneSize( zone, newSize );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+RequestStatus Client::setColorOfSingleLED( const LED & led, Color color ) noexcept
+{
+	try {
+		return _setColorOfSingleLED( led, color );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+
+//======================================================================================================================
+//  Client: exception-oriented wrappers of the API
+
+#ifndef NO_EXCEPTIONS
+
+void Client::connectStatusToException( ConnectStatus status )
+{
+	switch (status)
+	{
+		case ConnectStatus::Success:
+			return;
+		case ConnectStatus::AlreadyConnected:
+			throw UserError( enumString( status ) );
+		case ConnectStatus::HostNotResolved:
+		case ConnectStatus::ConnectFailed:
+		case ConnectStatus::RequestVersionFailed:
+		case ConnectStatus::VersionNotSupported:
+		case ConnectStatus::SendNameFailed:
+			throw ConnectionError( enumString( status ), getLastSystemError() );
+		default:
+			throw SystemError( enumString( status ), getLastSystemError() );
+	}
+}
+
+void Client::requestStatusToException( RequestStatus status )
+{
+	switch (status)
+	{
+		case RequestStatus::Success:
+			return;
+		case RequestStatus::NotConnected:
+			throw UserError( enumString( status ) );
+		case RequestStatus::SendRequestFailed:
+		case RequestStatus::ConnectionClosed:
+		case RequestStatus::NoReply:
+		case RequestStatus::InvalidReply:
+			throw ConnectionError( enumString( status ), getLastSystemError() );
+		default:
+			throw SystemError( enumString( status ), getLastSystemError() );
+	}
+}
+
+void Client::connectX( const std::string & host, uint16_t port )
+{
+	ConnectStatus status = _connect( host, port );
+	connectStatusToException( status );
+}
+
+void Client::connectX( own::IPAddr addr, uint16_t port )
+{
+	ConnectStatus status = _connect( addr, port );
+	connectStatusToException( status );
+}
+
+void Client::disconnectX()
+{
+	if (!_disconnect())
+	{
+		throw UserError( "The client is not connected." );
+	}
+}
+
+void Client::setTimeoutX( std::chrono::milliseconds timeout )
+{
+	if (!_setTimeout( timeout ))
+	{
+		throw SystemError( "Failed to set timeout", getLastSystemError() );
+	}
+}
+
+DeviceList Client::requestDeviceListX()
+{
+	DeviceListResult result = _requestDeviceList();
+	requestStatusToException( result.status );
+	return move( result.devices );
+}
+
+uint32_t Client::requestDeviceCountX()
+{
+	DeviceCountResult result = _requestDeviceCount();
+	requestStatusToException( result.status );
+	return result.count;
+}
+
+std::unique_ptr< Device > Client::requestDeviceInfoX( uint32_t deviceIdx )
+{
+	DeviceInfoResult result = _requestDeviceInfo( deviceIdx );
+	requestStatusToException( result.status );
+	return move( result.device );
+}
+
+bool Client::isDeviceListOutdatedX()
+{
+	UpdateStatus status = _checkForDeviceUpdates();
+	switch (status)
+	{
+		case UpdateStatus::UpToDate:
+			return false;
+		case UpdateStatus::OutOfDate:
+			return true;
+		case UpdateStatus::ConnectionClosed:
+		case UpdateStatus::UnexpectedMessage:
+			throw ConnectionError( enumString( status ), getLastSystemError() );
+		default:
+			throw SystemError( enumString( status ), getLastSystemError() );
+	}
+}
+
+void Client::changeModeX( const Device & device, const Mode & mode )
+{
+	RequestStatus status = _changeMode( device, mode );
+	requestStatusToException( status );
+}
+
+void Client::switchToDirectModeX( const Device & device )
+{
+	RequestStatus status = _switchToCustomMode( device );
+	requestStatusToException( status );
+}
+
+void Client::setDeviceColorX( const Device & device, Color color )
+{
+	RequestStatus status = _setDeviceColor( device, color );
+	requestStatusToException( status );
+}
+
+void Client::setZoneColorX( const Zone & zone, Color color )
+{
+	RequestStatus status = _setZoneColor( zone, color );
+	requestStatusToException( status );
+}
+
+void Client::setZoneSizeX( const Zone & zone, uint32_t newSize )
+{
+	RequestStatus status = _setZoneSize( zone, newSize );
+	requestStatusToException( status );
+}
+
+void Client::setColorOfSingleLEDX( const LED & led, Color color )
+{
+	RequestStatus status = _setColorOfSingleLED( led, color );
+	requestStatusToException( status );
+}
+
+#endif // NO_EXCEPTIONS
+
+
+//======================================================================================================================
+//  Client: helpers
+
 template< typename Message, typename ... ConstructorArgs >
 bool Client::sendMessage( ConstructorArgs ... args )
 {
@@ -754,44 +837,63 @@ Client::RecvResult< Message > Client::awaitMessage() noexcept
 	return result;
 }
 
-#ifndef NO_EXCEPTIONS
-void Client::connectStatusToException( ConnectStatus status )
+UpdateStatus Client::checkForUpdateMessageArrival() noexcept
 {
-	switch (status)
-	{
-		case ConnectStatus::Success:
-			return;
-		case ConnectStatus::AlreadyConnected:
-			throw UserError( enumString( status ) );
-		case ConnectStatus::HostNotResolved:
-		case ConnectStatus::ConnectFailed:
-		case ConnectStatus::RequestVersionFailed:
-		case ConnectStatus::VersionNotSupported:
-		case ConnectStatus::SendNameFailed:
-			throw ConnectionError( enumString( status ), getLastSystemError() );
-		default:
-			throw SystemError( enumString( status ), getLastSystemError() );
-	}
-}
-#endif
+	// We only need to check if there is any TCP message in the system input buffer, but don't wait for it.
+	// So we switch the socket to non-blocking mode and try to receive.
 
-#ifndef NO_EXCEPTIONS
-void Client::requestStatusToException( RequestStatus status )
-{
-	switch (status)
+	if (!_socket->setBlockingMode( false ))
 	{
-		case RequestStatus::Success:
-			return;
-		case RequestStatus::NotConnected:
-			throw UserError( enumString( status ) );
-		case RequestStatus::SendRequestFailed:
-		case RequestStatus::ConnectionClosed:
-			throw ConnectionError( enumString( status ), getLastSystemError() );
-		default:
-			throw SystemError( enumString( status ), getLastSystemError() );
+		return UpdateStatus::OtherSystemError;
+	}
+
+	auto enableBlockingAndReturn = [ this ]( UpdateStatus returnStatus )
+	{
+		if (!_socket->setBlockingMode( true ))
+		{
+			// This is bad, we changed the state of the socket and now we're unable to return it back.
+			// So rather burn everything to the ground and start from the beginning, than let things be in undefined state.
+			disconnect();
+			return UpdateStatus::CantRestoreSocket;
+		}
+		else
+		{
+			return returnStatus;
+		}
+	};
+
+	vector< uint8_t > buffer;
+	SocketError status = _socket->receive( buffer, Header::size() );
+	if (status == SocketError::WouldBlock)
+	{
+		// No message is currently in the socket, no indication that the device list is out of date.
+		return enableBlockingAndReturn( UpdateStatus::UpToDate );
+	}
+	else if (status == SocketError::ConnectionClosed)
+	{
+		return enableBlockingAndReturn( UpdateStatus::ConnectionClosed );
+	}
+	else if (status != SocketError::Success)
+	{
+		return enableBlockingAndReturn( UpdateStatus::OtherSystemError );
+	}
+
+	// We have some message, so let's check what it is.
+
+	Header header;
+	BinaryInputStream stream( make_span( buffer ) );
+	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
+	{
+		// We received something, but something totally different than what we expected.
+		return enableBlockingAndReturn( UpdateStatus::UnexpectedMessage );
+	}
+	else
+	{
+		// We have received a DeviceListUpdated message from the server,
+		// signal to the user that he needs to request the list again.
+		return enableBlockingAndReturn( UpdateStatus::OutOfDate );
 	}
 }
-#endif
 
 
 //======================================================================================================================

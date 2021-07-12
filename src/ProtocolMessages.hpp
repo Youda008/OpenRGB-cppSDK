@@ -64,6 +64,8 @@ How to extend an existing message:
 #define OPENRGB_PROTOCOL_MESSAGES_INCLUDED
 
 
+#include "Essential.hpp"
+
 #include "OpenRGB/DeviceInfo.hpp"
 #include "OpenRGB/Color.hpp"
 
@@ -238,7 +240,7 @@ struct ReplyControllerData
 			/*message_type*/ thisType,
 			/*device_idx*/   deviceIdx
 		),
-		device_desc( std::move(device) )
+		device_desc( move(device) )
 	{
 		header.message_size = data_size = calcDataSize();
 	}
