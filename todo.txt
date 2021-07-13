@@ -1,3 +1,2 @@
+support profile management from version 2
 more methods for colors, from HSV conversion, mixing, ...
-better and more consistent documentation
-noexcept where applicable

@@ -53,12 +53,12 @@ struct protocol
 	//-- OpenRGB arrays ------------------------------------------------------------------------------------------------
 
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static size_t sizeofVectorWithDynamicObjects( const std::vector< Type > & vec ) noexcept
+	static size_t sizeofVectorWithDynamicObjects( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
 		size_t size = 0;
 		for (const Type & elem : vec)
 		{
-			size += elem.calcSize();
+			size += elem.calcSize( protocolVersion );
 		}
 		return size;
 	}
@@ -70,9 +70,9 @@ struct protocol
 	}
 
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static size_t sizeofArray( const std::vector< Type > & vec ) noexcept
+	static size_t sizeofArray( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
-		return 2 + sizeofVectorWithDynamicObjects( vec );
+		return 2 + sizeofVectorWithDynamicObjects( vec, protocolVersion );
 	}
 
 	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
@@ -86,12 +86,12 @@ struct protocol
 	}
 
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec, uint32_t protocolVersion )
 	{
 		stream << uint16_t(vec.size());
 		for (const Type & elem : vec)
 		{
-			elem.serialize( stream );
+			elem.serialize( stream, protocolVersion );
 		}
 	}
 
@@ -111,7 +111,7 @@ struct protocol
 	}
 
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec, uint32_t parentIdx ) noexcept
+	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec, uint32_t protocolVersion, uint32_t parentIdx ) noexcept
 	{
 		uint16_t size = 0;
 		stream >> size;
@@ -119,7 +119,7 @@ struct protocol
 		for (uint16_t i = 0; i < size; ++i)
 		{
 			Type obj;
-			if (!obj.deserialize( stream, i, parentIdx ))
+			if (!obj.deserialize( stream, protocolVersion, i, parentIdx ))
 				return false;
 			vec.emplace_back( move(obj) );
 		}

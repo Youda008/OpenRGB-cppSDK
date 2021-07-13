@@ -127,6 +127,7 @@ Client::Client( const std::string & clientName ) noexcept
 :
 	_clientName( clientName ),
 	_socket( new TcpSocket ),
+	_negotiatedProtocolVersion( 0 ),
 	_isDeviceListOutOfDate( true )
 {}
 
@@ -155,7 +156,7 @@ ConnectStatus Client::_connect( const std::string & host, uint16_t port )
 	// rather set some default timeout for recv operations, user can always override this
 	_socket->setTimeout( milliseconds( 500 ) );
 
-	bool sendVersionRes = sendMessage< RequestProtocolVersion >();
+	bool sendVersionRes = sendMessage< RequestProtocolVersion >( implementedProtocolVersion );
 	if (!sendVersionRes)
 	{
 		_socket->disconnect();  // revert to the state before this function was called
@@ -169,12 +170,14 @@ ConnectStatus Client::_connect( const std::string & host, uint16_t port )
 		return ConnectStatus::RequestVersionFailed;
 	}
 
-	if (requestVersionRes.message.serverVersion < implementedProtocolVersion)
+	if (requestVersionRes.message.serverVersion == 0)
 	{
-		// Support for older OpenRGB versions will not be maintained. Sorry guys.
+		// Support for the very first version-less OpenRGB protocol will not be maintained.
 		_socket->disconnect();  // revert to the state before this function was called
 		return ConnectStatus::VersionNotSupported;
 	}
+
+	_negotiatedProtocolVersion = std::min( implementedProtocolVersion, requestVersionRes.message.serverVersion );
 
 	bool sendNameRes = sendMessage< SetClientName >( _clientName );
 	if (!sendNameRes)
@@ -254,7 +257,7 @@ DeviceListResult Client::_requestDeviceList()
 
 		for (uint32_t deviceIdx = 0; deviceIdx < deviceCountResult.message.count; ++deviceIdx)
 		{
-			sent = sendMessage< RequestControllerData >( deviceIdx, implementedProtocolVersion );
+			sent = sendMessage< RequestControllerData >( deviceIdx, _negotiatedProtocolVersion );
 			if (!sent)
 			{
 				result.status = RequestStatus::SendRequestFailed;
@@ -315,7 +318,7 @@ DeviceInfoResult Client::_requestDeviceInfo( uint32_t deviceIdx )
 
 	DeviceInfoResult result;
 
-	bool sent = sendMessage< RequestControllerData >( deviceIdx, implementedProtocolVersion );
+	bool sent = sendMessage< RequestControllerData >( deviceIdx, _negotiatedProtocolVersion );
 	if (!sent)
 	{
 		result.status = RequestStatus::SendRequestFailed;
@@ -361,7 +364,7 @@ RequestStatus Client::_changeMode( const Device & device, const Mode & mode )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< UpdateMode >( device.idx, mode.idx, mode ))
+	if (!sendMessage< UpdateMode >( device.idx, mode.idx, mode, _negotiatedProtocolVersion ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -741,7 +744,7 @@ bool Client::sendMessage( ConstructorArgs ... args )
 	// allocate buffer and serialize (header.message_size is calculated in constructor)
 	std::vector< uint8_t > buffer( message.header.size() + message.header.message_size );
 	BinaryOutputStream stream( make_span( buffer ) );
-	message.serialize( stream );
+	message.serialize( stream, _negotiatedProtocolVersion );
 
 	return _socket->send( make_span( buffer ) ) == SocketError::Success;
 }
@@ -807,7 +810,7 @@ Client::RecvResult< Message > Client::awaitMessage() noexcept
 
 	// parse and validate the body
 	BinaryInputStream stream( make_span( bodyBuffer ) );
-	if (!result.message.deserializeBody( stream ))
+	if (!result.message.deserializeBody( stream, _negotiatedProtocolVersion ))
 	{
 		result.status = RequestStatus::InvalidReply;
 	}

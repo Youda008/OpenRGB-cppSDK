@@ -93,14 +93,14 @@ bool Header::deserialize( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void ReplyControllerCount::serialize( BinaryOutputStream & stream ) const
+void ReplyControllerCount::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
 	stream << count;
 }
 
-bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream ) noexcept
+bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> count;
 
@@ -109,14 +109,14 @@ bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream ) noexcep
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void RequestControllerData::serialize( own::BinaryOutputStream & stream ) const
+void RequestControllerData::serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
 	stream << protocolVersion;
 }
 
-bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream ) noexcept
+bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> protocolVersion;
 
@@ -125,42 +125,42 @@ bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream ) n
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t ReplyControllerData::calcDataSize() const noexcept
+uint32_t ReplyControllerData::calcDataSize( uint32_t protocolVersion ) const noexcept
 {
 	size_t size = 0;
 
 	size += sizeof( data_size );
-	size += device_desc.calcSize();
+	size += device_desc.calcSize( protocolVersion );
 
 	return uint32_t( size );
 }
 
-void ReplyControllerData::serialize( BinaryOutputStream & stream ) const
+void ReplyControllerData::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) const
 {
 	header.serialize( stream );
 
 	stream << data_size;
-	device_desc.serialize( stream );
+	device_desc.serialize( stream, protocolVersion );
 }
 
-bool ReplyControllerData::deserializeBody( BinaryInputStream & stream ) noexcept
+bool ReplyControllerData::deserializeBody( BinaryInputStream & stream, uint32_t protocolVersion ) noexcept
 {
 	stream >> data_size;
-	device_desc.deserialize( stream, header.device_idx );
+	device_desc.deserialize( stream, header.device_idx, protocolVersion );
 
 	return !stream.hasFailed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void RequestProtocolVersion::serialize( BinaryOutputStream & stream ) const
+void RequestProtocolVersion::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
 	stream << clientVersion;
 }
 
-bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexcept
+bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> clientVersion;
 
@@ -169,14 +169,14 @@ bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexc
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void ReplyProtocolVersion::serialize( BinaryOutputStream & stream ) const
+void ReplyProtocolVersion::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
 	stream << serverVersion;
 }
 
-bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexcept
+bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> serverVersion;
 
@@ -185,7 +185,7 @@ bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream ) noexcep
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t SetClientName::calcDataSize() const noexcept
+uint32_t SetClientName::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -194,14 +194,14 @@ uint32_t SetClientName::calcDataSize() const noexcept
 	return uint32_t( size );
 }
 
-void SetClientName::serialize( BinaryOutputStream & stream ) const
+void SetClientName::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
 	stream.writeString0( name );
 }
 
-bool SetClientName::deserializeBody( BinaryInputStream & stream ) noexcept
+bool SetClientName::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream.readString0( name );
 
@@ -210,7 +210,7 @@ bool SetClientName::deserializeBody( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void ResizeZone::serialize( BinaryOutputStream & stream ) const
+void ResizeZone::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
@@ -218,7 +218,7 @@ void ResizeZone::serialize( BinaryOutputStream & stream ) const
 	stream << new_size;
 }
 
-bool ResizeZone::deserializeBody( BinaryInputStream & stream ) noexcept
+bool ResizeZone::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> zone_idx;
 	stream >> new_size;
@@ -228,7 +228,7 @@ bool ResizeZone::deserializeBody( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateLEDs::calcDataSize() const noexcept
+uint32_t UpdateLEDs::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -238,7 +238,7 @@ uint32_t UpdateLEDs::calcDataSize() const noexcept
 	return uint32_t( size );
 }
 
-void UpdateLEDs::serialize( BinaryOutputStream & stream ) const
+void UpdateLEDs::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
@@ -246,7 +246,7 @@ void UpdateLEDs::serialize( BinaryOutputStream & stream ) const
 	protocol::writeArray( stream, colors );
 }
 
-bool UpdateLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
+bool UpdateLEDs::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> data_size;
 	protocol::readArray( stream, colors );
@@ -256,7 +256,7 @@ bool UpdateLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateZoneLEDs::calcDataSize() const noexcept
+uint32_t UpdateZoneLEDs::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -267,7 +267,7 @@ uint32_t UpdateZoneLEDs::calcDataSize() const noexcept
 	return uint32_t( size );
 }
 
-void UpdateZoneLEDs::serialize( BinaryOutputStream & stream ) const
+void UpdateZoneLEDs::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
@@ -276,7 +276,7 @@ void UpdateZoneLEDs::serialize( BinaryOutputStream & stream ) const
 	protocol::writeArray( stream, colors );
 }
 
-bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
+bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> data_size;
 	stream >> zone_idx;
@@ -287,7 +287,7 @@ bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateSingleLED::calcDataSize() const noexcept
+uint32_t UpdateSingleLED::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -297,7 +297,7 @@ uint32_t UpdateSingleLED::calcDataSize() const noexcept
 	return uint32_t( size );
 }
 
-void UpdateSingleLED::serialize( BinaryOutputStream & stream ) const
+void UpdateSingleLED::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	header.serialize( stream );
 
@@ -305,7 +305,7 @@ void UpdateSingleLED::serialize( BinaryOutputStream & stream ) const
 	stream << color;
 }
 
-bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream ) noexcept
+bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> led_idx;
 	stream >> color;
@@ -315,31 +315,31 @@ bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream ) noexcept
 
 //----------------------------------------------------------------------------------------------------------------------
 
-uint32_t UpdateMode::calcDataSize() const noexcept
+uint32_t UpdateMode::calcDataSize( uint32_t protocolVersion ) const noexcept
 {
 	size_t size = 0;
 
 	size += sizeof( data_size );
 	size += sizeof( mode_idx );
-	size += mode_desc.calcSize();
+	size += mode_desc.calcSize( protocolVersion );
 
 	return uint32_t( size );
 }
 
-void UpdateMode::serialize( BinaryOutputStream & stream ) const
+void UpdateMode::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) const
 {
 	header.serialize( stream );
 
 	stream << data_size;
 	stream << mode_idx;
-	mode_desc.serialize( stream );
+	mode_desc.serialize( stream, protocolVersion );
 }
 
-bool UpdateMode::deserializeBody( BinaryInputStream & stream ) noexcept
+bool UpdateMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolVersion ) noexcept
 {
 	stream >> data_size;
 	stream >> mode_idx;
-	mode_desc.deserialize( stream, mode_idx, header.device_idx );
+	mode_desc.deserialize( stream, mode_idx, header.device_idx, protocolVersion );
 
 	return !stream.hasFailed();
 }

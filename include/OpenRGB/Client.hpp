@@ -298,6 +298,8 @@ class Client
 	// a pointer so that we don't have to include the TcpSocket and all its OS dependancies here
 	std::unique_ptr< own::TcpSocket > _socket;
 
+	uint32_t _negotiatedProtocolVersion;
+
 	bool _isDeviceListOutOfDate;
 
 };

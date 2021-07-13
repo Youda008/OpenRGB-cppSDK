@@ -49,13 +49,13 @@ const char * enumString( DeviceType ) noexcept;
 enum ModeFlags : uint32_t
 {
 	HasSpeed              = (1 << 0),  ///< the speed attribute in ModeDescription is present
-	HasDirectionLR        = (1 << 1),  ///< the direction attribute in ModeDescription can have LEFT or RIGHT values
-	HasDirectionUD        = (1 << 2),  ///< the direction attribute in ModeDescription can have UP or DOWN values
-	HasDirectionHV        = (1 << 3),  ///< the direction attribute in ModeDescription can have HORIZONTAL or VERTICAL values
+	HasDirectionLR        = (1 << 1),  ///< the direction attribute in ModeDescription can have Left or Right values
+	HasDirectionUD        = (1 << 2),  ///< the direction attribute in ModeDescription can have Up or Down values
+	HasDirectionHV        = (1 << 3),  ///< the direction attribute in ModeDescription can have Horizontal or Vertical values
 	HasBrightness         = (1 << 4),  ///< the brightness attribute in ModeDescription is present
-	HasPerLedColor        = (1 << 5),  ///< the color_mode attribute in ModeDescription can be set to PER_LED
-	HasModeSpecificColor  = (1 << 6),  ///< the color_mode attribute in ModeDescription can be set to MODE_SPECIFIC
-	HasRandomColor        = (1 << 7),  ///< the color_mode attribute in ModeDescription can be set to RANDOM
+	HasPerLedColor        = (1 << 5),  ///< the color_mode attribute in ModeDescription can be set to PerLed
+	HasModeSpecificColor  = (1 << 6),  ///< the color_mode attribute in ModeDescription can be set to ModeSpecific
+	HasRandomColor        = (1 << 7),  ///< the color_mode attribute in ModeDescription can be set to Random
 };
 std::string modeFlagsToString( uint32_t flags );
 
@@ -111,9 +111,9 @@ class LED
 
 	friend struct protocol;
 	LED();
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
+	size_t calcSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t protocolVersion, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -145,9 +145,9 @@ class Zone
 
 	friend struct protocol;
 	Zone();
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
+	size_t calcSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t protocolVersion, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -167,18 +167,18 @@ class Mode
 	// Attributes that are not marked with const are the mode parameters that can be set,
 	// others are just informational and need to remain constant.
 	const std::string  name;
-	const uint32_t     value;       ///< device-specific value
-	const uint32_t     flags;       ///< see ModeFlags for possible bit flags
-	const uint32_t     speed_min;   ///< minimum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	const uint32_t     speed_max;   ///< maximum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	const uint32_t     colors_min;  ///< minimum number of mode colors
-	const uint32_t     colors_max;  ///< maximum number of mode colors
+	const uint32_t     value;           ///< device-specific value
+	const uint32_t     flags;           ///< see ModeFlags for possible bit flags
+	const uint32_t     speed_min;       ///< minimum speed value, this attribute is valid only if ModeFlags::HasSpeed is set, otherwise it's uninitialized
+	const uint32_t     speed_max;       ///< maximum speed value, this attribute is valid only if ModeFlags::HasSpeed is set, otherwise it's uninitialized
+	const uint32_t     colors_min;      ///< minimum number of mode colors
+	const uint32_t     colors_max;      ///< maximum number of mode colors
 	/// Speed of the effect.
-	/** This attribute is enabled only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized.
+	/** This attribute is enabled only if ModeFlags::HasSpeed is set, otherwise it's uninitialized.
 	  * The possible values are determined by #speed_min and #speed_max. */
 	      uint32_t      speed;
 	/// Direction of the color effect.
-	/** This attribute is enabled only if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized.
+	/** This attribute is enabled only if any of ModeFlags::HasDirectionXY is set, otherwise it's uninitialized.
 	  * The possible values are determined by #flags. */
 	      Direction     direction;
 	const ColorMode     color_mode;  ///< how the colors of a mode are set
@@ -191,9 +191,9 @@ class Mode
 	friend class Device;
 	friend struct UpdateMode;
 	Mode();
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
+	size_t calcSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t protocolVersion, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -294,9 +294,9 @@ class Device
  private:  // for internal use only
 
 	friend struct ReplyControllerData;
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream, uint32_t deviceIdx ) noexcept;
+	size_t calcSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t protocolVersion, uint32_t deviceIdx ) noexcept;
 
 	friend class DeviceList;
 	friend class Client;

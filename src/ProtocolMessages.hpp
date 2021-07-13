@@ -36,9 +36,9 @@ struct NewMessage
 		header.message_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BufferOutputStream & stream ) const;
-	bool deserializeBody( own::BufferInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BufferOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserializeBody( own::BufferInputStream & stream, uint32_t protocolVersion ) noexcept;
 };
 
 3. Implement calcDataSize(), serialize(...) and deserializeBody(...) in the cpp file.
@@ -150,15 +150,15 @@ struct RequestControllerCount
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return 0;
 	}
-	void serialize( own::BinaryOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & ) noexcept
+	bool deserializeBody( own::BinaryInputStream & /*stream*/, uint32_t /*protocolVersion*/ = 0 ) noexcept
 	{
 		return true;
 	}
@@ -185,12 +185,12 @@ struct ReplyControllerCount
 		count( count )
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return sizeof( count );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Asks for all information and supported modes about a specific RGB device (controller).
@@ -214,12 +214,12 @@ struct RequestControllerData
 		protocolVersion( protocolVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return sizeof( protocolVersion );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// A reply to RequestControllerData
@@ -234,7 +234,7 @@ struct ReplyControllerData
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_DATA;
 
 	ReplyControllerData() noexcept {}
-	ReplyControllerData( uint32_t deviceIdx, const Device & device )
+	ReplyControllerData( uint32_t deviceIdx, const Device & device, uint32_t protocolVersion )
 	:
 		header(
 			/*message_type*/ thisType,
@@ -242,12 +242,12 @@ struct ReplyControllerData
 		),
 		device_desc( device )
 	{
-		header.message_size = data_size = calcDataSize();
+		header.message_size = data_size = calcDataSize( protocolVersion );
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t protocolVersion ) noexcept;
 };
 
 /// Tells the server in what version of the protocol the client wants to communite in.
@@ -260,22 +260,22 @@ struct RequestProtocolVersion
 
 	static constexpr MessageType thisType = MessageType::REQUEST_PROTOCOL_VERSION;
 
-	RequestProtocolVersion()
+	RequestProtocolVersion( uint32_t clientVersion )
 	:
 		header(
 			/*message_type*/ thisType,
 			/*device_idx*/   0,
 			/*message_size*/ calcDataSize()
 		),
-		clientVersion( implementedProtocolVersion )
+		clientVersion( clientVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return sizeof( clientVersion );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// A reply to RequestProtocolVersion. Contains the maximum version the server supports.
@@ -289,22 +289,22 @@ struct ReplyProtocolVersion
 	static constexpr MessageType thisType = MessageType::REQUEST_PROTOCOL_VERSION;
 
 	ReplyProtocolVersion() noexcept {}
-	ReplyProtocolVersion( uint32_t protocolVersion )
+	ReplyProtocolVersion( uint32_t serverVersion )
 	:
 		header(
 			/*message_type*/ thisType,
 			/*device_idx*/   0,
 			/*message_size*/ calcDataSize()
 		),
-		serverVersion( protocolVersion )
+		serverVersion( serverVersion )
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return sizeof( serverVersion );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Announces a custom name of the client to the server.
@@ -329,9 +329,9 @@ struct SetClientName
 		header.message_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// This is sent from the server everytime its device list has changed.
@@ -352,15 +352,15 @@ struct DeviceListUpdated
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return 0;
 	}
-	void serialize( own::BinaryOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & ) noexcept
+	bool deserializeBody( own::BinaryInputStream & /*stream*/, uint32_t /*protocolVersion*/ = 0 ) noexcept
 	{
 		return true;
 	}
@@ -389,12 +389,12 @@ struct ResizeZone
 		new_size( newSize )
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return sizeof( zone_idx ) + sizeof( new_size );
 	}
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Applies individually selected color to every LED.
@@ -420,9 +420,9 @@ struct UpdateLEDs
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Applies individually selected color to every LED in a specific zone.
@@ -450,9 +450,9 @@ struct UpdateZoneLEDs
 		header.message_size = data_size = calcDataSize();
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Changes color of a single particular LED.
@@ -478,9 +478,9 @@ struct UpdateSingleLED
 		color( color )
 	{}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 /// Switches mode of a device to a directly controlled one.
@@ -502,15 +502,15 @@ struct SetCustomMode
 		)
 	{}
 
-	constexpr uint32_t calcDataSize() const noexcept
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
 	{
 		return 0;
 	}
-	void serialize( own::BinaryOutputStream & stream ) const
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const
 	{
 		header.serialize( stream );
 	}
-	bool deserializeBody( own::BinaryInputStream & ) noexcept
+	bool deserializeBody( own::BinaryInputStream & /*stream*/, uint32_t /*protocolVersion*/ = 0 ) noexcept
 	{
 		return true;
 	}
@@ -529,7 +529,7 @@ struct UpdateMode
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATEMODE;
 
 	UpdateMode() noexcept {}
-	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const Mode & mode )
+	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const Mode & mode, uint32_t protocolVersion )
 	:
 		header(
 			/*message_type*/ thisType,
@@ -538,12 +538,12 @@ struct UpdateMode
 		mode_idx( modeIdx ),
 		mode_desc( mode )
 	{
-		header.message_size = data_size = calcDataSize();
+		header.message_size = data_size = calcDataSize( protocolVersion );
 	}
 
-	uint32_t calcDataSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserializeBody( own::BinaryInputStream & stream ) noexcept;
+	uint32_t calcDataSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t protocolVersion ) noexcept;
 };
 
 

@@ -210,7 +210,7 @@ LED::LED()
 	value()
 {}
 
-size_t LED::calcSize() const noexcept
+size_t LED::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -220,13 +220,13 @@ size_t LED::calcSize() const noexcept
 	return size;
 }
 
-void LED::serialize( BinaryOutputStream & stream ) const
+void LED::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	protocol::writeString( stream, name );
 	stream << value;
 }
 
-bool LED::deserialize( BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept
+bool LED::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/, uint32_t idx, uint32_t parentIdx ) noexcept
 {
 	// This hack with const casts allows us to restrict the user from changing attributes that are a static description
 	// and allow him to change only the parameters that are meant to be changed.
@@ -269,7 +269,7 @@ Zone::Zone()
 	matrix_values()
 {}
 
-size_t Zone::calcSize() const noexcept
+size_t Zone::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -290,7 +290,7 @@ size_t Zone::calcSize() const noexcept
 	return size;
 }
 
-void Zone::serialize( BinaryOutputStream & stream ) const
+void Zone::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	protocol::writeString( stream, name );
 	stream << type;
@@ -315,7 +315,7 @@ void Zone::serialize( BinaryOutputStream & stream ) const
 	}
 }
 
-bool Zone::deserialize( BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept
+bool Zone::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/, uint32_t idx, uint32_t parentIdx ) noexcept
 {
 	// This hack with const casts allows us to restrict the user from changing attributes that are a static description
 	// and allow him to change only the parameters that are meant to be changed.
@@ -397,7 +397,7 @@ Mode::Mode()
 	colors()
 {}
 
-size_t Mode::calcSize() const noexcept
+size_t Mode::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
 {
 	size_t size = 0;
 
@@ -416,7 +416,7 @@ size_t Mode::calcSize() const noexcept
 	return size;
 }
 
-void Mode::serialize( BinaryOutputStream & stream ) const
+void Mode::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
 {
 	protocol::writeString( stream, name );
 	stream << value;
@@ -431,7 +431,7 @@ void Mode::serialize( BinaryOutputStream & stream ) const
 	protocol::writeArray( stream, colors );
 }
 
-bool Mode::deserialize( BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept
+bool Mode::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/, uint32_t idx, uint32_t parentIdx ) noexcept
 {
 	// This hack with const casts allows us to restrict the user from changing attributes that are a static description
 	// and allow him to change only the parameters that are meant to be changed.
@@ -525,7 +525,7 @@ Device::Device()
 	colors()
 {}
 
-size_t Device::calcSize() const noexcept
+size_t Device::calcSize( uint32_t protocolVersion ) const noexcept
 {
 	size_t size = 0;
 
@@ -538,15 +538,15 @@ size_t Device::calcSize() const noexcept
 	size += protocol::sizeofString( location );
 
 	size += sizeof( active_mode );
-	size += protocol::sizeofArray( modes );
-	size += protocol::sizeofArray( zones );
-	size += protocol::sizeofArray( leds );
+	size += protocol::sizeofArray( modes, protocolVersion );
+	size += protocol::sizeofArray( zones, protocolVersion );
+	size += protocol::sizeofArray( leds, protocolVersion );
 	size += protocol::sizeofArray( colors );
 
 	return size;
 }
 
-void Device::serialize( BinaryOutputStream & stream ) const
+void Device::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) const
 {
 	stream << type;
 	protocol::writeString( stream, name );
@@ -560,14 +560,14 @@ void Device::serialize( BinaryOutputStream & stream ) const
 	stream << active_mode;
 	for (const Mode & mode : modes)
 	{
-		mode.serialize( stream );
+		mode.serialize( stream, protocolVersion );
 	}
-	protocol::writeArray( stream, zones );
-	protocol::writeArray( stream, leds );
+	protocol::writeArray( stream, zones, protocolVersion );
+	protocol::writeArray( stream, leds, protocolVersion );
 	protocol::writeArray( stream, colors );
 }
 
-bool Device::deserialize( BinaryInputStream & stream, uint32_t deviceIdx ) noexcept
+bool Device::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, uint32_t deviceIdx ) noexcept
 {
 	// This hack with const casts allows us to restrict the user from changing attributes that are a static description
 	// and allow him to change only the parameters that are meant to be changed.
@@ -590,12 +590,12 @@ bool Device::deserialize( BinaryInputStream & stream, uint32_t deviceIdx ) noexc
 	for (uint32_t modeIdx = 0; modeIdx < num_modes; ++modeIdx)
 	{
 		Mode mode;
-		if (!mode.deserialize( stream, modeIdx, deviceIdx ))
+		if (!mode.deserialize( stream, protocolVersion, modeIdx, deviceIdx ))
 			return false;
 		unconst( modes ).emplace_back( move(mode) );
 	}
-	protocol::readArray( stream, unconst( zones ), deviceIdx );
-	protocol::readArray( stream, unconst( leds ), deviceIdx );
+	protocol::readArray( stream, unconst( zones ), protocolVersion, deviceIdx );
+	protocol::readArray( stream, unconst( leds ), protocolVersion, deviceIdx );
 	protocol::readArray( stream, unconst( colors ) );
 
 	// Let's tolerate invalid device classes in case the server adds some without increasing protocol version
