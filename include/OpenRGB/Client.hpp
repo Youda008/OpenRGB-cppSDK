@@ -11,7 +11,6 @@
 
 #include "DeviceInfo.hpp"
 #include "Color.hpp"
-#include "NetAddress.hpp"
 #include "SystemErrorType.hpp"  // HACK: read the comment at the top of that header file
 
 #include <string>  // client name
@@ -125,9 +124,6 @@ class Client
 	/// Connects to the OpenRGB server determined by a host name and announces our client name.
 	ConnectStatus connect( const std::string & host, uint16_t port = defaultPort ) noexcept;
 
-	/// Connects to the OpenRGB server determined by IP address and announces our client name.
-	ConnectStatus connect( own::IPAddr addr = {127,0,0,1}, uint16_t port = defaultPort ) noexcept;
-
 	/// Closes connection to the server.
 	/** It will return false if the client is not connected or some rare system error occurs. */
 	bool disconnect() noexcept;
@@ -181,12 +177,6 @@ class Client
 	  * \throws ConnectionError when the network is down, such host does not exist or the host refuses connection
 	  * \throws SystemError when there was an error inside the operating system */
 	void connectX( const std::string & host, uint16_t port = 6742 );
-
-	/// Exception-throwing variant of connect( own::IPAddr addr, uint16_t port ).
-	/** \throws UserError when the client is already connected
-	  * \throws ConnectionError when the network is down or the host refuses connection
-	  * \throws SystemError when there was an error inside the operating system */
-	void connectX( own::IPAddr addr = {127,0,0,1}, uint16_t port = 6742 );
 
 	/// Exception-throwing variant of disconnect().
 	/** \throws UserError when the client is not connected */
@@ -268,8 +258,7 @@ class Client
 
  private: // helpers
 
-	template< typename HostSpec >
-	ConnectStatus _connect( const HostSpec & host, uint16_t port );
+	ConnectStatus _connect( const std::string & host, uint16_t port );
 	bool _disconnect() noexcept;
 	bool _setTimeout( std::chrono::milliseconds timeout ) noexcept;
 	DeviceListResult _requestDeviceList();

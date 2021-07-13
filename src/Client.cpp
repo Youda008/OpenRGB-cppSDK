@@ -137,8 +137,7 @@ bool Client::isConnected() const noexcept
 	return _socket->isConnected();
 }
 
-template< typename HostSpec >  // HostSpec is either std::string hostName or own::NetAddress addr
-ConnectStatus Client::_connect( const HostSpec & host, uint16_t port )
+ConnectStatus Client::_connect( const std::string & host, uint16_t port )
 {
 	SocketError connectRes = _socket->connect( host, port );
 	if (connectRes != SocketError::Success)
@@ -484,15 +483,6 @@ ConnectStatus Client::connect( const std::string & host, uint16_t port ) noexcep
 	)
 }
 
-ConnectStatus Client::connect( own::IPAddr addr, uint16_t port ) noexcept
-{
-	try {
-		return _connect( addr, port );
-	} CATCH_ALL (
-		return ConnectStatus::UnexpectedError;
-	)
-}
-
 bool Client::disconnect() noexcept
 {
 	try {
@@ -644,12 +634,6 @@ void Client::requestStatusToException( RequestStatus status )
 void Client::connectX( const std::string & host, uint16_t port )
 {
 	ConnectStatus status = _connect( host, port );
-	connectStatusToException( status );
-}
-
-void Client::connectX( own::IPAddr addr, uint16_t port )
-{
-	ConnectStatus status = _connect( addr, port );
 	connectStatusToException( status );
 }
 
