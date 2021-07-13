@@ -38,7 +38,10 @@ enum class DeviceType : uint32_t
 	Headset       = 8,
 	HeadsetStand  = 9,
 	Gamepad       = 10,
-	Unknown       = 11,
+	Light         = 11,
+    Speaker       = 12,
+    Virtual       = 13,
+	Unknown,
 };
 const char * enumString( DeviceType ) noexcept;
 

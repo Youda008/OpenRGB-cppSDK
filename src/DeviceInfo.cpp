@@ -44,6 +44,9 @@ const char * enumString( DeviceType type ) noexcept
 		"Headset",
 		"HeadsetStand",
 		"Gamepad",
+		"Light",
+		"Speaker",
+		"Virtual",
 		"Unknown",
 	};
 	static_assert( size_t(DeviceType::Unknown) + 1 == own::size(DeviceTypeStr), "update the DeviceTypeStr" );
