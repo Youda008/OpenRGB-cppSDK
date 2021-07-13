@@ -432,7 +432,7 @@ RequestStatus Client::_setZoneSize( const Zone & zone, uint32_t newSize )
 	return RequestStatus::Success;
 }
 
-RequestStatus Client::_setColorOfSingleLED( const LED & led, Color color )
+RequestStatus Client::_setLEDColor( const LED & led, Color color )
 {
 	if (!_socket->isConnected())
 	{
@@ -589,10 +589,10 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize ) noexcep
 }
 
 
-RequestStatus Client::setColorOfSingleLED( const LED & led, Color color ) noexcept
+RequestStatus Client::setLEDColor( const LED & led, Color color ) noexcept
 {
 	try {
-		return _setColorOfSingleLED( led, color );
+		return _setLEDColor( led, color );
 	} CATCH_ALL (
 		return RequestStatus::UnexpectedError;
 	)
@@ -713,7 +713,7 @@ void Client::changeModeX( const Device & device, const Mode & mode )
 	requestStatusToException( status );
 }
 
-void Client::switchToDirectModeX( const Device & device )
+void Client::switchToCustomModeX( const Device & device )
 {
 	RequestStatus status = _switchToCustomMode( device );
 	requestStatusToException( status );
@@ -737,9 +737,9 @@ void Client::setZoneSizeX( const Zone & zone, uint32_t newSize )
 	requestStatusToException( status );
 }
 
-void Client::setColorOfSingleLEDX( const LED & led, Color color )
+void Client::setLEDColorX( const LED & led, Color color )
 {
-	RequestStatus status = _setColorOfSingleLED( led, color );
+	RequestStatus status = _setLEDColor( led, color );
 	requestStatusToException( status );
 }
 

@@ -229,19 +229,24 @@ const Mode * findMode( const Device & device, const PartID & modeID )
 
 static bool help( const ArgList & )
 {
+	cout << '\n';
 	cout << "Possible commands:\n";
-	cout << "  help                                               # prints this list of commands\n";
-	cout << "  exit                                               # quits this application\n";
-	cout << "  connect <host_name>[:<port>]                       # orgb::Client::connect\n";
-	cout << "  disconnect                                         # orgb::Client::disconnect\n";
-	cout << "  list                                               # orgb::Client::requestDeviceList\n";
-	cout << "  setdevcolor <device_id> <color>                    # orgb::Client::setDeviceColor\n";
-	cout << "  setzonecolor <device_id> <zone_id> <color>         # orgb::Client::setZoneColor\n";
-	cout << "  setledcolor <device_id> <led_id> <color>           # orgb::Client::setColorOfSingleLED\n";
-	cout << "  changemode <device_id> <mode>                      # orgb::Client::changeMode\n";
-	cout << "  custommode <device_id>                             # orgb::Client::switchToCustomMode\n";
-	cout << "  setzonesize <device_id> <zone_id> <size>           # orgb::Client::setZoneSize\n";
-	cout << endl;
+	cout << "  help                                         # prints this list of commands\n";
+	cout << "  exit                                         # quits this application\n";
+	cout << "  connect <host_name>[:<port>]                 # orgb::Client::connect\n";
+	cout << "  disconnect                                   # orgb::Client::disconnect\n";
+	cout << "  getlist                                      # orgb::Client::requestDeviceList\n";
+	cout << "  getcount                                     # orgb::Client::requestDeviceCount\n";
+	cout << "  getdev                                       # orgb::Client::requestDeviceInfo\n";
+	cout << "  setdevcolor <device_id> <color>              # orgb::Client::setDeviceColor\n";
+	cout << "  setzonecolor <device_id> <zone_id> <color>   # orgb::Client::setZoneColor\n";
+	cout << "  setledcolor <device_id> <led_id> <color>     # orgb::Client::setLEDColor\n";
+	cout << "  changemode <device_id> <mode>                # orgb::Client::changeMode\n";
+	cout << "  custommode <device_id>                       # orgb::Client::switchToCustomMode\n";
+	cout << "  setzonesize <device_id> <zone_id> <size>     # orgb::Client::setZoneSize\n";
+	cout << '\n';
+	cout.flush();
+
 	return true;
 }
 
@@ -278,7 +283,7 @@ static bool disconnect( const ArgList & )
 	return true;
 }
 
-static bool list( const ArgList & )
+static bool getlist( const ArgList & )
 {
 	cout << "Requesting the device list." << endl;
 	listResult = client.requestDeviceList();
@@ -289,12 +294,54 @@ static bool list( const ArgList & )
 		return false;
 	}
 
-	cout << '\n' << "devices = [" << '\n';
+	cout << '\n';
+	cout << "devices = [\n";
 	for (const orgb::Device & device : listResult.devices)
 	{
 		print( cout, device, 1 );
 	}
-	cout << ']' << '\n' << endl;
+	cout << "]\n";
+	cout << '\n';
+	cout.flush();
+
+	return true;
+}
+
+static bool getcount( const ArgList & )
+{
+	cout << "Requesting the device count." << endl;
+	DeviceCountResult countResult = client.requestDeviceCount();
+
+	if (countResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( countResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << "device count: " << countResult.count << endl;
+
+	return true;
+}
+
+static bool getdev( const ArgList & args )
+{
+	uint32_t deviceIdx = args.getNext< uint32_t >();
+
+	cout << "Requesting info about device " << deviceIdx << endl;
+	DeviceInfoResult deviceResult = client.requestDeviceInfo( deviceIdx );
+
+	if (deviceResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( deviceResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << '\n';
+	print( cout, *deviceResult.device, 1 );
+	cout << '\n';
+	cout.flush();
+
+	listResult.devices.replace( deviceIdx, move( deviceResult.device ) );
 
 	return true;
 }
@@ -384,7 +431,7 @@ static bool setledcolor( const ArgList & args )
 		return false;
 
 	cout << "Changing color of LED " << ledID.str << " to " << color << endl;
-	RequestStatus status = client.setColorOfSingleLED( *led, color );
+	RequestStatus status = client.setLEDColor( *led, color );
 
 	if (status == RequestStatus::Success)
 	{
@@ -600,8 +647,12 @@ static void executeCommand( const Command & command, const ArgList & args )
 		handler = connect;
 	else if (command.name == "disconnect")
 		handler = disconnect;
-	else if (command.name == "list")
-		handler = list;
+	else if (command.name == "getlist")
+		handler = getlist;
+	else if (command.name == "getcount")
+		handler = getcount;
+	else if (command.name == "getdev")
+		handler = getdev;
 	else if (command.name == "setdevcolor")
 		handler = setdevcolor;
 	else if (command.name == "setzonecolor")

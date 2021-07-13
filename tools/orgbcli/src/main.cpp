@@ -56,7 +56,7 @@ static void printHelp_nonInteractive()
 		"\n"
 		"In interactive mode, you run the app without any arguments and it\n"
 		"continuously reads and executes the commands entered into the terminal\n"
-		"until command 'exit' or interrupt signal."
+		"until command 'exit' or interrupt signal.\n"
 	;
 	cout << help;
 	cout << "\n";

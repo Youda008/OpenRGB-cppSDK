@@ -195,6 +195,7 @@ const Mode * findMode( const Device & device, const PartID & modeID )
 
 REGISTER_SPECIAL_COMMAND( help, "", "prints this list of commands", HANDLER(
 {
+	cout << '\n';
 	cout << "Possible commands:\n";
 	for (const RegisteredCommand * cmd : g_specialCommands)
 	{
@@ -204,7 +205,8 @@ REGISTER_SPECIAL_COMMAND( help, "", "prints this list of commands", HANDLER(
 	{
 		cout << "  " << *cmd << '\n';
 	}
-	cout << endl;
+	cout << '\n';
+	cout.flush();
 	return true;
 }))
 
@@ -215,7 +217,7 @@ REGISTER_SPECIAL_COMMAND( exit, "", "quits this application", HANDLER(
 	return true;
 }))
 
-REGISTER_SPECIAL_COMMAND( connect, "[<host_name>[:<port>]]", "connects to an OpenRGB server", HANDLER(
+REGISTER_SPECIAL_COMMAND( connect, "[<host_name>[:<port>]]", "orgb::Client::connect - connects to an OpenRGB server", HANDLER(
 {
 	Endpoint endpoint = { "127.0.0.1", orgb::defaultPort };
 	if (args.size() > 0)
@@ -240,14 +242,14 @@ REGISTER_SPECIAL_COMMAND( connect, "[<host_name>[:<port>]]", "connects to an Ope
 	}
 }))
 
-REGISTER_SPECIAL_COMMAND( disconnect, "", "disconnects from the currently connected server", HANDLER(
+REGISTER_SPECIAL_COMMAND( disconnect, "", "orgb::Client::disconnect - disconnects from the currently connected server", HANDLER(
 {
 	client.disconnect();
 	cout << "Disconnected." << endl;
 	return true;
 }))
 
-REGISTER_COMMAND( list, "", "lists all devices and their properties, modes, zones and LEDs", HANDLER(
+REGISTER_COMMAND( getlist, "", "orgb::Client::requestDeviceList - lists all devices and their properties, modes, zones and LEDs", HANDLER(
 {
 	cout << "Requesting the device list." << endl;
 	DeviceListResult result = client.requestDeviceList();
@@ -258,17 +260,58 @@ REGISTER_COMMAND( list, "", "lists all devices and their properties, modes, zone
 		return false;
 	}
 
-	cout << '\n' << "devices = [" << '\n';
+	cout << '\n';
+	cout << "devices = [\n";
 	for (const orgb::Device & device : result.devices)
 	{
 		print( cout, device, 1 );
 	}
-	cout << ']' << '\n' << endl;
+	cout << "]\n";
+	cout << '\n';
+	cout.flush();
 
 	return true;
 }))
 
-REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a color of the whole device or a particular zone or led", HANDLER(
+REGISTER_COMMAND( getcount, "", "orgb::Client::requestDeviceCount - lists all devices and their properties, modes, zones and LEDs", HANDLER(
+{
+	cout << "Requesting the device count." << endl;
+	DeviceCountResult countResult = client.requestDeviceCount();
+
+	if (countResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( countResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << "device count: " << countResult.count << endl;
+
+	return true;
+}))
+
+REGISTER_COMMAND( getdev, "<device_idx>", "orgb::Client::requestDeviceInfo - lists all devices and their properties, modes, zones and LEDs", HANDLER(
+{
+	uint32_t deviceIdx = args.getNext< uint32_t >();
+
+	cout << "Requesting info about device " << deviceIdx << endl;
+	DeviceInfoResult deviceResult = client.requestDeviceInfo( deviceIdx );
+
+	if (deviceResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( deviceResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << '\n';
+	print( cout, *deviceResult.device, 1 );
+	cout << '\n';
+	cout.flush();
+
+	return true;
+}))
+
+
+REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "orgb::Client::set<X>Color - changes a color of the whole device or a particular zone or led", HANDLER(
 {
 	PartID deviceID = args.getNext< PartID >();
 	PartSpec partSpec;
@@ -311,7 +354,7 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a 
 		if (!led)
 			return false;
 		cout << "Changing color of LED " << partSpec.id.str << " to " << color << endl;
-		status = client.setColorOfSingleLED( *led, color );
+		status = client.setLEDColor( *led, color );
 	}
 
 	if (status == RequestStatus::Success)
@@ -326,7 +369,7 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "changes a 
 	}
 }))
 
-REGISTER_COMMAND( setmode, "<device_id> <mode>", "no idea, ask the OpenRGB devs", HANDLER(
+REGISTER_COMMAND( setmode, "<device_id> <mode>", "orgb::Client::changeMode - changes mode of a device", HANDLER(
 {
 	PartID deviceID = args.getNext< PartID >();
 	PartID modeID = args.getNext< PartID >();
@@ -363,7 +406,7 @@ REGISTER_COMMAND( setmode, "<device_id> <mode>", "no idea, ask the OpenRGB devs"
 	}
 }))
 
-REGISTER_COMMAND( custommode, "<device_id>", "no idea, ask the OpenRGB devs", HANDLER(
+REGISTER_COMMAND( custommode, "<device_id>", "orgb::Client::switchToCustomMode - switches the device to a directly controlled color mode, DEPRECATED", HANDLER(
 {
 	PartID deviceID = args.getNext< PartID >();
 
@@ -395,7 +438,7 @@ REGISTER_COMMAND( custommode, "<device_id>", "no idea, ask the OpenRGB devs", HA
 	}
 }))
 
-REGISTER_COMMAND( resizezone, "<device_id> <zone_id> <size>", "resizes a selected zone of a device", HANDLER(
+REGISTER_COMMAND( resizezone, "<device_id> <zone_id> <size>", "orgb::Client::setZoneSize - resizes a selected zone of a device", HANDLER(
 {
 	PartID deviceID = args.getNext< PartID >();
 	PartID zoneID = args.getNext< PartID >();

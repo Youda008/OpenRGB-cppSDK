@@ -338,12 +338,12 @@ class DeviceList
 	size_t size() const noexcept { return _list.size(); }
 
 	/// Use this if you intend to populate the DeviceList manually using individual calls to Client::requestDeviceInfo().
-	void append( std::unique_ptr< Device > && device )   { _list.push_back( std::move(device) ); }
+	void append( std::unique_ptr< Device > && device )  { _list.push_back( std::move(device) ); }
 
 	/// Use this to update your DeviceList after the call to Client::requestDeviceInfo().
-	void replace( std::unique_ptr< Device > && device )  { _list[ device->idx ] = std::move(device); }
+	void replace( uint32_t deviceIdx, std::unique_ptr< Device > && device )  { _list[ deviceIdx ] = std::move(device); }
 
-	void clear() noexcept                                { _list.clear(); }
+	void clear() noexcept  { _list.clear(); }
 
 	PointerIterator< DeviceListType::const_iterator > begin() const noexcept  { return _list.begin(); }
 	PointerIterator< DeviceListType::const_iterator > end() const noexcept    { return _list.end(); }

@@ -43,7 +43,7 @@ int main( int /*argc*/, char * /*argv*/ [] )
 	DeviceList devices;
 	const Device * cpuCooler = nullptr;
 
-	bool isInDirectMode = false;
+	bool isInCustomMode = false;
 
 	const Color colors [] = {
 		{ 255,   0,   0 },
@@ -113,12 +113,12 @@ int main( int /*argc*/, char * /*argv*/ [] )
 			continue;
 		}
 
-		// some devices don't accept colors until you set them to "Direct" mode
-		if (!isInDirectMode)
+		// some devices don't accept colors until you set them to custom mode
+		if (!isInCustomMode)
 		{
-			printf( "setting CPU cooler to Direct mode\n" );
-			client.switchToDirectMode( *cpuCooler );
-			isInDirectMode = true;
+			printf( "setting CPU cooler to custom mode\n" );
+			client.switchToCustomMode( *cpuCooler );
+			isInCustomMode = true;
 			// let's wait for next iteration, OpenRGB doesn't like when you send multiple requests at once
 			continue;
 		}

@@ -169,8 +169,8 @@ class Client
 	/// Resizes a zone of leds, if the device supports it.
 	RequestStatus setZoneSize( const Zone & zone, uint32_t newSize ) noexcept;
 
-	/// Sets a color of one selected LED.
-	RequestStatus setColorOfSingleLED( const LED & led, Color color ) noexcept;
+	/// Sets a color of a single selected LED.
+	RequestStatus setLEDColor( const LED & led, Color color ) noexcept;
 
 #ifndef NO_EXCEPTIONS
 
@@ -225,11 +225,11 @@ class Client
 	  * \throws SystemError when there was an error inside the operating system */
 	void changeModeX( const Device & device, const Mode & mode );
 
-	/// Exception-throwing variant of switchToDirectMode( const Device & ).
+	/// Exception-throwing variant of switchToCustomMode( const Device & ).
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
-	void switchToDirectModeX( const Device & device );
+	void switchToCustomModeX( const Device & device );
 
 	/// Exception-throwing variant of setDeviceColor().
 	/** \throws UserError when the client is not connected
@@ -249,11 +249,11 @@ class Client
 	  * \throws SystemError when there was an error inside the operating system */
 	void setZoneSizeX( const Zone & zone, uint32_t newSize );
 
-	/// Exception-throwing variant of setColorOfSingleLED( const LED &, Color ).
+	/// Exception-throwing variant of setLEDColor( const LED &, Color ).
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
-	void setColorOfSingleLEDX( const LED & led, Color color );
+	void setLEDColorX( const LED & led, Color color );
 
 #endif // NO_EXCEPTIONS
 
@@ -281,7 +281,7 @@ class Client
 	RequestStatus _setDeviceColor( const Device & device, Color color );
 	RequestStatus _setZoneColor( const Zone & zone, Color color );
 	RequestStatus _setZoneSize( const Zone & zone, uint32_t newSize );
-	RequestStatus _setColorOfSingleLED( const LED & led, Color color );
+	RequestStatus _setLEDColor( const LED & led, Color color );
 
 	template< typename Message, typename ... ConstructorArgs >
 	bool sendMessage( ConstructorArgs ... args );

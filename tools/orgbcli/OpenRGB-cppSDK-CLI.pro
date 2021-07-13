@@ -11,6 +11,7 @@ QMAKE_CXXFLAGS += -Wno-old-style-cast
 
 INCLUDEPATH += ../../include
 INCLUDEPATH += ../../shared/CppUtils-Essential
+INCLUDEPATH += ../../shared/CppUtils-Network
 
 LIBS += -L../../../build-windows64-release
 LIBS += -lorgbsdk
