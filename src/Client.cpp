@@ -302,6 +302,7 @@ DeviceCountResult Client::_requestDeviceCount()
 		return result;
 	}
 
+	result.count = deviceCountResult.message.count;
 	result.status = RequestStatus::Success;
 	return result;
 }
@@ -329,7 +330,7 @@ DeviceInfoResult Client::_requestDeviceInfo( uint32_t deviceIdx )
 		return result;
 	}
 
-	result.device = make_unique< Device >( deviceIdx, move( deviceDataResult.message.device_desc ) );
+	result.device.reset( new Device( move( deviceDataResult.message.device_desc ) ) );
 	result.status = RequestStatus::Success;
 	return result;
 }
@@ -361,10 +362,7 @@ RequestStatus Client::_changeMode( const Device & device, const Mode & mode )
 		return RequestStatus::NotConnected;
 	}
 
-	ModeDescription modeDesc;  // we need to copy all data because this might be user-owned object
-	mode.toProtocolDescription( modeDesc );
-
-	if (!sendMessage< UpdateMode >( device.idx, mode.idx, modeDesc ))
+	if (!sendMessage< UpdateMode >( device.idx, mode.idx, mode ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -410,8 +408,8 @@ RequestStatus Client::_setZoneColor( const Zone & zone, Color color )
 		return RequestStatus::NotConnected;
 	}
 
-	std::vector< Color > allColorsInZone( zone.desc.leds_count, color );
-	if (!sendMessage< UpdateZoneLEDs >( zone.parent.idx, zone.idx, allColorsInZone ))
+	std::vector< Color > allColorsInZone( zone.leds_count, color );
+	if (!sendMessage< UpdateZoneLEDs >( zone.parentIdx, zone.idx, allColorsInZone ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -426,7 +424,7 @@ RequestStatus Client::_setZoneSize( const Zone & zone, uint32_t newSize )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< ResizeZone >( zone.parent.idx, zone.idx, newSize ))
+	if (!sendMessage< ResizeZone >( zone.parentIdx, zone.idx, newSize ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -441,7 +439,7 @@ RequestStatus Client::_setColorOfSingleLED( const LED & led, Color color )
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< UpdateSingleLED >( led.parent.idx, led.idx, color ))
+	if (!sendMessage< UpdateSingleLED >( led.parentIdx, led.idx, color ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}

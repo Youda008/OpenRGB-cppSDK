@@ -24,6 +24,7 @@ namespace orgb {
 //======================================================================================================================
 /// Simple representation of a color with 3 8-bit values for red, green, blue components
 
+
 class Color
 {
 
@@ -33,9 +34,8 @@ class Color
 	uint8_t g;
 	uint8_t b;
 
-	Color() noexcept {}
+	Color() noexcept = default;
 	Color( uint8_t red, uint8_t green, uint8_t blue ) noexcept : r( red ), g( green ), b( blue ) {}
-	~Color() noexcept {}
 
 	/// Attempts to deduce a color from a string description.
 	/** Possible ways to define a color are:
@@ -54,8 +54,8 @@ class Color
 	static const Color Cyan;
 
 	constexpr size_t calcSize() const noexcept { return sizeof(r) + sizeof(g) + sizeof(b) + 1; }
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream ) noexcept;
+	friend own::BinaryOutputStream & operator<<( own::BinaryOutputStream & stream, Color color );
+	friend own::BinaryInputStream & operator>>( own::BinaryInputStream & stream, Color & color ) noexcept;
 
 	friend std::ostream & operator<<( std::ostream & os, Color color ) noexcept;
 	friend std::istream & operator>>( std::istream & is, Color & color ) noexcept;

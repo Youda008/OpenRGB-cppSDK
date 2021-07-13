@@ -146,7 +146,7 @@ void ReplyControllerData::serialize( BinaryOutputStream & stream ) const
 bool ReplyControllerData::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
-	device_desc.deserialize( stream );
+	device_desc.deserialize( stream, header.device_idx );
 
 	return !stream.hasFailed();
 }
@@ -233,7 +233,7 @@ uint32_t UpdateLEDs::calcDataSize() const noexcept
 	size_t size = 0;
 
 	size += sizeof( data_size );
-	size += sizeofORGBArray( colors );
+	size += protocol::sizeofArray( colors );
 
 	return uint32_t( size );
 }
@@ -243,13 +243,13 @@ void UpdateLEDs::serialize( BinaryOutputStream & stream ) const
 	header.serialize( stream );
 
 	stream << data_size;
-	writeORGBArray( stream, colors );
+	protocol::writeArray( stream, colors );
 }
 
 bool UpdateLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
-	readORGBArray( stream, colors );
+	protocol::readArray( stream, colors );
 
 	return !stream.hasFailed();
 }
@@ -262,7 +262,7 @@ uint32_t UpdateZoneLEDs::calcDataSize() const noexcept
 
 	size += sizeof( data_size );
 	size += sizeof( zone_idx );
-	size += sizeofORGBArray( colors );
+	size += protocol::sizeofArray( colors );
 
 	return uint32_t( size );
 }
@@ -273,14 +273,14 @@ void UpdateZoneLEDs::serialize( BinaryOutputStream & stream ) const
 
 	stream << data_size;
 	stream << zone_idx;
-	writeORGBArray( stream, colors );
+	protocol::writeArray( stream, colors );
 }
 
 bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	stream >> zone_idx;
-	readORGBArray( stream, colors );
+	protocol::readArray( stream, colors );
 
 	return !stream.hasFailed();
 }
@@ -302,13 +302,13 @@ void UpdateSingleLED::serialize( BinaryOutputStream & stream ) const
 	header.serialize( stream );
 
 	stream << led_idx;
-	color.serialize( stream );
+	stream << color;
 }
 
 bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> led_idx;
-	color.deserialize( stream );
+	stream >> color;
 
 	return !stream.hasFailed();
 }
@@ -339,7 +339,7 @@ bool UpdateMode::deserializeBody( BinaryInputStream & stream ) noexcept
 {
 	stream >> data_size;
 	stream >> mode_idx;
-	mode_desc.deserialize( stream );
+	mode_desc.deserialize( stream, mode_idx, header.device_idx );
 
 	return !stream.hasFailed();
 }

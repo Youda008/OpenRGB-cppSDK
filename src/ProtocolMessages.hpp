@@ -226,21 +226,21 @@ struct RequestControllerData
 struct ReplyControllerData
 {
 	Header header;
-	uint32_t           data_size;  ///< must always be same as header.message_size, no idea why it's there twice
-	DeviceDescription  device_desc;
+	uint32_t  data_size;  ///< must always be same as header.message_size, no idea why it's there twice
+	Device    device_desc;
 
  // support for templated processing
 
 	static constexpr MessageType thisType = MessageType::REQUEST_CONTROLLER_DATA;
 
 	ReplyControllerData() noexcept {}
-	ReplyControllerData( uint32_t deviceIdx, DeviceDescription && device )
+	ReplyControllerData( uint32_t deviceIdx, const Device & device )
 	:
 		header(
 			/*message_type*/ thisType,
 			/*device_idx*/   deviceIdx
 		),
-		device_desc( move(device) )
+		device_desc( device )
 	{
 		header.message_size = data_size = calcDataSize();
 	}
@@ -520,23 +520,23 @@ struct SetCustomMode
 struct UpdateMode
 {
 	Header  header;
-	uint32_t         data_size;
-	uint32_t         mode_idx;
-	ModeDescription  mode_desc;
+	uint32_t  data_size;
+	uint32_t  mode_idx;
+	Mode      mode_desc;
 
  // support for templated processing
 
 	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_UPDATEMODE;
 
 	UpdateMode() noexcept {}
-	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const ModeDescription & modeDesc )
+	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const Mode & mode )
 	:
 		header(
 			/*message_type*/ thisType,
 			/*device_idx*/   deviceIdx
 		),
 		mode_idx( modeIdx ),
-		mode_desc( modeDesc )
+		mode_desc( mode )
 	{
 		header.message_size = data_size = calcDataSize();
 	}

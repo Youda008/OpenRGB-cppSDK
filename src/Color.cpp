@@ -83,18 +83,18 @@ bool Color::fromString( const std::string & str ) noexcept
 	return false;
 }
 
-void Color::serialize( BinaryOutputStream & stream ) const
+BinaryOutputStream & operator<<( BinaryOutputStream & stream, Color color )
 {
 	uint8_t padding = 0;
-	stream << r << g << b << padding;
+	stream << color.r << color.g << color.b << padding;
+	return stream;
 }
 
-bool Color::deserialize( BinaryInputStream & stream ) noexcept
+BinaryInputStream & operator>>( BinaryInputStream & stream, Color & color ) noexcept
 {
 	uint8_t padding;
-	stream >> r >> g >> b >> padding;
-
-	return !stream.hasFailed();
+	stream >> color.r >> color.g >> color.b >> padding;
+	return stream;
 }
 
 std::ostream & operator<<( std::ostream & os, Color color ) noexcept

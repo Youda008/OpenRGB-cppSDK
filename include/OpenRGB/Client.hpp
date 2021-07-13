@@ -93,7 +93,7 @@ struct DeviceInfoResult
 {
 	RequestStatus status;  ///< whether the request suceeded or why it didn't
 	std::unique_ptr< Device > device;  ///< output of a successfull request
-	// The device has to be a pointer, because moving or copying it would corrupt all the parent references in its members.
+	// The device has to be a pointer because user is not allowed to use the constructors.
 };
 
 

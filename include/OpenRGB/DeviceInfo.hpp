@@ -21,9 +21,6 @@
 namespace orgb {
 
 
-class Device;
-
-
 //======================================================================================================================
 //  enums
 
@@ -92,81 +89,6 @@ const char * enumString( ZoneType ) noexcept;
 
 
 //======================================================================================================================
-//  parts of messages used by the network protocol
-
-/// Description of a device's color mode. Part of the network protocol.
-struct ModeDescription
-{
-	std::string   name;
-	uint32_t      value;       ///< device-specific value
-	uint32_t      flags;       ///< see ModeFlags for possible bit flags
-	uint32_t      speed_min;   ///< minimum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	uint32_t      speed_max;   ///< maximum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	uint32_t      colors_min;  ///< minimum number of mode colors
-	uint32_t      colors_max;  ///< maximum number of mode colors
-	uint32_t      speed;       ///< speed of the effect, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
-	Direction     direction;   ///< direction of the color effect, this attribute is valid only if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized
-	ColorMode     color_mode;  ///< how the colors of a mode are set
-	std::vector< Color >  colors;  ///< mode-specific list of colors
-
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream ) noexcept;
-};
-
-/// Description of a device's zone. Part of the network protocol.
-struct ZoneDescription
-{
-	std::string   name;
-	ZoneType      type;
-	uint32_t      leds_min;       ///< minimum size of the zone
-	uint32_t      leds_max;       ///< maximum size of the zone
-	uint32_t      leds_count;     ///< current size of the zone
-
-	// optional
-	uint32_t      matrix_height;  ///< if the zone type is matrix, this is its height
-	uint32_t      matrix_width;   ///< if the zone type is matrix, this is its width
-	std::vector< uint32_t >  matrix_values;  ///< TODO: what is this?
-
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream ) noexcept;
-};
-
-/// Description of a LED. Part of the network protocol.
-struct LEDDescription
-{
-	std::string  name;
-	uint32_t     value;  ///< device-specific value
-
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream ) noexcept;
-};
-
-/// Description of an RGB device (controller). Part of the network protocol.
-struct DeviceDescription
-{
-	DeviceType    type;
-	std::string   name;
-	std::string   vendor;
-	std::string   description;
-	std::string   version;
-	std::string   serial;
-	std::string   location;
-	uint32_t      active_mode;
-	std::vector< ModeDescription >  modes;
-	std::vector< ZoneDescription >  zones;
-	std::vector< LEDDescription >   leds;
-	std::vector< Color >            colors;
-
-	size_t calcSize() const noexcept;
-	void serialize( own::BinaryOutputStream & stream ) const;
-	bool deserialize( own::BinaryInputStream & stream ) noexcept;
-};
-
-
-//======================================================================================================================
 /// Represents a particular LED on an RGB device.
 
 class LED
@@ -174,20 +96,21 @@ class LED
 
  public:
 
-	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
-	uint32_t idx;           ///< index of this LED in the device's list of LEDs
-	LEDDescription desc;    ///< details about the LED
+	// metadata
+	const uint32_t idx;        ///< index of this LED in the device's list of LEDs
+	const uint32_t parentIdx;  ///< index of the parent device in the device list
 
- public:
+	// LED description
+	const std::string  name;
+	const uint32_t     value;  ///< device-specific value
 
-	LED( const Device & parent, uint32_t idx, LEDDescription && desc ) noexcept;
+ private:  // for internal use only
 
-	// Must be copyable so that vector can reallocate.
-	LED( const LED & other ) = default;
-	LED( LED && other ) noexcept = default;
-
-	LED & operator=( const LED & other ) = delete;
-	LED & operator=( LED && other ) = delete;
+	friend struct protocol;
+	LED();
+	size_t calcSize() const noexcept;
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -200,20 +123,28 @@ class Zone
 
  public:
 
-	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
-	uint32_t idx;           ///< index of this zone in the device's list of zones
-	ZoneDescription desc;   ///< details about the Zone
+	// metadata
+	const uint32_t idx;        ///< index of this zone in the device's list of zones
+	const uint32_t parentIdx;  ///< index of the parent device in the device list
 
- public:
+	// zone description
+	const std::string  name;
+	const ZoneType     type;
+	const uint32_t     leds_min;       ///< minimum size of the zone
+	const uint32_t     leds_max;       ///< maximum size of the zone
+	const uint32_t     leds_count;     ///< current size of the zone
+	// optional
+	const uint32_t     matrix_height;  ///< if the zone type is matrix, this is its height
+	const uint32_t     matrix_width;   ///< if the zone type is matrix, this is its width
+	const std::vector< uint32_t >  matrix_values;  ///< TODO: what is this?
 
-	Zone( const Device & parent, uint32_t idx, ZoneDescription && desc ) noexcept;
+ private:  // for internal use only
 
-	// Must be copyable so that vector can reallocate.
-	Zone( const Zone & other ) = default;
-	Zone( Zone && other ) noexcept = default;
-
-	Zone & operator=( const Zone & other ) = delete;
-	Zone & operator=( Zone && other ) = delete;
+	friend struct protocol;
+	Zone();
+	size_t calcSize() const noexcept;
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -226,39 +157,40 @@ class Mode
 
  public:
 
-	const Device & parent;  ///< Warning: This is non-owning reference!! It will cease to be valid when the DeviceList is destructed
-	const uint32_t idx;     ///< index of this mode in the device's list of modes
-	const ModeDescription desc;  ///< description and parameters of the mode
+	// metadata
+	const uint32_t idx;        ///< index of this mode in the device's list of modes
+	const uint32_t parentIdx;  ///< index of the parent device in the device list
 
-	// these are the mode attributes that can be changed
-
-	/// Direction of the color effect.
-	/** This attribute is enabled only if any of ModeFlags::HAS_DIRECTION_XY is set.
-	  * The possible values are determined by the ModeDescription::flags in #desc.
-	  * The original value received from the server is in ModeDescription::direction in #desc. */
-	Direction direction;
-
+	// Attributes that are not marked with const are the mode parameters that can be set,
+	// others are just informational and need to remain constant.
+	const std::string  name;
+	const uint32_t     value;       ///< device-specific value
+	const uint32_t     flags;       ///< see ModeFlags for possible bit flags
+	const uint32_t     speed_min;   ///< minimum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	const uint32_t     speed_max;   ///< maximum speed value, this attribute is valid only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized
+	const uint32_t     colors_min;  ///< minimum number of mode colors
+	const uint32_t     colors_max;  ///< maximum number of mode colors
 	/// Speed of the effect.
 	/** This attribute is enabled only if ModeFlags::HAS_SPEED is set, otherwise it's uninitialized.
-	  * The minimum and maximum value is determined by ModeDescription::speed in #desc.
-	  * The original value received from the server is in ModeDescription::speed in #desc. */
-	uint32_t speed;
-
+	  * The possible values are determined by #speed_min and #speed_max. */
+	      uint32_t      speed;
+	/// Direction of the color effect.
+	/** This attribute is enabled only if any of ModeFlags::HAS_DIRECTION_XY is set, otherwise it's uninitialized.
+	  * The possible values are determined by #flags. */
+	      Direction     direction;
+	const ColorMode     color_mode;  ///< how the colors of a mode are set
 	/// Mode-specific list of colors.
-	/** The original mode colors received from the server are in ModeDescription::colors in #desc. */
-	std::vector< Color > colors;
+	      std::vector< Color >  colors;
 
- public:
+ private:  // for internal use only
 
-	Mode( const Device & parent, uint32_t idx, ModeDescription && desc ) noexcept;
-
-	// must be copyable so that vector can reallocate
-	Mode( const Mode & other ) = default;
-
-	Mode & operator=( const Mode & other ) = delete;
-	Mode & operator=( Mode && other ) = delete;
-
-	void toProtocolDescription( ModeDescription & desc ) const;
+	friend struct protocol;
+	friend class Device;
+	friend struct UpdateMode;
+	Mode();
+	size_t calcSize() const noexcept;
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t idx, uint32_t parentIdx ) noexcept;
 
 };
 
@@ -271,30 +203,33 @@ class Device
 
  public:
 
-	uint32_t idx;  ///< index of this device in the device list
-	DeviceDescription desc;  ///< Details about the device. The modes, zones, leds and colors in this member will be empty, use the direct members of Device instead.
+	// metadata
+	const uint32_t idx;  ///< index of this device in the device list
 
-	std::vector< Mode > modes;
-	std::vector< Zone > zones;
-	std::vector< LED > leds;
-	std::vector< Color > colors;
+	// device description
+	const DeviceType   type;
+	const std::string  name;
+	const std::string  vendor;
+	const std::string  description;
+	const std::string  version;
+	const std::string  serial;
+	const std::string  location;
+	const uint32_t     active_mode;
+
+	// device subobjects
+	const std::vector< Mode > modes;
+	const std::vector< Zone > zones;
+	const std::vector< LED >  leds;
+	const std::vector< Color > colors;
 
  public:
-
-	Device( uint32_t idx, DeviceDescription && descr );
-
-	// No copies or moves allowed, because they would break the non-owning references in Modes, Zones and LEDs.
-	Device( const Device & other ) = delete;
-	Device( Device && other ) noexcept = delete;
-	Device & operator=( const Device & other ) = delete;
-	Device & operator=( Device && other ) = delete;
 
 	/// Finds the first mode with a specific name.
 	/** \returns nullptr when mode with this name is not found. */
 	const Mode * findMode( const std::string & name ) const noexcept
 	{
-		for (const Mode & mode : modes)
-			if (mode.desc.name == name)
+		for (const auto & mode : modes)
+			if (mode.name == name)
 				return &mode;
 		return nullptr;
 	}
@@ -303,8 +238,8 @@ class Device
 	/** \returns nullptr when zone with this name is not found. */
 	const Zone * findZone( const std::string & name ) const noexcept
 	{
-		for (const Zone & zone : zones)
-			if (zone.desc.name == name)
+		for (const auto & zone : zones)
+			if (zone.name == name)
 				return &zone;
 		return nullptr;
 	}
@@ -313,8 +248,8 @@ class Device
 	/** \returns nullptr when LED with this name is not found. */
 	const LED * findLED( const std::string & name ) const noexcept
 	{
-		for (const LED & led : leds)
-			if (led.desc.name == name)
+		for (const auto & led : leds)
+			if (led.name == name)
 				return &led;
 		return nullptr;
 	}
@@ -325,8 +260,8 @@ class Device
 	/** \throws NotFound when mode with this name is not found. */
 	const Mode & findModeX( const std::string & name ) const
 	{
-		for (const Mode & mode : modes)
-			if (mode.desc.name == name)
+		for (const auto & mode : modes)
+			if (mode.name == name)
 				return mode;
 		throw NotFound( "Mode of such name was not found" );
 	}
@@ -335,8 +270,8 @@ class Device
 	/** \throws NotFound when zone with this name is not found. */
 	const Zone & findZoneX( const std::string & name ) const
 	{
-		for (const Zone & zone : zones)
-			if (zone.desc.name == name)
+		for (const auto & zone : zones)
+			if (zone.name == name)
 				return zone;
 		throw NotFound( "Zone of such name was not found" );
 	}
@@ -345,13 +280,26 @@ class Device
 	/** \throws NotFound when LED with this name is not found. */
 	const LED & findLEDX( const std::string & name ) const
 	{
-		for (const LED & led : leds)
-			if (led.desc.name == name)
+		for (const auto & led : leds)
+			if (led.name == name)
 				return led;
 		throw NotFound( "LED of such name was not found" );
 	}
 
 #endif // NO_EXCEPTIONS
+
+ private:  // for internal use only
+
+	friend struct ReplyControllerData;
+	size_t calcSize() const noexcept;
+	void serialize( own::BinaryOutputStream & stream ) const;
+	bool deserialize( own::BinaryInputStream & stream, uint32_t deviceIdx ) noexcept;
+
+	friend class DeviceList;
+	friend class Client;
+	Device();
+	Device( const Device & other ) = default;
+	Device( Device && other ) = default;
 
 };
 
@@ -380,27 +328,22 @@ class PointerIterator
 
 class DeviceList
 {
-	// This has to ve vector of pointers. Simple vector would invalidate references in Mode, Zone and LED when resized.
+
+	// Pointers are more practical here, because they are faster to move and we can easily wrap them arround in the API
 	using DeviceListType = std::vector< std::unique_ptr< Device > >;
 	DeviceListType _list;
 
  public:
 
-	DeviceList() noexcept {}
-	// Copying is not allowed because it would break the non-owning references in Device sub-objects.
-	DeviceList( const DeviceList & other ) = delete;
-	DeviceList( DeviceList && other ) noexcept = default;
-	DeviceList & operator=( const DeviceList & other ) = delete;
-	DeviceList & operator=( DeviceList && other ) noexcept = default;
-
 	size_t size() const noexcept { return _list.size(); }
 
-	// this should only be used by the Client when constructing the list from the server response
-	void append( DeviceDescription && desc ) { _list.emplace_back( new Device( nextIdx(), std::move( desc ) ) ); }
-	void clear() noexcept { _list.clear(); }
+	/// Use this if you intend to populate the DeviceList manually using individual calls to Client::requestDeviceInfo().
+	void append( std::unique_ptr< Device > && device )   { _list.push_back( std::move(device) ); }
 
 	/// Use this to update your DeviceList after the call to Client::requestDeviceInfo().
-	void replace( std::unique_ptr< Device > && device ) { _list[ device->idx ] = std::move( device ); }
+	void replace( std::unique_ptr< Device > && device )  { _list[ device->idx ] = std::move(device); }
+
+	void clear() noexcept                                { _list.clear(); }
 
 	PointerIterator< DeviceListType::const_iterator > begin() const noexcept  { return _list.begin(); }
 	PointerIterator< DeviceListType::const_iterator > end() const noexcept    { return _list.end(); }
@@ -412,7 +355,7 @@ class DeviceList
 	void forEach( DeviceType deviceType, FuncType loopBody ) const
 	{
 		for (const Device & device : *this)
-			if (device.desc.type == deviceType)
+			if (device.type == deviceType)
 				loopBody( device );
 	}
 
@@ -421,7 +364,7 @@ class DeviceList
 	void forEach( const std::string & vendor, FuncType loopBody ) const
 	{
 		for (const Device & device : *this)
-			if (device.desc.vendor == vendor)
+			if (device.vendor == vendor)
 				loopBody( device );
 	}
 
@@ -430,7 +373,7 @@ class DeviceList
 	const Device * find( DeviceType deviceType ) const noexcept
 	{
 		for (const Device & device : *this)
-			if (device.desc.type == deviceType)
+			if (device.type == deviceType)
 				return &device;
 		return nullptr;
 	}
@@ -440,7 +383,7 @@ class DeviceList
 	const Device * find( const std::string & deviceName ) const noexcept
 	{
 		for (const Device & device : *this)
-			if (device.desc.name == deviceName)
+			if (device.name == deviceName)
 				return &device;
 		return nullptr;
 	}
@@ -452,7 +395,7 @@ class DeviceList
 	const Device & findX( DeviceType deviceType ) const
 	{
 		for (const Device & device : *this)
-			if (device.desc.type == deviceType)
+			if (device.type == deviceType)
 				return device;
 		throw NotFound( "Device of such type was not found" );
 	}
@@ -462,16 +405,19 @@ class DeviceList
 	const Device & findX( const std::string & deviceName ) const
 	{
 		for (const Device & device : *this)
-			if (device.desc.name == deviceName)
+			if (device.name == deviceName)
 				return device;
 		throw NotFound( "Device of such name was not found" );
 	}
 
 #endif // NO_EXCEPTIONS
 
- private:
+ private:  // for internal use only
 
-	uint32_t nextIdx() const noexcept { return uint32_t( _list.size() ); }
+	// this should only be used by the Client when constructing the list from the server response
+	friend class Client;
+	void reserve( size_t newSize )   { _list.reserve( newSize ); }
+	void append( Device && device )  { _list.emplace_back( new Device( std::move(device) ) ); }
 
 };
 

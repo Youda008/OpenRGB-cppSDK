@@ -9,6 +9,7 @@
 #define OPENRGB_PROTOCOL_COMMON_INCLUDED
 
 
+#include "ContainerUtils.hpp"
 #include "BinaryStream.hpp"
 MAKE_LITTLE_ENDIAN_DEFAULT
 
@@ -20,99 +21,112 @@ namespace orgb {
 
 
 //======================================================================================================================
-//  OpenRGB strings
+// Putting these template functions into a struct allows us to collectively mark them as friend and allow them to access
+// methods of Mode, Zone, LED that should be private to the user of the library, but accessible to the library itself.
+// The struct is basically used as a "friendable" namespace here.
 
-inline size_t sizeofORGBString( const std::string & str ) noexcept
+struct protocol
 {
-	return 2 + str.size() + 1;
-}
 
-inline void writeORGBString( own::BinaryOutputStream & stream, const std::string & str )
-{
-	stream << uint16_t( str.size() + 1 );
-	stream.writeString0( str );
-}
+	//-- OpenRGB strings -----------------------------------------------------------------------------------------------
 
-inline bool readORGBString( own::BinaryInputStream & stream, std::string & str ) noexcept
-{
-	uint16_t size = 0;
-	stream >> size;
-	stream.readString0( str );
-	return !stream.hasFailed() && str.size() + 1 == size;
-}
-
-
-//======================================================================================================================
-//  OpenRGB arrays
-
-template< typename Type, typename std::enable_if< std::is_fundamental<Type>::value, int >::type = 0 >
-size_t sizeofVector( const std::vector< Type > & vec ) noexcept
-{
-	return vec.size() * sizeof( Type );
-}
-
-template< typename Type, typename std::enable_if< !std::is_fundamental<Type>::value, int >::type = 0 >
-size_t sizeofVector( const std::vector< Type > & vec ) noexcept
-{
-	size_t size = 0;
-	for (const Type & elem : vec)
+	static size_t sizeofString( const std::string & str ) noexcept
 	{
-		size += elem.calcSize();
+		return 2 + str.size() + 1;
 	}
-	return size;
-}
 
-template< typename Type >
-size_t sizeofORGBArray( const std::vector< Type > & vec ) noexcept
-{
-	return 2 + sizeofVector( vec );
-}
-
-template< typename Type, typename std::enable_if< std::is_integral<Type>::value, int >::type = 0 >
-void writeORGBArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
-{
-	stream << uint16_t(vec.size());
-	for (const Type & elem : vec)
+	static void writeString( own::BinaryOutputStream & stream, const std::string & str )
 	{
-		stream << elem;
+		stream << uint16_t( str.size() + 1 );
+		stream.writeString0( str );
 	}
-}
 
-template< typename Type, typename std::enable_if< !std::is_integral<Type>::value, int >::type = 0 >
-void writeORGBArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
-{
-	stream << uint16_t(vec.size());
-	for (const Type & elem : vec)
+	static bool readString( own::BinaryInputStream & stream, std::string & str ) noexcept
 	{
-		elem.serialize( stream );
+		uint16_t size = 0;
+		stream >> size;
+		stream.readString0( str );
+		return !stream.hasFailed() && str.size() + 1 == size;
 	}
-}
 
-template< typename Type, typename std::enable_if< std::is_integral<Type>::value, int >::type = 0 >
-bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
-{
-	uint16_t size = 0;
-	stream >> size;
-	vec.resize( size );
-	for (uint16_t i = 0; i < size; ++i)
-	{
-		stream >> vec[i];
-	}
-	return !stream.hasFailed();
-}
 
-template< typename Type, typename std::enable_if< !std::is_integral<Type>::value, int >::type = 0 >
-bool readORGBArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
-{
-	uint16_t size = 0;
-	stream >> size;
-	vec.resize( size );
-	for (uint16_t i = 0; i < size; ++i)
+	//-- OpenRGB arrays ------------------------------------------------------------------------------------------------
+
+	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	static size_t sizeofVectorWithDynamicObjects( const std::vector< Type > & vec ) noexcept
 	{
-		vec[i].deserialize( stream );
+		size_t size = 0;
+		for (const Type & elem : vec)
+		{
+			size += elem.calcSize();
+		}
+		return size;
 	}
-	return !stream.hasFailed();
-}
+
+	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	static size_t sizeofArray( const std::vector< Type > & vec ) noexcept
+	{
+		return 2 + own::sizeofVector( vec );
+	}
+
+	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	static size_t sizeofArray( const std::vector< Type > & vec ) noexcept
+	{
+		return 2 + sizeofVectorWithDynamicObjects( vec );
+	}
+
+	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
+	{
+		stream << uint16_t(vec.size());
+		for (const Type & elem : vec)
+		{
+			stream << elem;
+		}
+	}
+
+	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
+	{
+		stream << uint16_t(vec.size());
+		for (const Type & elem : vec)
+		{
+			elem.serialize( stream );
+		}
+	}
+
+	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
+	{
+		uint16_t size = 0;
+		stream >> size;
+		vec.resize( size );
+		for (uint16_t i = 0; i < size; ++i)
+		{
+			stream >> vec[i];
+			if (stream.hasFailed())
+				return false;
+		}
+		return !stream.hasFailed();
+	}
+
+	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec, uint32_t parentIdx ) noexcept
+	{
+		uint16_t size = 0;
+		stream >> size;
+		vec.reserve( size );
+		for (uint16_t i = 0; i < size; ++i)
+		{
+			Type obj;
+			if (!obj.deserialize( stream, i, parentIdx ))
+				return false;
+			vec.emplace_back( move(obj) );
+		}
+		return !stream.hasFailed();
+	}
+
+};
 
 
 //======================================================================================================================
