@@ -8,7 +8,8 @@ It uses a pseudo-language which shall be understood as follows:
  * 'optional' means the following element might or might not be present depending on some field that preceeds it
  * all integers are in little-endian
  * all messages and sections are "packed" - there are no padding bytes, integer fields might not be alligned to offsets that are multiples of their size
- * all strings must be terminated by '\0' character, and the 2-byte length field that preceeds them counts the terminating character too
+ * all strings comming from the client must be terminated by '\0' character, and the 2-byte length field that preceeds them counts the terminating character too
+   however strings comming from the server are often not null-terminated, so read them by using the preceeding length or the packet length
 
 
 enum MessageType : uint32
@@ -271,6 +272,62 @@ message SaveMode
 	ModeDescription mode_desc;
 }
 
+// Asks for a list of saved profiles.
+message RequestProfileList
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_PROFILE_LIST,
+		message_size = 0
+	};
+};
+
+// A reply to RequestProfileList
+message ReplyProfileList
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_PROFILE_LIST,
+		message_size = 0
+	};
+	uint32   data_size;
+	uint16   num_profiles;
+	ProfileName[] profiles;
+};
+
+// Saves the current configuration of all devices under a new profile name.
+message RequestSaveProfile
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_SAVE_PROFILE,
+		message_size = length(profileName)
+	};
+	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+};
+
+/// Applies an existing profile.
+message RequestLoadProfile
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_LOAD_PROFILE,
+		message_size = length(profileName)
+	};
+	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+};
+
+// Removes an existing profile.
+message RequestDeleteProfile
+{
+	Header   header = {
+		device_idx = 0,
+		message_type = REQUEST_DELETE_PROFILE,
+		message_size = length(profileName)
+	};
+	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+};
+
 section DeviceDescription
 {
 	DeviceType type;
@@ -336,6 +393,12 @@ section LEDDescription
 	uint16   name_length;
 	char[]   name;
 	uint32   value;  // device-specific value
+}
+
+section ProfileName
+{
+	uint16   name_length;  // this is a length without the terminating '\0'
+	char[]   name;         // this string unlike others is not null-terminated, read only name_length bytes
 }
 
 section Color

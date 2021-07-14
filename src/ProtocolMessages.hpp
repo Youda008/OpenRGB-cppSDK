@@ -99,6 +99,10 @@ enum class MessageType : uint32_t
 	REQUEST_PROTOCOL_VERSION       = 40,
 	SET_CLIENT_NAME                = 50,
 	DEVICE_LIST_UPDATED            = 100,
+	REQUEST_PROFILE_LIST           = 150,
+	REQUEST_SAVE_PROFILE           = 151,
+	REQUEST_LOAD_PROFILE           = 152,
+	REQUEST_DELETE_PROFILE         = 153,
 	RGBCONTROLLER_RESIZEZONE       = 1000,
 	RGBCONTROLLER_UPDATELEDS       = 1050,
 	RGBCONTROLLER_UPDATEZONELEDS   = 1051,
@@ -575,6 +579,145 @@ struct SaveMode
 	uint32_t calcDataSize( uint32_t protocolVersion ) const noexcept;
 	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
 	bool deserializeBody( own::BinaryInputStream & stream, uint32_t protocolVersion ) noexcept;
+};
+
+/// Asks for a list of saved profiles.
+struct RequestProfileList
+{
+	Header  header;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_PROFILE_LIST;
+
+	RequestProfileList() noexcept
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   0,
+			/*message_size*/ calcDataSize()
+		)
+	{}
+
+	constexpr uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept
+	{
+		return 0;
+	}
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const
+	{
+		header.serialize( stream );
+	}
+	bool deserializeBody( own::BinaryInputStream & /*stream*/, uint32_t /*protocolVersion*/ = 0 ) noexcept
+	{
+		return true;
+	}
+};
+
+/// A reply to RequestProfileList
+struct ReplyProfileList
+{
+	Header  header;
+	uint32_t  data_size;
+	std::vector< std::string > profiles;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_PROFILE_LIST;
+
+	ReplyProfileList() noexcept {}
+	ReplyProfileList( const std::vector< std::string > & profiles ) noexcept
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   0
+		),
+		profiles( profiles )
+	{
+		header.message_size = calcDataSize();
+	}
+
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
+};
+
+
+/// Saves the current configuration of all devices under a new profile name.
+struct RequestSaveProfile
+{
+	Header  header;
+	std::string profileName;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_SAVE_PROFILE;
+
+	RequestSaveProfile( const std::string & profileName ) noexcept
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   0
+		),
+		profileName( profileName )
+	{
+		header.message_size = calcDataSize();
+	}
+
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
+};
+
+/// Applies an existing profile.
+struct RequestLoadProfile
+{
+	Header  header;
+	std::string profileName;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_LOAD_PROFILE;
+
+	RequestLoadProfile( const std::string & profileName ) noexcept
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   0
+		),
+		profileName( profileName )
+	{
+		header.message_size = calcDataSize();
+	}
+
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
+};
+
+/// Removes an existing profile.
+struct RequestDeleteProfile
+{
+	Header  header;
+	std::string profileName;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::REQUEST_DELETE_PROFILE;
+
+	RequestDeleteProfile( const std::string & profileName ) noexcept
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   0
+		),
+		profileName( profileName )
+	{
+		header.message_size = calcDataSize();
+	}
+
+	uint32_t calcDataSize( uint32_t /*protocolVersion*/ = 0 ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ = 0 ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ = 0 ) noexcept;
 };
 
 

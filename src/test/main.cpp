@@ -235,7 +235,7 @@ static bool help( const ArgList & )
 	cout << "  exit                                         # quits this application\n";
 	cout << "  connect <host_name>[:<port>]                 # orgb::Client::connect\n";
 	cout << "  disconnect                                   # orgb::Client::disconnect\n";
-	cout << "  getlist                                      # orgb::Client::requestDeviceList\n";
+	cout << "  listdevs                                     # orgb::Client::requestDeviceList\n";
 	cout << "  getcount                                     # orgb::Client::requestDeviceCount\n";
 	cout << "  getdev                                       # orgb::Client::requestDeviceInfo\n";
 	cout << "  setdevcolor <device_id> <color>              # orgb::Client::setDeviceColor\n";
@@ -245,6 +245,10 @@ static bool help( const ArgList & )
 	cout << "  changemode <device_id> <mode>                # orgb::Client::changeMode\n";
 	cout << "  savemode <device_id> <mode>                  # orgb::Client::saveMode\n";
 	cout << "  setzonesize <device_id> <zone_id> <size>     # orgb::Client::setZoneSize\n";
+	cout << "  listprofiles                                 # orgb::Client::requestProfileList\n";
+	cout << "  saveprofile                                  # orgb::Client::saveProfile\n";
+	cout << "  loadprofile                                  # orgb::Client::loadProfile\n";
+	cout << "  delprofile                                   # orgb::Client::deleteProfile\n";
 	cout << '\n';
 	cout.flush();
 
@@ -284,7 +288,7 @@ static bool disconnect( const ArgList & )
 	return true;
 }
 
-static bool getlist( const ArgList & )
+static bool listdevs( const ArgList & )
 {
 	cout << "Requesting the device list." << endl;
 	listResult = client.requestDeviceList();
@@ -578,6 +582,87 @@ static bool setzonesize( const ArgList & args )
 	}
 }
 
+static bool listprofiles( const ArgList & )
+{
+	cout << "Requesting the profile list." << endl;
+	ProfileListResult listResult = client.requestProfileList();
+
+	if (listResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( listResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << '\n';
+	cout << "profiles = [\n";
+	for (const std::string & profile : listResult.profiles)
+	{
+		cout << "    " << profile << '\n';
+	}
+	cout << "]\n";
+	cout << '\n';
+	cout.flush();
+
+	return true;
+}
+
+static bool saveprofile( const ArgList & args )
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Saving the current configuration as \"" << profileName << "\"" << endl;
+	RequestStatus status = client.saveProfile( profileName );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}
+
+static bool loadprofile( const ArgList & args )
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Loading existing profile \"" << profileName << "\"" << endl;
+	RequestStatus status = client.loadProfile( profileName );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}
+
+static bool delprofile( const ArgList & args )
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Deleting existing profile \"" << profileName << "\"" << endl;
+	RequestStatus status = client.deleteProfile( profileName );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}
+
 
 //======================================================================================================================
 
@@ -682,8 +767,8 @@ static void executeCommand( const Command & command, const ArgList & args )
 		handler = connect;
 	else if (command.name == "disconnect")
 		handler = disconnect;
-	else if (command.name == "getlist")
-		handler = getlist;
+	else if (command.name == "listdevs")
+		handler = listdevs;
 	else if (command.name == "getcount")
 		handler = getcount;
 	else if (command.name == "getdev")
@@ -702,6 +787,14 @@ static void executeCommand( const Command & command, const ArgList & args )
 		handler = savemode;
 	else if (command.name == "setzonesize")
 		handler = setzonesize;
+	else if (command.name == "listprofiles")
+		handler = listprofiles;
+	else if (command.name == "saveprofile")
+		handler = saveprofile;
+	else if (command.name == "loadprofile")
+		handler = loadprofile;
+	else if (command.name == "delprofile")
+		handler = delprofile;
 	else
 	{
 		cout << "Unknown command. Use 'help' to see the list of all possible commands" << endl;

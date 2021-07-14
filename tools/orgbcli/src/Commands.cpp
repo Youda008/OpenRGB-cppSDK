@@ -249,7 +249,7 @@ REGISTER_SPECIAL_COMMAND( disconnect, "", "orgb::Client::disconnect - disconnect
 	return true;
 }))
 
-REGISTER_COMMAND( getlist, "", "orgb::Client::requestDeviceList - lists all devices and their properties, modes, zones and LEDs", HANDLER(
+REGISTER_COMMAND( listdevs, "", "orgb::Client::requestDeviceList - lists all devices and their properties, modes, zones and LEDs", HANDLER(
 {
 	cout << "Requesting the device list." << endl;
 	DeviceListResult result = client.requestDeviceList();
@@ -463,6 +463,87 @@ REGISTER_COMMAND( resizezone, "<device_id> <zone_id> <size>", "orgb::Client::set
 
 	cout << "Changing size of zone " << zoneID.str << " to " << zoneSize << endl;
 	RequestStatus status = client.setZoneSize( *zone, zoneSize );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}))
+
+REGISTER_COMMAND( listprofiles, "", "orgb::Client::requestProfileList - lists all saved profiles", HANDLER(
+{
+	cout << "Requesting the profile list." << endl;
+	ProfileListResult listResult = client.requestProfileList();
+
+	if (listResult.status != RequestStatus::Success)
+	{
+		cout << " -> failed: " << enumString( listResult.status ) << " (error code: " << client.getLastSystemError() << ")" << endl;
+		return false;
+	}
+
+	cout << '\n';
+	cout << "profiles = [\n";
+	for (const std::string & profile : listResult.profiles)
+	{
+		cout << "    " << profile << '\n';
+	}
+	cout << "]\n";
+	cout << '\n';
+	cout.flush();
+
+	return true;
+}))
+
+REGISTER_COMMAND( saveprofile, "<profile_name>", "orgb::Client::saveProfile - saves the current configuration as a new profile", HANDLER(
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Saving the current configuration as \"" << profileName << "\"" << endl;
+	RequestStatus status = client.saveProfile( profileName );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}))
+
+REGISTER_COMMAND( loadprofile, "<profile_name>", "orgb::Client::loadProfile - applies an existing profile", HANDLER(
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Loading existing profile \"" << profileName << "\"" << endl;
+	RequestStatus status = client.loadProfile( profileName );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}))
+
+REGISTER_COMMAND( delprofile, "<profile_name>", "orgb::Client::deleteProfile - removes an existing profile", HANDLER(
+{
+	string profileName = args.getNext< string >();
+
+	cout << "Deleting existing profile \"" << profileName << "\"" << endl;
+	RequestStatus status = client.deleteProfile( profileName );
 
 	if (status == RequestStatus::Success)
 	{

@@ -35,12 +35,17 @@ const char * enumString( MessageType type ) noexcept
 		case MessageType::REQUEST_PROTOCOL_VERSION:       return "REQUEST_PROTOCOL_VERSION";
 		case MessageType::SET_CLIENT_NAME:                return "SET_CLIENT_NAME";
 		case MessageType::DEVICE_LIST_UPDATED:            return "DEVICE_LIST_UPDATED";
+		case MessageType::REQUEST_PROFILE_LIST:           return "REQUEST_PROFILE_LIST";
+		case MessageType::REQUEST_SAVE_PROFILE:           return "REQUEST_SAVE_PROFILE";
+		case MessageType::REQUEST_LOAD_PROFILE:           return "REQUEST_LOAD_PROFILE";
+		case MessageType::REQUEST_DELETE_PROFILE:         return "REQUEST_DELETE_PROFILE";
 		case MessageType::RGBCONTROLLER_RESIZEZONE:       return "RGBCONTROLLER_RESIZEZONE";
 		case MessageType::RGBCONTROLLER_UPDATELEDS:       return "RGBCONTROLLER_UPDATELEDS";
 		case MessageType::RGBCONTROLLER_UPDATEZONELEDS:   return "RGBCONTROLLER_UPDATEZONELEDS";
 		case MessageType::RGBCONTROLLER_UPDATESINGLELED:  return "RGBCONTROLLER_UPDATESINGLELED";
 		case MessageType::RGBCONTROLLER_SETCUSTOMMODE:    return "RGBCONTROLLER_SETCUSTOMMODE";
 		case MessageType::RGBCONTROLLER_UPDATEMODE:       return "RGBCONTROLLER_UPDATEMODE";
+		case MessageType::RGBCONTROLLER_SAVEMODE:         return "RGBCONTROLLER_SAVEMODE";
 		default:                                          return "<invalid>";
 	}
 }
@@ -49,18 +54,23 @@ static bool isValidMessageType( MessageType type )
 {
 	switch (type)
 	{
-		case MessageType::REQUEST_CONTROLLER_COUNT:      return true;
-		case MessageType::REQUEST_CONTROLLER_DATA:       return true;
-		case MessageType::REQUEST_PROTOCOL_VERSION:      return true;
-		case MessageType::SET_CLIENT_NAME:               return true;
-		case MessageType::DEVICE_LIST_UPDATED:           return true;
-		case MessageType::RGBCONTROLLER_RESIZEZONE:      return true;
-		case MessageType::RGBCONTROLLER_UPDATELEDS:      return true;
-		case MessageType::RGBCONTROLLER_UPDATEZONELEDS:  return true;
-		case MessageType::RGBCONTROLLER_UPDATESINGLELED: return true;
-		case MessageType::RGBCONTROLLER_SETCUSTOMMODE:   return true;
-		case MessageType::RGBCONTROLLER_UPDATEMODE:      return true;
-		default:                                         return false;
+		case MessageType::REQUEST_CONTROLLER_COUNT:       return true;
+		case MessageType::REQUEST_CONTROLLER_DATA:        return true;
+		case MessageType::REQUEST_PROTOCOL_VERSION:       return true;
+		case MessageType::SET_CLIENT_NAME:                return true;
+		case MessageType::DEVICE_LIST_UPDATED:            return true;
+		case MessageType::REQUEST_PROFILE_LIST:           return true;
+		case MessageType::REQUEST_SAVE_PROFILE:           return true;
+		case MessageType::REQUEST_LOAD_PROFILE:           return true;
+		case MessageType::REQUEST_DELETE_PROFILE:         return true;
+		case MessageType::RGBCONTROLLER_RESIZEZONE:       return true;
+		case MessageType::RGBCONTROLLER_UPDATELEDS:       return true;
+		case MessageType::RGBCONTROLLER_UPDATEZONELEDS:   return true;
+		case MessageType::RGBCONTROLLER_UPDATESINGLELED:  return true;
+		case MessageType::RGBCONTROLLER_SETCUSTOMMODE:    return true;
+		case MessageType::RGBCONTROLLER_UPDATEMODE:       return true;
+		case MessageType::RGBCONTROLLER_SAVEMODE:         return true;
+		default:                                          return false;
 	}
 }
 
@@ -372,6 +382,131 @@ bool SaveMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolVer
 	stream >> data_size;
 	stream >> mode_idx;
 	mode_desc.deserialize( stream, mode_idx, header.device_idx, protocolVersion );
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t ReplyProfileList::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
+{
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	// Unfortunatelly, these strings break the consistency with the rest by not including the '\0' so it must be counted manually.
+	size += sizeof( uint16_t );  // num_profiles
+	for (const std::string & profile : profiles)
+	{
+		size += 2 + profile.size();
+	}
+
+	return uint32_t( size );
+}
+
+void ReplyProfileList::serialize( own::BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
+{
+	header.serialize( stream );
+
+	stream << data_size;
+	// Unfortunatelly, these strings break the consistency with the rest by not including the '\0' so it must be written manually.
+	stream << uint16_t( profiles.size() );
+	for (const auto & profile : profiles)
+	{
+		stream << uint16_t( profile.size() );
+		stream.writeString( profile );
+	}
+}
+
+bool ReplyProfileList::deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
+{
+	stream >> data_size;
+	// Unfortunatelly, these strings break the consistency with the rest by not including the '\0' so it must be read manually.
+	uint16_t num_profiles = 0;
+	stream >> num_profiles;
+	profiles.resize( num_profiles );
+	for (uint16_t i = 0; i < num_profiles; ++i)
+	{
+		uint16_t name_len = 0;
+		stream >> name_len;
+		stream.readString( profiles[i], name_len );
+		if (stream.hasFailed())
+			return false;
+	}
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t RequestSaveProfile::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
+{
+	size_t size = 0;
+
+	size += profileName.size();
+
+	return uint32_t( size );
+}
+
+void RequestSaveProfile::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
+{
+	header.serialize( stream );
+
+	stream.writeString( profileName );
+}
+
+bool RequestSaveProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
+{
+	stream.readString( profileName, header.message_size );
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t RequestLoadProfile::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
+{
+	size_t size = 0;
+
+	size += profileName.size();
+
+	return uint32_t( size );
+}
+
+void RequestLoadProfile::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
+{
+	header.serialize( stream );
+
+	stream.writeString( profileName );
+}
+
+bool RequestLoadProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
+{
+	stream.readString( profileName, header.message_size );
+
+	return !stream.hasFailed();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t RequestDeleteProfile::calcDataSize( uint32_t /*protocolVersion*/ ) const noexcept
+{
+	size_t size = 0;
+
+	size += profileName.size();
+
+	return uint32_t( size );
+}
+
+void RequestDeleteProfile::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
+{
+	header.serialize( stream );
+
+	stream.writeString( profileName );
+}
+
+bool RequestDeleteProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
+{
+	stream.readString( profileName, header.message_size );
 
 	return !stream.hasFailed();
 }

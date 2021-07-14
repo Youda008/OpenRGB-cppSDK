@@ -95,6 +95,13 @@ struct DeviceInfoResult
 	// The device has to be a pointer because user is not allowed to use the constructors.
 };
 
+/// Result and output of a profile list request
+struct ProfileListResult
+{
+	RequestStatus status;  ///< whether the request suceeded or why it didn't
+	std::vector< std::string > profiles;  ///< output of a successfull request
+};
+
 
 //======================================================================================================================
 /// OpenRGB network client.
@@ -172,6 +179,18 @@ class Client
 	/// Sets a color of a single selected LED.
 	RequestStatus setLEDColor( const LED & led, Color color ) noexcept;
 
+	/// Queries the server for a list of saved profiles.
+	ProfileListResult requestProfileList();
+
+	/// Saves the current configuration of all devices under a new profile name.
+	RequestStatus saveProfile( const std::string & profileName );
+
+	/// Applies an existing profile.
+	RequestStatus loadProfile( const std::string & profileName );
+
+	/// Removes an existing profile.
+	RequestStatus deleteProfile( const std::string & profileName );
+
 #ifndef NO_EXCEPTIONS
 
 	//-- exception-oriented API ----------------------------------------------------------------------------------------
@@ -186,7 +205,7 @@ class Client
 	/** \throws UserError when the client is not connected */
 	void disconnectX();
 
-	/// Exception-throwing variant of setTimeout( std::chrono::milliseconds ).
+	/// Exception-throwing variant of setTimeout().
 	/** \throws SystemError when there was an error inside the operating system */
 	void setTimeoutX( std::chrono::milliseconds timeout );
 
@@ -213,19 +232,19 @@ class Client
 	  * \throws SystemError when there was an error inside the operating system */
 	bool isDeviceListOutdatedX();
 
-	/// Exception-throwing variant of switchToCustomMode( const Device & ).
+	/// Exception-throwing variant of switchToCustomMode().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void switchToCustomModeX( const Device & device );
 
-	/// Exception-throwing variant of changeMode( const Device &, const Mode & ).
+	/// Exception-throwing variant of changeMode().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void changeModeX( const Device & device, const Mode & mode );
 
-	/// Exception-throwing variant of saveMode( const Device &, const Mode & ).
+	/// Exception-throwing variant of saveMode().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
@@ -237,23 +256,47 @@ class Client
 	  * \throws SystemError when there was an error inside the operating system */
 	void setDeviceColorX( const Device & device, Color color );
 
-	/// Exception-throwing variant of setZoneColor( const Zone &, Color ).
+	/// Exception-throwing variant of setZoneColor().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void setZoneColorX( const Zone & zone, Color color );
 
-	/// Exception-throwing variant of setZoneSize( const Zone &, uint32_t ).
+	/// Exception-throwing variant of setZoneSize().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void setZoneSizeX( const Zone & zone, uint32_t newSize );
 
-	/// Exception-throwing variant of setLEDColor( const LED &, Color ).
+	/// Exception-throwing variant of setLEDColor().
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void setLEDColorX( const LED & led, Color color );
+
+	/// Exception-throwing variant of requestProfileList().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent or no valid reply was received
+	  * \throws SystemError when there was an error inside the operating system */
+	std::vector< std::string > requestProfileListX();
+
+	/// Exception-throwing variant of saveProfile().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
+	void saveProfileX( const std::string & profileName );
+
+	/// Exception-throwing variant of loadProfile().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
+	void loadProfileX( const std::string & profileName );
+
+	/// Exception-throwing variant of deleteProfile().
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
+	void deleteProfileX( const std::string & profileName );
 
 #endif // NO_EXCEPTIONS
 
@@ -282,6 +325,10 @@ class Client
 	RequestStatus _setZoneColor( const Zone & zone, Color color );
 	RequestStatus _setZoneSize( const Zone & zone, uint32_t newSize );
 	RequestStatus _setLEDColor( const LED & led, Color color );
+	ProfileListResult _requestProfileList();
+	RequestStatus _saveProfile( const std::string & profileName );
+	RequestStatus _loadProfile( const std::string & profileName );
+	RequestStatus _deleteProfile( const std::string & profileName );
 
 	template< typename Message, typename ... ConstructorArgs >
 	bool sendMessage( ConstructorArgs ... args );

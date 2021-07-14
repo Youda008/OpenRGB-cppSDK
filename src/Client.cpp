@@ -464,6 +464,79 @@ RequestStatus Client::_setLEDColor( const LED & led, Color color )
 	return RequestStatus::Success;
 }
 
+ProfileListResult Client::_requestProfileList()
+{
+	if (!_socket->isConnected())
+	{
+		return { RequestStatus::NotConnected, {} };
+	}
+
+	ProfileListResult result;
+
+	bool sent = sendMessage< RequestProfileList >();
+	if (!sent)
+	{
+		result.status = RequestStatus::SendRequestFailed;
+		return result;
+	}
+
+	auto deviceDataResult = awaitMessage< ReplyProfileList >();
+	if (deviceDataResult.status != RequestStatus::Success)
+	{
+		result.status = deviceDataResult.status;
+		return result;
+	}
+
+	result.profiles = move( deviceDataResult.message.profiles );
+	result.status = RequestStatus::Success;
+	return result;
+}
+
+RequestStatus Client::_saveProfile( const std::string & profileName )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NotConnected;
+	}
+
+	if (!sendMessage< RequestSaveProfile >( profileName ))
+	{
+		return RequestStatus::SendRequestFailed;
+	}
+
+	return RequestStatus::Success;
+}
+
+RequestStatus Client::_loadProfile( const std::string & profileName )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NotConnected;
+	}
+
+	if (!sendMessage< RequestLoadProfile >( profileName ))
+	{
+		return RequestStatus::SendRequestFailed;
+	}
+
+	return RequestStatus::Success;
+}
+
+RequestStatus Client::_deleteProfile( const std::string & profileName )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NotConnected;
+	}
+
+	if (!sendMessage< RequestLoadProfile >( profileName ))
+	{
+		return RequestStatus::SendRequestFailed;
+	}
+
+	return RequestStatus::Success;
+}
+
 system_error_t Client::getLastSystemError() const noexcept
 {
 	return _socket->getLastSystemError();
@@ -605,6 +678,42 @@ RequestStatus Client::setLEDColor( const LED & led, Color color ) noexcept
 {
 	try {
 		return _setLEDColor( led, color );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+ProfileListResult Client::requestProfileList()
+{
+	try {
+		return _requestProfileList();
+	} CATCH_ALL (
+		return { RequestStatus::UnexpectedError, {} };
+	)
+}
+
+RequestStatus Client::saveProfile( const std::string & profileName )
+{
+	try {
+		return _saveProfile( profileName );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+RequestStatus Client::loadProfile( const std::string & profileName )
+{
+	try {
+		return _loadProfile( profileName );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+RequestStatus Client::deleteProfile( const std::string & profileName )
+{
+	try {
+		return _deleteProfile( profileName );
 	} CATCH_ALL (
 		return RequestStatus::UnexpectedError;
 	)
@@ -752,6 +861,31 @@ void Client::setZoneSizeX( const Zone & zone, uint32_t newSize )
 void Client::setLEDColorX( const LED & led, Color color )
 {
 	RequestStatus status = _setLEDColor( led, color );
+	requestStatusToException( status );
+}
+
+std::vector< std::string > Client::requestProfileListX()
+{
+	ProfileListResult result = _requestProfileList();
+	requestStatusToException( result.status );
+	return move( result.profiles );
+}
+
+void Client::saveProfileX( const std::string & profileName )
+{
+	RequestStatus status = _saveProfile( profileName );
+	requestStatusToException( status );
+}
+
+void Client::loadProfileX( const std::string & profileName )
+{
+	RequestStatus status = _loadProfile( profileName );
+	requestStatusToException( status );
+}
+
+void Client::deleteProfileX( const std::string & profileName )
+{
+	RequestStatus status = _deleteProfile( profileName );
 	requestStatusToException( status );
 }
 

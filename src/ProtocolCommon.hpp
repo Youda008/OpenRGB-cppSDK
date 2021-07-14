@@ -13,6 +13,7 @@
 #include "BinaryStream.hpp"
 MAKE_LITTLE_ENDIAN_DEFAULT
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -45,20 +46,30 @@ struct protocol
 	{
 		uint16_t size = 0;
 		stream >> size;
-		stream.readString0( str );
-		return !stream.hasFailed() && str.size() + 1 == size;
+		stream.readString( str, size > 0 ? size - 1 : 0 );
+		return !stream.hasFailed() && strlen( str.c_str() ) + 1 == size;
 	}
 
 
 	//-- OpenRGB arrays ------------------------------------------------------------------------------------------------
 
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static size_t sizeofVectorWithDynamicObjects( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
+	static size_t sizeofVectorOfDynamicObjects( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
 		size_t size = 0;
-		for (const Type & elem : vec)
+		for (const auto & elem : vec)
 		{
 			size += elem.calcSize( protocolVersion );
+		}
+		return size;
+	}
+
+	static size_t sizeofVectorOfStrings( const std::vector< std::string > & vec ) noexcept
+	{
+		size_t size = 0;
+		for (const auto & elem : vec)
+		{
+			size += sizeofString( elem );
 		}
 		return size;
 	}
@@ -69,27 +80,41 @@ struct protocol
 		return 2 + own::sizeofVector( vec );
 	}
 
+	static size_t sizeofArray( const std::vector< std::string > & vec ) noexcept
+	{
+		return 2 + sizeofVectorOfStrings( vec );
+	}
+
 	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
 	static size_t sizeofArray( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
-		return 2 + sizeofVectorWithDynamicObjects( vec, protocolVersion );
+		return 2 + sizeofVectorOfDynamicObjects( vec, protocolVersion );
 	}
 
 	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
-	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec )
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > & vec )
 	{
 		stream << uint16_t(vec.size());
-		for (const Type & elem : vec)
+		for (const auto & elem : vec)
 		{
 			stream << elem;
 		}
 	}
 
-	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
-	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > vec, uint32_t protocolVersion )
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< std::string > & vec )
 	{
 		stream << uint16_t(vec.size());
-		for (const Type & elem : vec)
+		for (const auto & elem : vec)
+		{
+			writeString( stream, elem );
+		}
+	}
+
+	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > & vec, uint32_t protocolVersion )
+	{
+		stream << uint16_t(vec.size());
+		for (const auto & elem : vec)
 		{
 			elem.serialize( stream, protocolVersion );
 		}
@@ -104,6 +129,20 @@ struct protocol
 		for (uint16_t i = 0; i < size; ++i)
 		{
 			stream >> vec[i];
+			if (stream.hasFailed())
+				return false;
+		}
+		return !stream.hasFailed();
+	}
+
+	static bool readArray( own::BinaryInputStream & stream, std::vector< std::string > & vec ) noexcept
+	{
+		uint16_t size = 0;
+		stream >> size;
+		vec.resize( size );
+		for (uint16_t i = 0; i < size; ++i)
+		{
+			readString( stream, vec[i] );
 			if (stream.hasFailed())
 				return false;
 		}
