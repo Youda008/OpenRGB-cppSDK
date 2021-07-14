@@ -389,6 +389,8 @@ Mode::Mode()
 	flags(),
 	speed_min(),
 	speed_max(),
+	brightness_min(),
+	brightness_max(),
 	colors_min(),
 	colors_max(),
 	speed(),
@@ -397,7 +399,7 @@ Mode::Mode()
 	colors()
 {}
 
-size_t Mode::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
+size_t Mode::calcSize( uint32_t protocolVersion ) const noexcept
 {
 	size_t size = 0;
 
@@ -406,6 +408,11 @@ size_t Mode::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
 	size += sizeof( flags );
 	size += sizeof( speed_min );
 	size += sizeof( speed_max );
+	if (protocolVersion >= 3)
+	{
+		size += sizeof( brightness_min );
+		size += sizeof( brightness_max );
+	}
 	size += sizeof( colors_min );
 	size += sizeof( colors_max );
 	size += sizeof( speed );
@@ -416,13 +423,18 @@ size_t Mode::calcSize( uint32_t /*protocolVersion*/ ) const noexcept
 	return size;
 }
 
-void Mode::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ ) const
+void Mode::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) const
 {
 	protocol::writeString( stream, name );
 	stream << value;
 	stream << flags;
 	stream << speed_min;
 	stream << speed_max;
+	if (protocolVersion >= 3)
+	{
+		stream << brightness_min;
+		stream << brightness_max;
+	}
 	stream << colors_min;
 	stream << colors_max;
 	stream << speed;
@@ -431,7 +443,7 @@ void Mode::serialize( BinaryOutputStream & stream, uint32_t /*protocolVersion*/ 
 	protocol::writeArray( stream, colors );
 }
 
-bool Mode::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/, uint32_t idx, uint32_t parentIdx ) noexcept
+bool Mode::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, uint32_t idx, uint32_t parentIdx ) noexcept
 {
 	// This hack with const casts allows us to restrict the user from changing attributes that are a static description
 	// and allow him to change only the parameters that are meant to be changed.
@@ -445,6 +457,11 @@ bool Mode::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/
 	stream >> unconst( flags );
 	stream >> unconst( speed_min );
 	stream >> unconst( speed_max );
+	if (protocolVersion >= 3)
+	{
+		stream >> unconst( brightness_min );
+		stream >> unconst( brightness_max );
+	}
 	stream >> unconst( colors_min );
 	stream >> unconst( colors_max );
 	stream >> speed;
@@ -469,6 +486,8 @@ void print( const Mode & mode, unsigned int indentLevel )
 	indent( indentLevel + 1 ); printf( "direction = %s;\n", enumString( mode.direction ) );
 	indent( indentLevel + 1 ); printf( "speed_min = %u;\n", mode.speed_min );
 	indent( indentLevel + 1 ); printf( "speed_max = %u;\n", mode.speed_max );
+	indent( indentLevel + 1 ); printf( "brightness_min = %u;\n", mode.brightness_min );
+	indent( indentLevel + 1 ); printf( "brightness_max = %u;\n", mode.brightness_max );
 	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.speed );
 	indent( indentLevel + 1 ); printf( "colors_min = %u;\n", mode.colors_min );
 	indent( indentLevel + 1 ); printf( "colors_max = %u;\n", mode.colors_max );
@@ -491,6 +510,8 @@ void print( std::ostream & os, const Mode & mode, unsigned int indentLevel )
 	indent( os, indentLevel + 1 ); os << "direction = "<<enumString( mode.direction )<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed_min = "<<mode.speed_min<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed_max = "<<mode.speed_max<<";\n";
+	indent( os, indentLevel + 1 ); os << "brightness_min = "<<mode.brightness_min<<";\n";
+	indent( os, indentLevel + 1 ); os << "brightness_max = "<<mode.brightness_max<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed = "<<mode.speed<<";\n";
 	indent( os, indentLevel + 1 ); os << "colors_min = "<<mode.colors_min<<";\n";
 	indent( os, indentLevel + 1 ); os << "colors_max = "<<mode.colors_max<<";\n";

@@ -85,7 +85,7 @@ namespace orgb {
 /// version of the protocol this client currently implements
 /** The following structs and enums are defined according to this version of the protocol.
   * Older versions will not be supported, sorry guys. */
-constexpr unsigned int implementedProtocolVersion = 1;
+constexpr unsigned int implementedProtocolVersion = 3;
 
 
 //======================================================================================================================

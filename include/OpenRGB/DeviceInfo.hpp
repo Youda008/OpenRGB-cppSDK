@@ -171,6 +171,8 @@ class Mode
 	const uint32_t     flags;           ///< see ModeFlags for possible bit flags
 	const uint32_t     speed_min;       ///< minimum speed value, this attribute is valid only if ModeFlags::HasSpeed is set, otherwise it's uninitialized
 	const uint32_t     speed_max;       ///< maximum speed value, this attribute is valid only if ModeFlags::HasSpeed is set, otherwise it's uninitialized
+	const uint32_t     brightness_min;  ///< minimum brightness value, this attribute is valid only if ModeFlags::HasBrightness is set, otherwise it's uninitialized
+	const uint32_t     brightness_max;  ///< maximum brightness value, this attribute is valid only if ModeFlags::HasBrightness is set, otherwise it's uninitialized
 	const uint32_t     colors_min;      ///< minimum number of mode colors
 	const uint32_t     colors_max;      ///< maximum number of mode colors
 	/// Speed of the effect.
@@ -178,8 +180,8 @@ class Mode
 	  * The possible values are determined by #speed_min and #speed_max. */
 	      uint32_t      speed;
 	/// Direction of the color effect.
-	/** This attribute is enabled only if any of ModeFlags::HasDirectionXY is set, otherwise it's uninitialized.
-	  * The possible values are determined by #flags. */
+	/** This attribute is enabled only if any of ModeFlags::HasDirectionXY is set in #flags, otherwise it's uninitialized.
+	  * The possible values are also determined by #flags. */
 	      Direction     direction;
 	const ColorMode     color_mode;  ///< how the colors of a mode are set
 	/// Mode-specific list of colors.
