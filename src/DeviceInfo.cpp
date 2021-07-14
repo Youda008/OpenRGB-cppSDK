@@ -394,6 +394,7 @@ Mode::Mode()
 	colors_min(),
 	colors_max(),
 	speed(),
+	brightness(),
 	direction(),
 	color_mode(),
 	colors()
@@ -416,6 +417,10 @@ size_t Mode::calcSize( uint32_t protocolVersion ) const noexcept
 	size += sizeof( colors_min );
 	size += sizeof( colors_max );
 	size += sizeof( speed );
+	if (protocolVersion >= 3)
+	{
+		size += sizeof( brightness );
+	}
 	size += sizeof( direction );
 	size += sizeof( color_mode );
 	size += protocol::sizeofArray( colors );
@@ -438,6 +443,10 @@ void Mode::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) co
 	stream << colors_min;
 	stream << colors_max;
 	stream << speed;
+	if (protocolVersion >= 3)
+	{
+		stream << brightness;
+	}
 	stream << direction;
 	stream << color_mode;
 	protocol::writeArray( stream, colors );
@@ -465,6 +474,10 @@ bool Mode::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, ui
 	stream >> unconst( colors_min );
 	stream >> unconst( colors_max );
 	stream >> speed;
+	if (protocolVersion >= 3)
+	{
+		stream >> unconst( brightness );
+	}
 	stream >> direction;
 	stream >> unconst( color_mode );
 	protocol::readArray( stream, colors );
@@ -486,9 +499,10 @@ void print( const Mode & mode, unsigned int indentLevel )
 	indent( indentLevel + 1 ); printf( "direction = %s;\n", enumString( mode.direction ) );
 	indent( indentLevel + 1 ); printf( "speed_min = %u;\n", mode.speed_min );
 	indent( indentLevel + 1 ); printf( "speed_max = %u;\n", mode.speed_max );
+	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.speed );
 	indent( indentLevel + 1 ); printf( "brightness_min = %u;\n", mode.brightness_min );
 	indent( indentLevel + 1 ); printf( "brightness_max = %u;\n", mode.brightness_max );
-	indent( indentLevel + 1 ); printf( "speed = %u;\n", mode.speed );
+	indent( indentLevel + 1 ); printf( "brightness = %u;\n", mode.brightness );
 	indent( indentLevel + 1 ); printf( "colors_min = %u;\n", mode.colors_min );
 	indent( indentLevel + 1 ); printf( "colors_max = %u;\n", mode.colors_max );
 	indent( indentLevel + 1 ); printf( "color_mode = %s;\n", enumString( mode.color_mode ) );
@@ -510,9 +524,10 @@ void print( std::ostream & os, const Mode & mode, unsigned int indentLevel )
 	indent( os, indentLevel + 1 ); os << "direction = "<<enumString( mode.direction )<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed_min = "<<mode.speed_min<<";\n";
 	indent( os, indentLevel + 1 ); os << "speed_max = "<<mode.speed_max<<";\n";
+	indent( os, indentLevel + 1 ); os << "speed = "<<mode.speed<<";\n";
 	indent( os, indentLevel + 1 ); os << "brightness_min = "<<mode.brightness_min<<";\n";
 	indent( os, indentLevel + 1 ); os << "brightness_max = "<<mode.brightness_max<<";\n";
-	indent( os, indentLevel + 1 ); os << "speed = "<<mode.speed<<";\n";
+	indent( os, indentLevel + 1 ); os << "brightness = "<<mode.brightness<<";\n";
 	indent( os, indentLevel + 1 ); os << "colors_min = "<<mode.colors_min<<";\n";
 	indent( os, indentLevel + 1 ); os << "colors_max = "<<mode.colors_max<<";\n";
 	indent( os, indentLevel + 1 ); os << "color_mode = "<<enumString( mode.color_mode )<<";\n";

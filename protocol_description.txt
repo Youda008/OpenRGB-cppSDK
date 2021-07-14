@@ -1,5 +1,5 @@
 This file contains the description of the OpenRGB network API (protocol) that this client implements.
-The protocol is evolving, the current state of the document describes version 1, but it may change in the future.
+The protocol is evolving, the current state of the document describes version 3, but it may change in the future.
 It uses a pseudo-language which shall be understood as follows:
  * 'message' means a self-contained block of TCP data that represents a request or a response
  * 'section' means a part of message that is either repeated or part of multiple different messages
@@ -308,6 +308,7 @@ section ModeDescription
 	uint32    colors_min;      // minimum number of mode colors
 	uint32    colors_max;      // maximum number of mode colors
 	uint32    speed;           // speed of the effect, this attribute is valid only if ModeFlags::HasSpeed is set, otherwise it's uninitialized
+	uint32    brightness;      // brightness of the lights, this attribute is valid only if ModeFlags::HasBrightness is set, otherwise it's uninitialized
 	Direction direction;       // direction of the color effect, this attribute is only valid if any of ModeFlags::HasDirectionXY is set, otherwise it's uninitialized
 	ColorMode color_mode;      // how the colors of a mode are set
 	uint16    num_colors;

@@ -179,6 +179,10 @@ class Mode
 	/** This attribute is enabled only if ModeFlags::HasSpeed is set, otherwise it's uninitialized.
 	  * The possible values are determined by #speed_min and #speed_max. */
 	      uint32_t      speed;
+	/// Brightness of the lights.
+	/** This attribute is enabled only if ModeFlags::HasBrightness is set, otherwise it's uninitialized.
+	  * The possible values are determined by #brightness_min and #brightness_max. */
+	      uint32_t      brightness;
 	/// Direction of the color effect.
 	/** This attribute is enabled only if any of ModeFlags::HasDirectionXY is set in #flags, otherwise it's uninitialized.
 	  * The possible values are also determined by #flags. */
