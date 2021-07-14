@@ -369,7 +369,39 @@ REGISTER_COMMAND( setcolor, "<device_id> [(zone|led):<id>] <color>", "orgb::Clie
 	}
 }))
 
-REGISTER_COMMAND( setmode, "<device_id> <mode>", "orgb::Client::changeMode - changes mode of a device", HANDLER(
+REGISTER_COMMAND( custommode, "<device_id>", "orgb::Client::switchToCustomMode - switches the device to a directly controlled color mode, DEPRECATED", HANDLER(
+{
+	PartID deviceID = args.getNext< PartID >();
+
+	// Device list cannot be re-used from the previous 'list' command, because that command may have been executed in
+	// a different process in non-interactive mode or not executed at all.
+	DeviceListResult listResult = client.requestDeviceList();
+	if (listResult.status != RequestStatus::Success)
+	{
+		cout << "Failed to get a recent device list: " << enumString( listResult.status ) << endl;
+		return false;
+	}
+
+	const Device * device = findDevice( listResult.devices, deviceID );
+	if (!device)
+		return false;
+
+	cout << "Swithing device " << deviceID.str << " to custom mode" << endl;
+	RequestStatus status = client.switchToCustomMode( *device );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}))
+
+REGISTER_COMMAND( savemode, "<device_id> <mode>", "orgb::Client::saveMode - TODO", HANDLER(
 {
 	PartID deviceID = args.getNext< PartID >();
 	PartID modeID = args.getNext< PartID >();
@@ -391,40 +423,8 @@ REGISTER_COMMAND( setmode, "<device_id> <mode>", "orgb::Client::changeMode - cha
 	if (!mode)
 		return false;
 
-	cout << "Changing mode of device " << deviceID.str << " to " << modeID.str << endl;
-	RequestStatus status = client.changeMode( *device, *mode );
-
-	if (status == RequestStatus::Success)
-	{
-		cout << " -> success" << endl;
-		return true;
-	}
-	else
-	{
-		cout << " -> failed: " << enumString( status ) << endl;
-		return false;
-	}
-}))
-
-REGISTER_COMMAND( custommode, "<device_id>", "orgb::Client::switchToCustomMode - switches the device to a directly controlled color mode, DEPRECATED", HANDLER(
-{
-	PartID deviceID = args.getNext< PartID >();
-
-	// Device list cannot be re-used from the previous 'list' command, because that command may have been executed in
-	// a different process in non-interactive mode or not executed at all.
-	DeviceListResult listResult = client.requestDeviceList();
-	if (listResult.status != RequestStatus::Success)
-	{
-		cout << "Failed to get a recent device list: " << enumString( listResult.status ) << endl;
-		return false;
-	}
-
-	const Device * device = findDevice( listResult.devices, deviceID );
-	if (!device)
-		return false;
-
-	cout << "Swithing device " << deviceID.str << " to custom mode" << endl;
-	RequestStatus status = client.switchToCustomMode( *device );
+	cout << "Saving mode of device " << deviceID.str << " to " << modeID.str << endl;
+	RequestStatus status = client.saveMode( *device, *mode );
 
 	if (status == RequestStatus::Success)
 	{

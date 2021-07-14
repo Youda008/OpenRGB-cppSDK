@@ -345,6 +345,38 @@ bool UpdateMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolV
 }
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
+uint32_t SaveMode::calcDataSize( uint32_t protocolVersion ) const noexcept
+{
+	size_t size = 0;
+
+	size += sizeof( data_size );
+	size += sizeof( mode_idx );
+	size += mode_desc.calcSize( protocolVersion );
+
+	return uint32_t( size );
+}
+
+void SaveMode::serialize( BinaryOutputStream & stream, uint32_t protocolVersion ) const
+{
+	header.serialize( stream );
+
+	stream << data_size;
+	stream << mode_idx;
+	mode_desc.serialize( stream, protocolVersion );
+}
+
+bool SaveMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolVersion ) noexcept
+{
+	stream >> data_size;
+	stream >> mode_idx;
+	mode_desc.deserialize( stream, mode_idx, header.device_idx, protocolVersion );
+
+	return !stream.hasFailed();
+}
+
+
 //======================================================================================================================
 
 

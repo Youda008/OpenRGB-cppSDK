@@ -357,6 +357,21 @@ UpdateStatus Client::_checkForDeviceUpdates() noexcept
 	return status;
 }
 
+RequestStatus Client::_switchToCustomMode( const Device & device )
+{
+	if (!_socket->isConnected())
+	{
+		return RequestStatus::NotConnected;
+	}
+
+	if (!sendMessage< SetCustomMode >( device.idx ))
+	{
+		return RequestStatus::SendRequestFailed;
+	}
+
+	return RequestStatus::Success;
+}
+
 RequestStatus Client::_changeMode( const Device & device, const Mode & mode )
 {
 	if (!_socket->isConnected())
@@ -372,14 +387,14 @@ RequestStatus Client::_changeMode( const Device & device, const Mode & mode )
 	return RequestStatus::Success;
 }
 
-RequestStatus Client::_switchToCustomMode( const Device & device )
+RequestStatus Client::_saveMode( const Device & device, const Mode & mode )
 {
 	if (!_socket->isConnected())
 	{
 		return RequestStatus::NotConnected;
 	}
 
-	if (!sendMessage< SetCustomMode >( device.idx ))
+	if (!sendMessage< SaveMode >( device.idx, mode.idx, mode, _negotiatedProtocolVersion ))
 	{
 		return RequestStatus::SendRequestFailed;
 	}
@@ -532,16 +547,6 @@ UpdateStatus Client::checkForDeviceUpdates() noexcept
 	return _checkForDeviceUpdates();
 }
 
-RequestStatus Client::changeMode( const Device & device, const Mode & mode ) noexcept
-{
-	try {
-		return _changeMode( device, mode );
-	} CATCH_ALL (
-		return RequestStatus::UnexpectedError;
-	)
-}
-
-
 RequestStatus Client::switchToCustomMode( const Device & device ) noexcept
 {
 	try {
@@ -551,6 +556,23 @@ RequestStatus Client::switchToCustomMode( const Device & device ) noexcept
 	)
 }
 
+RequestStatus Client::changeMode( const Device & device, const Mode & mode ) noexcept
+{
+	try {
+		return _changeMode( device, mode );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
+
+RequestStatus Client::saveMode( const Device & device, const Mode & mode ) noexcept
+{
+	try {
+		return _saveMode( device, mode );
+	} CATCH_ALL (
+		return RequestStatus::UnexpectedError;
+	)
+}
 
 RequestStatus Client::setDeviceColor( const Device & device, Color color ) noexcept
 {
@@ -561,7 +583,6 @@ RequestStatus Client::setDeviceColor( const Device & device, Color color ) noexc
 	)
 }
 
-
 RequestStatus Client::setZoneColor( const Zone & zone, Color color ) noexcept
 {
 	try {
@@ -571,7 +592,6 @@ RequestStatus Client::setZoneColor( const Zone & zone, Color color ) noexcept
 	)
 }
 
-
 RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize ) noexcept
 {
 	try {
@@ -580,7 +600,6 @@ RequestStatus Client::setZoneSize( const Zone & zone, uint32_t newSize ) noexcep
 		return RequestStatus::UnexpectedError;
 	)
 }
-
 
 RequestStatus Client::setLEDColor( const LED & led, Color color ) noexcept
 {
@@ -694,15 +713,21 @@ bool Client::isDeviceListOutdatedX()
 	}
 }
 
+void Client::switchToCustomModeX( const Device & device )
+{
+	RequestStatus status = _switchToCustomMode( device );
+	requestStatusToException( status );
+}
+
 void Client::changeModeX( const Device & device, const Mode & mode )
 {
 	RequestStatus status = _changeMode( device, mode );
 	requestStatusToException( status );
 }
 
-void Client::switchToCustomModeX( const Device & device )
+void Client::saveModeX( const Device & device, const Mode & mode )
 {
-	RequestStatus status = _switchToCustomMode( device );
+	RequestStatus status = _saveMode( device, mode );
 	requestStatusToException( status );
 }
 

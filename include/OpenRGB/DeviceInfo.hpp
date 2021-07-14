@@ -192,6 +192,7 @@ class Mode
 	friend struct protocol;
 	friend class Device;
 	friend struct UpdateMode;
+	friend struct SaveMode;
 	Mode();
 	size_t calcSize( uint32_t protocolVersion ) const noexcept;
 	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;

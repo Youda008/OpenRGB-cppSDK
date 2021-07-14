@@ -105,6 +105,7 @@ enum class MessageType : uint32_t
 	RGBCONTROLLER_UPDATESINGLELED  = 1052,
 	RGBCONTROLLER_SETCUSTOMMODE    = 1100,
 	RGBCONTROLLER_UPDATEMODE       = 1101,
+	RGBCONTROLLER_SAVEMODE         = 1102,
 };
 const char * enumString( MessageType ) noexcept;
 
@@ -530,6 +531,36 @@ struct UpdateMode
 
 	UpdateMode() noexcept {}
 	UpdateMode( uint32_t deviceIdx, uint32_t modeIdx, const Mode & mode, uint32_t protocolVersion )
+	:
+		header(
+			/*message_type*/ thisType,
+			/*device_idx*/   deviceIdx
+		),
+		mode_idx( modeIdx ),
+		mode_desc( mode )
+	{
+		header.message_size = data_size = calcDataSize( protocolVersion );
+	}
+
+	uint32_t calcDataSize( uint32_t protocolVersion ) const noexcept;
+	void serialize( own::BinaryOutputStream & stream, uint32_t protocolVersion ) const;
+	bool deserializeBody( own::BinaryInputStream & stream, uint32_t protocolVersion ) noexcept;
+};
+
+/// TODO
+struct SaveMode
+{
+	Header  header;
+	uint32_t  data_size;
+	uint32_t  mode_idx;
+	Mode      mode_desc;
+
+ // support for templated processing
+
+	static constexpr MessageType thisType = MessageType::RGBCONTROLLER_SAVEMODE;
+
+	SaveMode() noexcept {}
+	SaveMode( uint32_t deviceIdx, uint32_t modeIdx, const Mode & mode, uint32_t protocolVersion )
 	:
 		header(
 			/*message_type*/ thisType,

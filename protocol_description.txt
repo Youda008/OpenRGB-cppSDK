@@ -24,6 +24,7 @@ enum MessageType : uint32
 	RGBCONTROLLER_UPDATESINGLELED  = 1052,
 	RGBCONTROLLER_SETCUSTOMMODE    = 1100,
 	RGBCONTROLLER_UPDATEMODE       = 1101,
+	RGBCONTROLLER_SAVEMODE         = 1102,
 }
 
 // Every protocol message starts with this.
@@ -250,6 +251,19 @@ message UpdateMode
 	Header   header = {
 		device_idx = <selected_device>,
 		message_type = RGBCONTROLLER_UPDATEMODE,
+		message_size = <dynamic>
+	};
+	uint32   data_size;
+	uint32   mode_idx;
+	ModeDescription mode_desc;
+}
+
+// TODO
+message SaveMode
+{
+	Header   header = {
+		device_idx = <selected_device>,
+		message_type = RGBCONTROLLER_SAVEMODE,
 		message_size = <dynamic>
 	};
 	uint32   data_size;

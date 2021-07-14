@@ -241,8 +241,9 @@ static bool help( const ArgList & )
 	cout << "  setdevcolor <device_id> <color>              # orgb::Client::setDeviceColor\n";
 	cout << "  setzonecolor <device_id> <zone_id> <color>   # orgb::Client::setZoneColor\n";
 	cout << "  setledcolor <device_id> <led_id> <color>     # orgb::Client::setLEDColor\n";
-	cout << "  changemode <device_id> <mode>                # orgb::Client::changeMode\n";
 	cout << "  custommode <device_id>                       # orgb::Client::switchToCustomMode\n";
+	cout << "  changemode <device_id> <mode>                # orgb::Client::changeMode\n";
+	cout << "  savemode <device_id> <mode>                  # orgb::Client::saveMode\n";
 	cout << "  setzonesize <device_id> <zone_id> <size>     # orgb::Client::setZoneSize\n";
 	cout << '\n';
 	cout.flush();
@@ -445,6 +446,35 @@ static bool setledcolor( const ArgList & args )
 	}
 }
 
+static bool custommode( const ArgList & args )
+{
+	PartID deviceID = args.getNext< PartID >();
+
+	if (listResult.status != RequestStatus::Success)
+	{
+		cout << "Device list not initialized, run 'list' first" << endl;
+		return false;
+	}
+
+	const Device * device = findDevice( listResult.devices, deviceID );
+	if (!device)
+		return false;
+
+	cout << "Swithing device " << deviceID.str << " to custom mode" << endl;
+	RequestStatus status = client.switchToCustomMode( *device );
+
+	if (status == RequestStatus::Success)
+	{
+		cout << " -> success" << endl;
+		return true;
+	}
+	else
+	{
+		cout << " -> failed: " << enumString( status ) << endl;
+		return false;
+	}
+}
+
 static bool changemode( const ArgList & args )
 {
 	PartID deviceID = args.getNext< PartID >();
@@ -479,9 +509,10 @@ static bool changemode( const ArgList & args )
 	}
 }
 
-static bool custommode( const ArgList & args )
+static bool savemode( const ArgList & args )
 {
 	PartID deviceID = args.getNext< PartID >();
+	PartID modeID = args.getNext< PartID >();
 
 	if (listResult.status != RequestStatus::Success)
 	{
@@ -493,8 +524,12 @@ static bool custommode( const ArgList & args )
 	if (!device)
 		return false;
 
-	cout << "Swithing device " << deviceID.str << " to custom mode" << endl;
-	RequestStatus status = client.switchToCustomMode( *device );
+	const Mode * mode = findMode( *device, modeID );
+	if (!mode)
+		return false;
+
+	cout << "Saving mode of device " << deviceID.str << " to " << modeID.str << endl;
+	RequestStatus status = client.saveMode( *device, *mode );
 
 	if (status == RequestStatus::Success)
 	{
@@ -659,10 +694,12 @@ static void executeCommand( const Command & command, const ArgList & args )
 		handler = setzonecolor;
 	else if (command.name == "setledcolor")
 		handler = setledcolor;
-	else if (command.name == "changemode")
-		handler = changemode;
 	else if (command.name == "custommode")
 		handler = custommode;
+	else if (command.name == "changemode")
+		handler = changemode;
+	else if (command.name == "savemode")
+		handler = savemode;
 	else if (command.name == "setzonesize")
 		handler = setzonesize;
 	else

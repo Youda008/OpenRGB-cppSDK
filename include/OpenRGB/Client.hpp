@@ -146,15 +146,19 @@ class Client
 	/** In case it has been changed, you need to call requestDeviceList() again. */
 	UpdateStatus checkForDeviceUpdates() noexcept;
 
+	/// Switches the device to a directly controlled color mode.
+	/** This seems unsupported by many RGB controllers, and it's probably deprecated in the OpenRGB app. */
+	RequestStatus switchToCustomMode( const Device & device ) noexcept;
+
 	/// Updates the parameters of a mode and also switches the device to this mode.
 	/** If you just want to switch the mode, use one of the Mode objects received from the server via requestDeviceList().
 	  * If you want to change the parameters of a mode, create a copy of the Mode object, change the parameters of the copy
 	  * and pass the copy to this function. */
 	RequestStatus changeMode( const Device & device, const Mode & mode ) noexcept;
 
-	/// Switches the device to a directly controlled color mode.
-	/** This seems unsupported by many RGB controllers, and it's probably deprecated in the OpenRGB app. */
-	RequestStatus switchToCustomMode( const Device & device ) noexcept;
+	/// I don't know
+	/** Ask the OpenRGB devs. */
+	RequestStatus saveMode( const Device & device, const Mode & mode ) noexcept;
 
 	/// Sets one unified color for the whole device.
 	RequestStatus setDeviceColor( const Device & device, Color color ) noexcept;
@@ -209,17 +213,23 @@ class Client
 	  * \throws SystemError when there was an error inside the operating system */
 	bool isDeviceListOutdatedX();
 
+	/// Exception-throwing variant of switchToCustomMode( const Device & ).
+	/** \throws UserError when the client is not connected
+	  * \throws ConnectionError when a request couldn't be sent
+	  * \throws SystemError when there was an error inside the operating system */
+	void switchToCustomModeX( const Device & device );
+
 	/// Exception-throwing variant of changeMode( const Device &, const Mode & ).
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
 	void changeModeX( const Device & device, const Mode & mode );
 
-	/// Exception-throwing variant of switchToCustomMode( const Device & ).
+	/// Exception-throwing variant of saveMode( const Device &, const Mode & ).
 	/** \throws UserError when the client is not connected
 	  * \throws ConnectionError when a request couldn't be sent
 	  * \throws SystemError when there was an error inside the operating system */
-	void switchToCustomModeX( const Device & device );
+	void saveModeX( const Device & device, const Mode & mode );
 
 	/// Exception-throwing variant of setDeviceColor().
 	/** \throws UserError when the client is not connected
@@ -265,8 +275,9 @@ class Client
 	DeviceCountResult _requestDeviceCount();
 	DeviceInfoResult _requestDeviceInfo( uint32_t deviceIdx );
 	UpdateStatus _checkForDeviceUpdates() noexcept;
-	RequestStatus _changeMode( const Device & device, const Mode & mode );
 	RequestStatus _switchToCustomMode( const Device & device );
+	RequestStatus _changeMode( const Device & device, const Mode & mode );
+	RequestStatus _saveMode( const Device & device, const Mode & mode );
 	RequestStatus _setDeviceColor( const Device & device, Color color );
 	RequestStatus _setZoneColor( const Zone & zone, Color color );
 	RequestStatus _setZoneSize( const Zone & zone, uint32_t newSize );
