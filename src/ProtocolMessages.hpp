@@ -551,7 +551,7 @@ struct UpdateMode
 	bool deserializeBody( own::BinaryInputStream & stream, uint32_t protocolVersion ) noexcept;
 };
 
-/// TODO
+/// Saves the mode parameters into the device memory to make it persistent.
 struct SaveMode
 {
 	Header  header;

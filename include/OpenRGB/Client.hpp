@@ -163,8 +163,8 @@ class Client
 	  * and pass the copy to this function. */
 	RequestStatus changeMode( const Device & device, const Mode & mode ) noexcept;
 
-	/// I don't know
-	/** Ask the OpenRGB devs. */
+	/// Saves the mode parameters into the device memory to make it persistent??
+	/** I don't really know what this does, ask the OpenRGB devs. */
 	RequestStatus saveMode( const Device & device, const Mode & mode ) noexcept;
 
 	/// Sets one unified color for the whole device.

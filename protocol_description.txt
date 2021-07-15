@@ -259,7 +259,7 @@ message UpdateMode
 	ModeDescription mode_desc;
 }
 
-// TODO
+// Saves the mode parameters into the device memory to make it persistent.
 message SaveMode
 {
 	Header   header = {
