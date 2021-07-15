@@ -205,7 +205,7 @@ message UpdateLEDs
 		message_type = RGBCONTROLLER_UPDATELEDS,
 		message_size = <dynamic>
 	};
-	uint32   data_size;
+	uint32   data_size = header.message_size;  // yes, this value is really there twice, no idea why
 	uint16   num_colors;
 	Color[]  colors;
 }
@@ -218,7 +218,7 @@ message UpdateZoneLEDs
 		message_type = RGBCONTROLLER_UPDATEZONELEDS,
 		message_size = <dynamic>
 	};
-	uint32   data_size;
+	uint32   data_size = header.message_size;  // yes, this value is really there twice, no idea why
 	uint32   zone_idx;
 	uint16   num_colors;
 	Color[]  colors;
@@ -254,7 +254,7 @@ message UpdateMode
 		message_type = RGBCONTROLLER_UPDATEMODE,
 		message_size = <dynamic>
 	};
-	uint32   data_size;
+	uint32   data_size = header.message_size;  // yes, this value is really there twice, no idea why
 	uint32   mode_idx;
 	ModeDescription mode_desc;
 }
@@ -267,7 +267,7 @@ message SaveMode
 		message_type = RGBCONTROLLER_SAVEMODE,
 		message_size = <dynamic>
 	};
-	uint32   data_size;
+	uint32   data_size = header.message_size;  // yes, this value is really there twice, no idea why
 	uint32   mode_idx;
 	ModeDescription mode_desc;
 }
@@ -288,9 +288,9 @@ message ReplyProfileList
 	Header   header = {
 		device_idx = 0,
 		message_type = REQUEST_PROFILE_LIST,
-		message_size = 0
+		message_size = <dynamic>
 	};
-	uint32   data_size;
+	uint32   data_size = header.message_size;  // yes, this value is really there twice, no idea why
 	uint16   num_profiles;
 	ProfileName[] profiles;
 };
@@ -301,9 +301,9 @@ message RequestSaveProfile
 	Header   header = {
 		device_idx = 0,
 		message_type = REQUEST_SAVE_PROFILE,
-		message_size = length(profileName)
+		message_size = length(profileName) + 1
 	};
-	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+	char[]   profileName;
 };
 
 /// Applies an existing profile.
@@ -312,9 +312,9 @@ message RequestLoadProfile
 	Header   header = {
 		device_idx = 0,
 		message_type = REQUEST_LOAD_PROFILE,
-		message_size = length(profileName)
+		message_size = length(profileName) + 1
 	};
-	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+	char[]   profileName;
 };
 
 // Removes an existing profile.
@@ -323,9 +323,9 @@ message RequestDeleteProfile
 	Header   header = {
 		device_idx = 0,
 		message_type = REQUEST_DELETE_PROFILE,
-		message_size = length(profileName)
+		message_size = length(profileName) + 1
 	};
-	char[]   profileName;  // this string unlike others is not null-terminated, read only message_size bytes
+	char[]   profileName;
 };
 
 section DeviceDescription
@@ -397,8 +397,8 @@ section LEDDescription
 
 section ProfileName
 {
-	uint16   name_length;  // this is a length without the terminating '\0'
-	char[]   name;         // this string unlike others is not null-terminated, read only name_length bytes
+	uint16   name_length;
+	char[]   name;
 }
 
 section Color

@@ -609,7 +609,7 @@ bool Device::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, 
 	// and allow him to change only the parameters that are meant to be changed.
 
 	// fill in our metadata
-	unconst( this->idx ) = idx;
+	unconst( idx ) = deviceIdx;
 
 	stream >> unconst( type );
 	protocol::readString( stream, unconst( name ) );

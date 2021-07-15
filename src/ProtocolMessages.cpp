@@ -156,7 +156,7 @@ void ReplyControllerData::serialize( BinaryOutputStream & stream, uint32_t proto
 bool ReplyControllerData::deserializeBody( BinaryInputStream & stream, uint32_t protocolVersion ) noexcept
 {
 	stream >> data_size;
-	device_desc.deserialize( stream, header.device_idx, protocolVersion );
+	device_desc.deserialize( stream, protocolVersion, header.device_idx );
 
 	return !stream.hasFailed();
 }
@@ -420,18 +420,7 @@ void ReplyProfileList::serialize( own::BinaryOutputStream & stream, uint32_t /*p
 bool ReplyProfileList::deserializeBody( own::BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
 	stream >> data_size;
-	// Unfortunatelly, these strings break the consistency with the rest by not including the '\0' so it must be read manually.
-	uint16_t num_profiles = 0;
-	stream >> num_profiles;
-	profiles.resize( num_profiles );
-	for (uint16_t i = 0; i < num_profiles; ++i)
-	{
-		uint16_t name_len = 0;
-		stream >> name_len;
-		stream.readString( profiles[i], name_len );
-		if (stream.hasFailed())
-			return false;
-	}
+	protocol::readArray( stream, profiles );
 
 	return !stream.hasFailed();
 }
@@ -442,7 +431,7 @@ uint32_t RequestSaveProfile::calcDataSize( uint32_t /*protocolVersion*/ ) const 
 {
 	size_t size = 0;
 
-	size += profileName.size();
+	size += profileName.size() + 1;
 
 	return uint32_t( size );
 }
@@ -451,12 +440,12 @@ void RequestSaveProfile::serialize( BinaryOutputStream & stream, uint32_t /*prot
 {
 	header.serialize( stream );
 
-	stream.writeString( profileName );
+	stream.writeString0( profileName );
 }
 
 bool RequestSaveProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
-	stream.readString( profileName, header.message_size );
+	stream.readString0( profileName );
 
 	return !stream.hasFailed();
 }
@@ -467,7 +456,7 @@ uint32_t RequestLoadProfile::calcDataSize( uint32_t /*protocolVersion*/ ) const 
 {
 	size_t size = 0;
 
-	size += profileName.size();
+	size += profileName.size() + 1;
 
 	return uint32_t( size );
 }
@@ -476,12 +465,12 @@ void RequestLoadProfile::serialize( BinaryOutputStream & stream, uint32_t /*prot
 {
 	header.serialize( stream );
 
-	stream.writeString( profileName );
+	stream.writeString0( profileName );
 }
 
 bool RequestLoadProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
-	stream.readString( profileName, header.message_size );
+	stream.readString0( profileName );
 
 	return !stream.hasFailed();
 }
@@ -492,7 +481,7 @@ uint32_t RequestDeleteProfile::calcDataSize( uint32_t /*protocolVersion*/ ) cons
 {
 	size_t size = 0;
 
-	size += profileName.size();
+	size += profileName.size() + 1;
 
 	return uint32_t( size );
 }
@@ -501,12 +490,12 @@ void RequestDeleteProfile::serialize( BinaryOutputStream & stream, uint32_t /*pr
 {
 	header.serialize( stream );
 
-	stream.writeString( profileName );
+	stream.writeString0( profileName );
 }
 
 bool RequestDeleteProfile::deserializeBody( BinaryInputStream & stream, uint32_t /*protocolVersion*/ ) noexcept
 {
-	stream.readString( profileName, header.message_size );
+	stream.readString0( profileName );
 
 	return !stream.hasFailed();
 }

@@ -487,14 +487,12 @@ REGISTER_COMMAND( listprofiles, "", "orgb::Client::requestProfileList - lists al
 		return false;
 	}
 
-	cout << '\n';
 	cout << "profiles = [\n";
 	for (const std::string & profile : listResult.profiles)
 	{
-		cout << "    " << profile << '\n';
+		cout << "    \"" << profile << "\"\n";
 	}
 	cout << "]\n";
-	cout << '\n';
 	cout.flush();
 
 	return true;

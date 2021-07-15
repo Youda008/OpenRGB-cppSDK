@@ -212,7 +212,10 @@ bool Client::_disconnect() noexcept
 	else if (status == SocketError::NotConnected)
 		return false;
 	else
-		critical_error("Unexpected disconnect status.");  // this should never happen, but if it does we want to know
+		// This can happen if the client doesn't respond to a server's FIN packet by calling close() in time and the
+		// server just forcibly ends the connection producing a network error.
+		// In this case, the user doesn't need to know because he wanted the socket closed and that's what's gonna happen.255
+		return true;
 }
 
 bool Client::_setTimeout( std::chrono::milliseconds timeout ) noexcept

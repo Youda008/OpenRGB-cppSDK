@@ -46,7 +46,8 @@ struct protocol
 	{
 		uint16_t size = 0;
 		stream >> size;
-		stream.readString( str, size > 0 ? size - 1 : 0 );
+		stream.readString( str, size > 0 ? size - 1 : 0 );  // don't rely on the '\0' terminator, read by the size
+		stream.skip(1);  // move reading pointer past the expected '\0'
 		return !stream.hasFailed() && strlen( str.c_str() ) + 1 == size;
 	}
 

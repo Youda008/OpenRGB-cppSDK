@@ -85,15 +85,13 @@ bool Color::fromString( const std::string & str ) noexcept
 
 BinaryOutputStream & operator<<( BinaryOutputStream & stream, Color color )
 {
-	uint8_t padding = 0;
-	stream << color.r << color.g << color.b << padding;
+	stream << color.r << color.g << color.b << color.padding;
 	return stream;
 }
 
 BinaryInputStream & operator>>( BinaryInputStream & stream, Color & color ) noexcept
 {
-	uint8_t padding;
-	stream >> color.r >> color.g >> color.b >> padding;
+	stream >> color.r >> color.g >> color.b >> color.padding;
 	return stream;
 }
 
@@ -101,7 +99,7 @@ std::ostream & operator<<( std::ostream & os, Color color ) noexcept
 {
 	std::ios_base::fmtflags origFlags( os.flags() );
 	os << std::uppercase << std::hex << std::setfill('0');
-	os << std::setw(2) << uint(color.r) << std::setw(2) << uint(color.g) << std::setw(2) << uint(color.b);
+	os << '#' << std::setw(2) << uint(color.r) << std::setw(2) << uint(color.g) << std::setw(2) << uint(color.b);
 	os.flags( origFlags );
 	return os;
 }
@@ -119,7 +117,7 @@ std::istream & operator>>( std::istream & is, Color & color ) noexcept
 
 void print( Color color )
 {
-	printf( "%02X%02X%02X", uint(color.r), uint(color.g), uint(color.b) );
+	printf( "#%02X%02X%02X", uint(color.r), uint(color.g), uint(color.b) );
 }
 
 
