@@ -9,4 +9,8 @@ file(GLOB SOURCE_FILES
 )
 
 add_executable(orgbcli ${SOURCE_FILES})
-target_link_libraries(orgbcli orgbsdk ws2_32)
+if (WIN32)
+	target_link_libraries(orgbcli orgbsdk ws2_32)
+else()
+	target_link_libraries(orgbcli orgbsdk)
+endif()
