@@ -9,7 +9,7 @@ It can be built without exception support and should work on any CPU architectur
 
 Include the library declarations.
 (optionally declare what elements you will be using, for shorter identifiers)
-```
+```cpp
 #include "OpenRGB/Client.hpp"
 using orgb::ConnectStatus;
 using orgb::DeviceListResult;
@@ -18,7 +18,7 @@ using orgb::DeviceType;
 ```
 
 Create the client and connect to an OpenRGB server.
-```
+```cpp
 orgb::Client client( "My OpenRGB Client" );
 
 ConnectStatus status = client.connect( "127.0.0.1" );  // you can also use Windows computer name
@@ -31,7 +31,7 @@ if (status != ConnectStatus::Success)
 ```
 
 Download a list of devices and their settings.
-```
+```cpp
 DeviceListResult result = client.requestDeviceList();
 if (result.status != RequestStatus::Success)
 {
@@ -42,7 +42,7 @@ if (result.status != RequestStatus::Success)
 ```
 
 Find the device you want to control. You can search by type or name.
-```
+```cpp
 const Device * cpuCooler = result.devices.find( DeviceType::Cooler );
 if (!cpuCooler)
 {
@@ -53,7 +53,7 @@ if (!cpuCooler)
 
 Some devices don't accept manual color changes until you set them to "Direct" mode.
 This is how you do it.
-```
+```cpp
 const Mode * directMode = cpuCooler->findMode( "Direct" );
 if (!directMode)
 {
@@ -64,16 +64,16 @@ client.changeMode( *cpuCooler, *directMode );
 ```
 
 Finally, set any color you want.
-```
+```cpp
 client.setDeviceColor( *cpuCooler, Color::Red );
 ```
 
 You can create any color by using the `Color` constructor.
-```
+```cpp
 Color customColor( 255, 128, 64 );
 ```
 It is also possible to create color from strings like "black", "red", "cyan", ... and from hex notation in format "#1267AB" by using method `fromString`
-```
+```cpp
 Color color;
 if (!color.fromString( input ))
     fprintf( stderr, "Invalid input.\n" );
@@ -83,13 +83,13 @@ if (!color.fromString( input ))
 Between any color or mode change requests there should be at least few millisecond delay. Current implementation of OpenRGB is unreliable and bugs itself when you send it multiple requests at once.
 
 Add this between any two calls to client.
-```
+```cpp
 std::this_thread::sleep_for( milliseconds( 50 ) );
 ```
 
 #### Exceptions vs return values
 If you don't like the old-school way of checking return values, there are exception-throwing variants for each method of the client (they are postfixed with `X`). The code can be then written in slightly simplier way.
-```
+```cpp
 try
 {
     orgb::Client client( "My OpenRGB Client" );
