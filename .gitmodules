@@ -1,6 +1,6 @@
 [submodule "shared/CppUtils-Essential"]
 	path = shared/CppUtils-Essential
-	url = git@github.com:Youda008/CppUtils-Essential.git
+	url = https://github.com/Youda008/CppUtils-Essential.git
 [submodule "shared/CppUtils-Network"]
 	path = shared/CppUtils-Network
-	url = git@github.com:Youda008/CppUtils-Network.git
+	url = https://github.com/Youda008/CppUtils-Network.git
