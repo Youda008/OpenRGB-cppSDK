@@ -16,19 +16,19 @@ release:CONFIG += static
 QMAKE_CXXFLAGS += -Wno-old-style-cast -Wno-comment
 
 debug {
-	DEFINES += DEBUG SAFETY_CHECKS
+	DEFINES += DEBUG
 }
 release {
-	#DEFINES += CRITICALS_CATCHABLE
+	DEFINES += CRITICALS_CATCHABLE
 }
 
 SOURCES += \
+        shared/CppUtils-Essential/BinaryStream.cpp \
         shared/CppUtils-Essential/ContainerUtils.cpp \
         shared/CppUtils-Essential/CriticalError.cpp \
         shared/CppUtils-Essential/LangUtils.cpp \
         shared/CppUtils-Essential/StreamUtils.cpp \
         shared/CppUtils-Essential/StringUtils.cpp \
-        shared/CppUtils-Network/BinaryStream.cpp \
         shared/CppUtils-Network/HostInfo.cpp \
         shared/CppUtils-Network/NetAddress.cpp \
         shared/CppUtils-Network/Socket.cpp \
@@ -46,15 +46,18 @@ HEADERS += \
         include/OpenRGB/Exceptions.hpp \
         include/OpenRGB/SystemErrorType.hpp \
         shared/CppUtils-Essential/Assert.hpp \
+        shared/CppUtils-Essential/BinaryStream.hpp \
         shared/CppUtils-Essential/ContainerUtils.hpp \
         shared/CppUtils-Essential/CriticalError.hpp \
+        shared/CppUtils-Essential/Endianity.hpp \
         shared/CppUtils-Essential/Essential.hpp \
         shared/CppUtils-Essential/LangUtils.hpp \
+        shared/CppUtils-Essential/MathUtils.hpp \
         shared/CppUtils-Essential/Safety.hpp \
         shared/CppUtils-Essential/Span.hpp \
         shared/CppUtils-Essential/StreamUtils.hpp \
         shared/CppUtils-Essential/StringUtils.hpp \
-        shared/CppUtils-Network/BinaryStream.hpp \
+        shared/CppUtils-Essential/TypeTraits.hpp \
         shared/CppUtils-Network/HostInfo.hpp \
         shared/CppUtils-Network/NetAddress.hpp \
         shared/CppUtils-Network/Socket.hpp \

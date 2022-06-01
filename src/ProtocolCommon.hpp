@@ -48,13 +48,13 @@ struct protocol
 		stream >> size;
 		stream.readString( str, size > 0 ? size - 1 : 0 );  // don't rely on the '\0' terminator, read by the size
 		stream.skip(1);  // move reading pointer past the expected '\0'
-		return !stream.hasFailed() && strlen( str.c_str() ) + 1 == size;
+		return !stream.failed() && strlen( str.c_str() ) + 1 == size;
 	}
 
 
 	//-- OpenRGB arrays ------------------------------------------------------------------------------------------------
 
-	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( !std::is_trivial<Type>::value ) >
 	static size_t sizeofVectorOfDynamicObjects( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
 		size_t size = 0;
@@ -75,7 +75,7 @@ struct protocol
 		return size;
 	}
 
-	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( std::is_trivial<Type>::value ) >
 	static size_t sizeofArray( const std::vector< Type > & vec ) noexcept
 	{
 		return 2 + own::sizeofVector( vec );
@@ -86,13 +86,13 @@ struct protocol
 		return 2 + sizeofVectorOfStrings( vec );
 	}
 
-	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( !std::is_trivial<Type>::value ) >
 	static size_t sizeofArray( const std::vector< Type > & vec, uint32_t protocolVersion ) noexcept
 	{
 		return 2 + sizeofVectorOfDynamicObjects( vec, protocolVersion );
 	}
 
-	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( std::is_trivial<Type>::value ) >
 	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > & vec )
 	{
 		stream << uint16_t(vec.size());
@@ -111,7 +111,7 @@ struct protocol
 		}
 	}
 
-	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( !std::is_trivial<Type>::value ) >
 	static void writeArray( own::BinaryOutputStream & stream, const std::vector< Type > & vec, uint32_t protocolVersion )
 	{
 		stream << uint16_t(vec.size());
@@ -121,7 +121,7 @@ struct protocol
 		}
 	}
 
-	template< typename Type, typename std::enable_if< std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( std::is_trivial<Type>::value ) >
 	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec ) noexcept
 	{
 		uint16_t size = 0;
@@ -130,10 +130,10 @@ struct protocol
 		for (uint16_t i = 0; i < size; ++i)
 		{
 			stream >> vec[i];
-			if (stream.hasFailed())
+			if (stream.failed())
 				return false;
 		}
-		return !stream.hasFailed();
+		return !stream.failed();
 	}
 
 	static bool readArray( own::BinaryInputStream & stream, std::vector< std::string > & vec ) noexcept
@@ -144,13 +144,13 @@ struct protocol
 		for (uint16_t i = 0; i < size; ++i)
 		{
 			readString( stream, vec[i] );
-			if (stream.hasFailed())
+			if (stream.failed())
 				return false;
 		}
-		return !stream.hasFailed();
+		return !stream.failed();
 	}
 
-	template< typename Type, typename std::enable_if< !std::is_trivial<Type>::value, int >::type = 0 >
+	template< typename Type, REQUIRES( !std::is_trivial<Type>::value ) >
 	static bool readArray( own::BinaryInputStream & stream, std::vector< Type > & vec, uint32_t protocolVersion, uint32_t parentIdx ) noexcept
 	{
 		uint16_t size = 0;
@@ -163,7 +163,7 @@ struct protocol
 				return false;
 			vec.emplace_back( move(obj) );
 		}
-		return !stream.hasFailed();
+		return !stream.failed();
 	}
 
 };

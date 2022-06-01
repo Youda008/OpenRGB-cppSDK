@@ -76,7 +76,7 @@ static bool isValidMessageType( MessageType type )
 
 void Header::serialize( BinaryOutputStream & stream ) const
 {
-	stream << magic[0] << magic[1] << magic[2] << magic[3];
+	stream << magic;
 	stream << device_idx;
 	stream << message_type;
 	stream << message_size;
@@ -84,7 +84,7 @@ void Header::serialize( BinaryOutputStream & stream ) const
 
 bool Header::deserialize( BinaryInputStream & stream ) noexcept
 {
-	stream >> magic[0] >> magic[1] >> magic[2] >> magic[3];
+	stream >> magic;
 	stream >> device_idx;
 	stream >> message_type;
 	stream >> message_size;
@@ -94,7 +94,7 @@ bool Header::deserialize( BinaryInputStream & stream ) noexcept
 	if (!isValidMessageType( message_type ))
 		stream.setFailed();
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 
@@ -114,7 +114,7 @@ bool ReplyControllerCount::deserializeBody( BinaryInputStream & stream, uint32_t
 {
 	stream >> count;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ bool RequestControllerData::deserializeBody( own::BinaryInputStream & stream, ui
 {
 	stream >> protocolVersion;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ bool ReplyControllerData::deserializeBody( BinaryInputStream & stream, uint32_t 
 	stream >> data_size;
 	device_desc.deserialize( stream, protocolVersion, header.device_idx );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ bool RequestProtocolVersion::deserializeBody( BinaryInputStream & stream, uint32
 {
 	stream >> clientVersion;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ bool ReplyProtocolVersion::deserializeBody( BinaryInputStream & stream, uint32_t
 {
 	stream >> serverVersion;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ bool SetClientName::deserializeBody( BinaryInputStream & stream, uint32_t /*prot
 {
 	stream.readString0( name );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ bool ResizeZone::deserializeBody( BinaryInputStream & stream, uint32_t /*protoco
 	stream >> zone_idx;
 	stream >> new_size;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -261,7 +261,7 @@ bool UpdateLEDs::deserializeBody( BinaryInputStream & stream, uint32_t /*protoco
 	stream >> data_size;
 	protocol::readArray( stream, colors );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ bool UpdateZoneLEDs::deserializeBody( BinaryInputStream & stream, uint32_t /*pro
 	stream >> zone_idx;
 	protocol::readArray( stream, colors );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -320,7 +320,7 @@ bool UpdateSingleLED::deserializeBody( BinaryInputStream & stream, uint32_t /*pr
 	stream >> led_idx;
 	stream >> color;
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ bool UpdateMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolV
 	stream >> mode_idx;
 	mode_desc.deserialize( stream, mode_idx, header.device_idx, protocolVersion );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 
@@ -383,7 +383,7 @@ bool SaveMode::deserializeBody( BinaryInputStream & stream, uint32_t protocolVer
 	stream >> mode_idx;
 	mode_desc.deserialize( stream, mode_idx, header.device_idx, protocolVersion );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -422,7 +422,7 @@ bool ReplyProfileList::deserializeBody( own::BinaryInputStream & stream, uint32_
 	stream >> data_size;
 	protocol::readArray( stream, profiles );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -447,7 +447,7 @@ bool RequestSaveProfile::deserializeBody( BinaryInputStream & stream, uint32_t /
 {
 	stream.readString0( profileName );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -472,7 +472,7 @@ bool RequestLoadProfile::deserializeBody( BinaryInputStream & stream, uint32_t /
 {
 	stream.readString0( profileName );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -497,7 +497,7 @@ bool RequestDeleteProfile::deserializeBody( BinaryInputStream & stream, uint32_t
 {
 	stream.readString0( profileName );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 

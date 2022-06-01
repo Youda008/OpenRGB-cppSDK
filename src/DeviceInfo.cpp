@@ -49,7 +49,7 @@ const char * enumString( DeviceType type ) noexcept
 		"Virtual",
 		"Unknown",
 	};
-	static_assert( size_t(DeviceType::Unknown) + 1 == own::size(DeviceTypeStr), "update the DeviceTypeStr" );
+	static_assert( size_t(DeviceType::Unknown) + 1 == fut::size(DeviceTypeStr), "update the DeviceTypeStr" );
 
 	// Collapse everything else than known classes to Unknown
 	// in case the server adds some classes without increasing protocol version.
@@ -105,7 +105,7 @@ const char * enumString( Direction dir ) noexcept
 		"Horizontal",
 		"Vertical",
 	};
-	static_assert( size_t(Direction::Vertical) + 1 == own::size(DirectionStr), "update the DirectionStr" );
+	static_assert( size_t(Direction::Vertical) + 1 == fut::size(DirectionStr), "update the DirectionStr" );
 
 	if (size_t( dir ) <= size_t( Direction::Vertical ))
 		return DirectionStr[ size_t( dir ) ];
@@ -122,7 +122,7 @@ const char * enumString( ColorMode mode ) noexcept
 		"ModeSpecific",
 		"Random",
 	};
-	static_assert( size_t(ColorMode::Random) + 1 == own::size(ColorModeStr), "update the ColorModeStr" );
+	static_assert( size_t(ColorMode::Random) + 1 == fut::size(ColorModeStr), "update the ColorModeStr" );
 
 	if (size_t( mode ) <= size_t( ColorMode::Random ) )
 		return ColorModeStr[ size_t( mode ) ];
@@ -138,7 +138,7 @@ const char * enumString( ZoneType type ) noexcept
 		"Linear",
 		"Matrix",
 	};
-	static_assert( size_t(ZoneType::Matrix) + 1 == own::size(ZoneTypeStr), "update the ZoneTypeStr" );
+	static_assert( size_t(ZoneType::Matrix) + 1 == fut::size(ZoneTypeStr), "update the ZoneTypeStr" );
 
 	if (size_t( type ) <= size_t( ZoneType::Matrix ))
 		return ZoneTypeStr[ size_t( type ) ];
@@ -238,7 +238,7 @@ bool LED::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/,
 	protocol::readString( stream, unconst( name ) );
 	stream >> unconst( value );
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 void print( const LED & led, unsigned int indentLevel )
@@ -347,7 +347,7 @@ bool Zone::deserialize( BinaryInputStream & stream, uint32_t /*protocolVersion*/
 	if (!isValidZoneType( type ))
 		stream.setFailed();
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 void print( const Zone & zone, unsigned int indentLevel )
@@ -487,7 +487,7 @@ bool Mode::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, ui
 	if (!isValidColorMode( color_mode ))
 		stream.setFailed();
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 void print( const Mode & mode, unsigned int indentLevel )
@@ -638,7 +638,7 @@ bool Device::deserialize( BinaryInputStream & stream, uint32_t protocolVersion, 
 	//if (!isValidDeviceType( type ))
 	//	stream.setFailed();
 
-	return !stream.hasFailed();
+	return !stream.failed();
 }
 
 void print( const Device & device, unsigned int indentLevel )

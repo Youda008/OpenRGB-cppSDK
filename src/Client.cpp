@@ -21,7 +21,7 @@ using own::SocketError;
 using own::getLastError;
 using own::getErrorString;
 #include "LangUtils.hpp"
-using own::make_unique;
+using fut::make_unique;
 #include "ContainerUtils.hpp"
 using own::span;
 using own::make_span;
@@ -58,9 +58,9 @@ const char * enumString( ConnectStatus status ) noexcept
 		"Other system error.",
 		"Internal error of this library. Please create a github issue.",
 	};
-	static_assert( size_t(ConnectStatus::UnexpectedError) + 1 == own::size(ConnectStatusStr), "update the ConnectStatusStr" );
+	static_assert( size_t(ConnectStatus::UnexpectedError) + 1 == fut::size(ConnectStatusStr), "update the ConnectStatusStr" );
 
-	if (size_t(status) < own::size(ConnectStatusStr))
+	if (size_t(status) < fut::size(ConnectStatusStr))
 	{
 		return ConnectStatusStr[ size_t(status) ];
 	}
@@ -83,9 +83,9 @@ const char * enumString( RequestStatus status ) noexcept
 		"The reply from the server is invalid.",
 		"Internal error of this library. Please create a github issue.",
 	};
-	static_assert( size_t(RequestStatus::UnexpectedError) + 1 == own::size(RequestStatusStr), "update the RequestStatusStr" );
+	static_assert( size_t(RequestStatus::UnexpectedError) + 1 == fut::size(RequestStatusStr), "update the RequestStatusStr" );
 
-	if (size_t(status) < own::size(RequestStatusStr))
+	if (size_t(status) < fut::size(RequestStatusStr))
 	{
 		return RequestStatusStr[ size_t(status) ];
 	}
@@ -107,9 +107,9 @@ const char * enumString( UpdateStatus status ) noexcept
 		"Other system error.",
 		"Internal error of this library. Please create a github issue.",
 	};
-	static_assert( size_t(UpdateStatus::UnexpectedError) + 1 == own::size(UpdateStatusStr), "update the UpdateStatusStr" );
+	static_assert( size_t(UpdateStatus::UnexpectedError) + 1 == fut::size(UpdateStatusStr), "update the UpdateStatusStr" );
 
-	if (size_t(status) < own::size(UpdateStatusStr))
+	if (size_t(status) < fut::size(UpdateStatusStr))
 	{
 		return UpdateStatusStr[ size_t(status) ];
 	}
@@ -905,10 +905,10 @@ bool Client::sendMessage( ConstructorArgs ... args )
 
 	// allocate buffer and serialize (header.message_size is calculated in constructor)
 	std::vector< uint8_t > buffer( message.header.size() + message.header.message_size );
-	BinaryOutputStream stream( make_span( buffer ) );
+	BinaryOutputStream stream( buffer );
 	message.serialize( stream, _negotiatedProtocolVersion );
 
-	return _socket->send( make_span( buffer ) ) == SocketError::Success;
+	return _socket->send( buffer ) == SocketError::Success;
 }
 
 template< typename Message >
@@ -920,7 +920,7 @@ Client::RecvResult< Message > Client::awaitMessage() noexcept
 	{
 		// receive header into buffer
 		array< uint8_t, Header::size() > headerBuffer; size_t received;
-		SocketError headerStatus = _socket->receive( make_span( headerBuffer ), received );
+		SocketError headerStatus = _socket->receive( headerBuffer, received );
 		if (headerStatus != SocketError::Success)
 		{
 			if (headerStatus == SocketError::ConnectionClosed)
@@ -933,7 +933,7 @@ Client::RecvResult< Message > Client::awaitMessage() noexcept
 		}
 
 		// parse and validate the header
-		BinaryInputStream stream( make_span( headerBuffer ) );
+		BinaryInputStream stream( headerBuffer );
 		if (!result.message.header.deserialize( stream ))
 		{
 			result.status = RequestStatus::InvalidReply;
@@ -971,7 +971,7 @@ Client::RecvResult< Message > Client::awaitMessage() noexcept
 	}
 
 	// parse and validate the body
-	BinaryInputStream stream( make_span( bodyBuffer ) );
+	BinaryInputStream stream( bodyBuffer );
 	if (!result.message.deserializeBody( stream, _negotiatedProtocolVersion ))
 	{
 		result.status = RequestStatus::InvalidReply;
@@ -1028,7 +1028,7 @@ UpdateStatus Client::checkForUpdateMessageArrival() noexcept
 	// We have some message, so let's check what it is.
 
 	Header header;
-	BinaryInputStream stream( make_span( buffer ) );
+	BinaryInputStream stream( buffer );
 	if (!header.deserialize( stream ) || header.message_type != MessageType::DEVICE_LIST_UPDATED)
 	{
 		// We received something, but something totally different than what we expected.
