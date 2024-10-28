@@ -4,14 +4,14 @@ project(OpenRGB_cppSDK)
 
 include_directories(
 	include
-	shared/CppUtils-Essential
-	shared/CppUtils-Network
+	external/CppUtils-Essential
+	external/CppUtils-Network
 )
 
 file(GLOB SOURCE_FILES
 	"src/*.hpp" "src/*.cpp"
-	"shared/CppUtils-Essential/*.hpp" "shared/CppUtils-Essential/*.cpp"
-	"shared/CppUtils-Network/*.hpp" "shared/CppUtils-Network/*.cpp"
+	"external/CppUtils-Essential/*.hpp" "external/CppUtils-Essential/*.cpp"
+	"external/CppUtils-Network/*.hpp" "external/CppUtils-Network/*.cpp"
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")

@@ -23,16 +23,16 @@ release {
 }
 
 SOURCES += \
-        shared/CppUtils-Essential/BinaryStream.cpp \
-        shared/CppUtils-Essential/ContainerUtils.cpp \
-        shared/CppUtils-Essential/CriticalError.cpp \
-        shared/CppUtils-Essential/LangUtils.cpp \
-        shared/CppUtils-Essential/StreamUtils.cpp \
-        shared/CppUtils-Essential/StringUtils.cpp \
-        shared/CppUtils-Network/HostInfo.cpp \
-        shared/CppUtils-Network/NetAddress.cpp \
-        shared/CppUtils-Network/Socket.cpp \
-        shared/CppUtils-Network/SystemErrorInfo.cpp \
+        external/CppUtils-Essential/BinaryStream.cpp \
+        external/CppUtils-Essential/ContainerUtils.cpp \
+        external/CppUtils-Essential/CriticalError.cpp \
+        external/CppUtils-Essential/LangUtils.cpp \
+        external/CppUtils-Essential/StreamUtils.cpp \
+        external/CppUtils-Essential/StringUtils.cpp \
+        external/CppUtils-Network/HostInfo.cpp \
+        external/CppUtils-Network/NetAddress.cpp \
+        external/CppUtils-Network/Socket.cpp \
+        external/CppUtils-Network/SystemErrorInfo.cpp \
         src/Client.cpp \
         src/Color.cpp \
         src/DeviceInfo.cpp \
@@ -45,23 +45,23 @@ SOURCES += \
 HEADERS += \
         include/OpenRGB/Exceptions.hpp \
         include/OpenRGB/SystemErrorType.hpp \
-        shared/CppUtils-Essential/Assert.hpp \
-        shared/CppUtils-Essential/BinaryStream.hpp \
-        shared/CppUtils-Essential/ContainerUtils.hpp \
-        shared/CppUtils-Essential/CriticalError.hpp \
-        shared/CppUtils-Essential/Endianity.hpp \
-        shared/CppUtils-Essential/Essential.hpp \
-        shared/CppUtils-Essential/LangUtils.hpp \
-        shared/CppUtils-Essential/MathUtils.hpp \
-        shared/CppUtils-Essential/Safety.hpp \
-        shared/CppUtils-Essential/Span.hpp \
-        shared/CppUtils-Essential/StreamUtils.hpp \
-        shared/CppUtils-Essential/StringUtils.hpp \
-        shared/CppUtils-Essential/TypeTraits.hpp \
-        shared/CppUtils-Network/HostInfo.hpp \
-        shared/CppUtils-Network/NetAddress.hpp \
-        shared/CppUtils-Network/Socket.hpp \
-        shared/CppUtils-Network/SystemErrorInfo.hpp \
+        external/CppUtils-Essential/Assert.hpp \
+        external/CppUtils-Essential/BinaryStream.hpp \
+        external/CppUtils-Essential/ContainerUtils.hpp \
+        external/CppUtils-Essential/CriticalError.hpp \
+        external/CppUtils-Essential/Endianity.hpp \
+        external/CppUtils-Essential/Essential.hpp \
+        external/CppUtils-Essential/LangUtils.hpp \
+        external/CppUtils-Essential/MathUtils.hpp \
+        external/CppUtils-Essential/Safety.hpp \
+        external/CppUtils-Essential/Span.hpp \
+        external/CppUtils-Essential/StreamUtils.hpp \
+        external/CppUtils-Essential/StringUtils.hpp \
+        external/CppUtils-Essential/TypeTraits.hpp \
+        external/CppUtils-Network/HostInfo.hpp \
+        external/CppUtils-Network/NetAddress.hpp \
+        external/CppUtils-Network/Socket.hpp \
+        external/CppUtils-Network/SystemErrorInfo.hpp \
         include/OpenRGB/Client.hpp \
         include/OpenRGB/Color.hpp \
         include/OpenRGB/DeviceInfo.hpp \
@@ -73,8 +73,8 @@ DISTFILES += \
 	protocol_description.txt
 
 INCLUDEPATH += include
-INCLUDEPATH += shared/CppUtils-Essential
-INCLUDEPATH += shared/CppUtils-Network
+INCLUDEPATH += external/CppUtils-Essential
+INCLUDEPATH += external/CppUtils-Network
 
 win32 {
 	LIBS += -lws2_32
