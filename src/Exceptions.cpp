@@ -7,13 +7,8 @@
 
 #ifndef NO_EXCEPTIONS
 
-#include "OpenRGB/Exceptions.hpp"
-
-#include "Essential.hpp"
-
-#include "SystemErrorInfo.hpp"
-using own::getLastError;
-using own::getErrorString;
+#include <OpenRGB/Exceptions.hpp>
+#include <CppUtils-Essential/Essential.hpp>
 
 
 namespace orgb {

@@ -1,16 +1,10 @@
-include_directories(
-	../../include
-	../../external/CppUtils-Essential
-)
+add_executable(orgbcli)
 
-file(GLOB SOURCE_FILES
-	"src/*.hpp" "src/*.cpp"
-	"../../external/CppUtils-Essential/*.hpp" "../../external/CppUtils-Essential/*.cpp"
-)
+file(GLOB SrcFiles CONFIGURE_DEPENDS "src/*.hpp" "src/*.cpp")
+target_sources(orgbcli PRIVATE ${SrcFiles})
 
-add_executable(orgbcli ${SOURCE_FILES})
-if (WIN32)
-	target_link_libraries(orgbcli orgbsdk ws2_32)
-else()
-	target_link_libraries(orgbcli orgbsdk)
-endif()
+target_include_directories(orgbcli PRIVATE ${CppEssential_IncludeDirs})
+
+target_link_libraries(orgbcli orgbsdk)
+
+install(TARGETS orgbcli DESTINATION bin)

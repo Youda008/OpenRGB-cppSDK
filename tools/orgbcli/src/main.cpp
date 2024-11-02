@@ -1,11 +1,11 @@
-#include "Essential.hpp"
-
-#include "OpenRGB/Client.hpp"
-using namespace orgb;
+#include <CppUtils-Essential/Essential.hpp>
 
 #include "Commands.hpp"
 
-#include "StreamUtils.hpp"
+#include <OpenRGB/Client.hpp>
+using namespace orgb;
+
+#include <CppUtils-Essential/StreamUtils.hpp>
 
 #include <iostream>
 #include <sstream>

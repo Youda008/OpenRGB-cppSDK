@@ -3,25 +3,24 @@ TARGET = orgbcli
 TEMPLATE = app
 CONFIG += console
 CONFIG += c++11
-CONFIG += static
 CONFIG -= app_bundle
 CONFIG -= qt
+release: CONFIG += static
 
 QMAKE_CXXFLAGS += -Wno-old-style-cast
 
 INCLUDEPATH += ../../include
-INCLUDEPATH += ../../external/CppUtils-Essential
-INCLUDEPATH += ../../external/CppUtils-Network
+INCLUDEPATH += ../../external
 
-LIBS += -L../../../build-windows64-release
-LIBS += -lorgbsdk
-LIBS += -lws2_32
+HEADERS += \
+	src/CommandRegistration.hpp \
+	src/Commands.hpp
 
 SOURCES += \
 	src/CommandRegistration.cpp \
 	src/Commands.cpp \
 	src/main.cpp
 
-HEADERS += \
-	src/CommandRegistration.hpp \
-	src/Commands.hpp
+LIBS += -L"../../../build-windows64-release" -lorgbsdk
+LIBS += -lcppnet -lcppbase
+win32: LIBS += -lws2_32

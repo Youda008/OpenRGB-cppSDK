@@ -9,7 +9,7 @@
 #define OPENRGB_MISC_UTILS_INCLUDED
 
 
-#include "Essential.hpp"
+#include <CppUtils-Essential/Essential.hpp>
 
 #include <iosfwd>
 

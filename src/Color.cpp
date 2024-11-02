@@ -5,15 +5,15 @@
 // Description: Representation of a color
 //======================================================================================================================
 
-#include "OpenRGB/Color.hpp"
-
-#include "Essential.hpp"
+#include <OpenRGB/Color.hpp>
+#include <CppUtils-Essential/Essential.hpp>
 
 #include "MiscUtils.hpp"
-#include "StringUtils.hpp"
-#include "BinaryStream.hpp"
+
+#include <CppUtils-Essential/BinaryStream.hpp>
 using own::BinaryOutputStream;
 using own::BinaryInputStream;
+#include <CppUtils-Essential/StringUtils.hpp>
 
 #include <cstdio>
 #include <iostream>

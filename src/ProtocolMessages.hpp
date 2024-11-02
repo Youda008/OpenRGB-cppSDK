@@ -64,10 +64,10 @@ How to extend an existing message:
 #define OPENRGB_PROTOCOL_MESSAGES_INCLUDED
 
 
-#include "Essential.hpp"
+#include <CppUtils-Essential/Essential.hpp>
 
-#include "OpenRGB/DeviceInfo.hpp"
-#include "OpenRGB/Color.hpp"
+#include <OpenRGB/DeviceInfo.hpp>
+#include <OpenRGB/Color.hpp>
 
 #include <cstdint>
 #include <string>

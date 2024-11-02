@@ -1,13 +1,13 @@
 #include "Commands.hpp"
-
-#include "Essential.hpp"
-#include "LangUtils.hpp"
-#include "StreamUtils.hpp"
-
-#include "OpenRGB/Client.hpp"
-using namespace orgb;
+#include <CppUtils-Essential/Essential.hpp>
 
 #include "CommandRegistration.hpp"
+
+#include <OpenRGB/Client.hpp>
+using namespace orgb;
+
+#include <CppUtils-Essential/StreamUtils.hpp>
+#include <CppUtils-Essential/LangUtils.hpp>
 
 #include <string>
 #include <vector>

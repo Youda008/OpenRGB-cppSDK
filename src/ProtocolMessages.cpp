@@ -8,7 +8,8 @@
 #include "ProtocolMessages.hpp"
 
 #include "ProtocolCommon.hpp"
-#include "BinaryStream.hpp"
+
+#include <CppUtils-Essential/BinaryStream.hpp>
 using own::BinaryOutputStream;
 using own::BinaryInputStream;
 

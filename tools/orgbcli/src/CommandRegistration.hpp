@@ -1,9 +1,9 @@
 #ifndef CLI_CMDREG_INCLUDED
 #define CLI_CMDREG_INCLUDED
 
-#include "Essential.hpp"
+#include <CppUtils-Essential/Essential.hpp>
 
-#include "StringUtils.hpp"  // from_string
+#include <CppUtils-Essential/StringUtils.hpp>  // from_string
 
 #include <string>
 #include <vector>

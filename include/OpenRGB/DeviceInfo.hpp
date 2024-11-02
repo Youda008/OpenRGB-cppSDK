@@ -9,7 +9,7 @@
 #define OPENRGB_DEVICE_INCLUDED
 
 
-#include "OpenRGB/Exceptions.hpp"
+#include "Exceptions.hpp"
 
 #include "Color.hpp"
 

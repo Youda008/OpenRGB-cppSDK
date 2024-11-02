@@ -1,21 +1,16 @@
-#include "Essential.hpp"
+#include <CppUtils-Essential/Essential.hpp>
 
-#include "OpenRGB/Client.hpp"
+#include <OpenRGB/Client.hpp>
 using namespace orgb;
 
-#include "StringUtils.hpp"
-#include "StreamUtils.hpp"
+#include <CppUtils-Essential/StringUtils.hpp>
+#include <CppUtils-Essential/StreamUtils.hpp>
 
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 using namespace std;
-
-
-static orgb::Client client( "OpenRGB-cppSDK" );
-
-static DeviceListResult listResult = { RequestStatus::NotConnected, {} };
 
 
 //======================================================================================================================
@@ -254,6 +249,9 @@ static bool help( const ArgList & )
 
 	return true;
 }
+
+static orgb::Client client( "OpenRGB-cppSDK" );
+static DeviceListResult listResult = { RequestStatus::NotConnected, {} };
 
 static bool connect( const ArgList & args )
 {
@@ -674,7 +672,7 @@ static void printBanner()
 }
 
 // takes into account quotes
-bool readArg( istringstream & is, std::string & arg )
+static bool readArg( istringstream & is, std::string & arg )
 {
 	bool singleQuotes = false;
 	bool doubleQuotes = false;

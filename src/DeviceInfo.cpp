@@ -5,17 +5,17 @@
 // Description: data structures containing device information
 //======================================================================================================================
 
-#include "OpenRGB/DeviceInfo.hpp"
-
-#include "Essential.hpp"
+#include <OpenRGB/DeviceInfo.hpp>
+#include <CppUtils-Essential/Essential.hpp>
 
 #include "ProtocolCommon.hpp"
-#include "BinaryStream.hpp"
+#include "MiscUtils.hpp"
+
+#include <CppUtils-Essential/BinaryStream.hpp>
 using own::BinaryOutputStream;
 using own::BinaryInputStream;
-#include "LangUtils.hpp"
+#include <CppUtils-Essential/LangUtils.hpp>
 using own::unconst;
-#include "MiscUtils.hpp"
 
 #include <string>
 using std::string;

@@ -9,8 +9,8 @@
 #define OPENRGB_PROTOCOL_COMMON_INCLUDED
 
 
-#include "ContainerUtils.hpp"
-#include "BinaryStream.hpp"
+#include <CppUtils-Essential/ContainerUtils.hpp>
+#include <CppUtils-Essential/BinaryStream.hpp>
 MAKE_LITTLE_ENDIAN_DEFAULT
 
 #include <cstring>

@@ -1,6 +1,6 @@
 #include "CommandRegistration.hpp"
 
-#include "StreamUtils.hpp"  // repeat_char
+#include <CppUtils-Essential/StreamUtils.hpp>  // repeat_char
 
 #include <iostream>
 
