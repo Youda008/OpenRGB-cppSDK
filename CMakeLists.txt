@@ -60,7 +60,7 @@ endif()
 # generate documentation of Doxygen is present
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-	configure_file(${CMAKE_SOURCE_DIR}/doc/Doxyfile ${CMAKE_BINARY_DIR}/doc/Doxyfile)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile)
 	add_custom_target(doc
 		COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc
