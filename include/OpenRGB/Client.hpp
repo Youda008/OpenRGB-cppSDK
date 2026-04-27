@@ -170,6 +170,10 @@ class Client
 	/// Sets one unified color for the whole device.
 	RequestStatus setDeviceColor( const Device & device, Color color ) noexcept;
 
+	/// Sets per-LED colors for the whole device in a single bulk request.
+	/** \p colors must have the same number of elements as device.leds. */
+	RequestStatus setDeviceColors( const Device & device, const std::vector< Color > & colors ) noexcept;
+
 	/// Sets a color of a particular zone of a device.
 	RequestStatus setZoneColor( const Zone & zone, Color color ) noexcept;
 
@@ -322,6 +326,7 @@ class Client
 	RequestStatus _changeMode( const Device & device, const Mode & mode );
 	RequestStatus _saveMode( const Device & device, const Mode & mode );
 	RequestStatus _setDeviceColor( const Device & device, Color color );
+	RequestStatus _setDeviceColors( const Device & device, const std::vector< Color > & colors );
 	RequestStatus _setZoneColor( const Zone & zone, Color color );
 	RequestStatus _setZoneSize( const Zone & zone, uint32_t newSize );
 	RequestStatus _setLEDColor( const LED & led, Color color );
